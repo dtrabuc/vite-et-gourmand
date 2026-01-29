@@ -1,0 +1,372 @@
+/* VITE GOURMAND - STYLES PRINCIPAUX */
+
+:root {
+  --color-primary: #8b2635;
+  --color-primary-dark: #6b1c28;
+  --color-secondary: #d4a574;
+  --color-light: #f8f9fa;
+  --color-dark: #2c3e50;
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+/* Styles globaux */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  min-height: 100vh;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #333;
+  background-color: #fff;
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  flex: 1;
+}
+
+/* Navigation */
+.navbar {
+  background-color: #fff !important;
+  box-shadow: var(--shadow);
+}
+
+.navbar-brand {
+  font-size: 1.5em;
+  font-weight: 700;
+  color: var(--color-primary) !important;
+}
+
+.nav-link {
+  color: #333 !important;
+  font-weight: 500;
+  margin-left: 15px;
+  transition: color 0.3s ease;
+}
+
+.nav-link:hover {
+  color: var(--color-primary) !important;
+}
+
+.nav-link.active {
+  color: var(--color-primary) !important;
+  border-bottom: 2px solid var(--color-primary);
+  padding-bottom: 3px;
+}
+
+/* Hero section */
+.hero {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  color: white;
+}
+
+.hero h1 {
+  font-weight: 700;
+  font-size: 3.5rem;
+  margin-bottom: 20px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.hero .lead {
+  font-size: 1.3em;
+  margin-bottom: 30px;
+  opacity: 0.95;
+}
+
+/* Formulaires */
+.form-select {
+  transition: all 0.3s ease;
+  border: 2px solid #dee2e6;
+}
+
+.form-select:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 0.25rem rgba(139, 38, 53, 0.25);
+  height: auto;
+}
+
+.form-select-lg {
+  font-size: 1.1rem;
+  padding: 0.75rem 1rem;
+}
+
+/* Boutons */
+.btn-primary {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+  font-weight: 600;
+  padding: 12px 35px;
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  background-color: var(--color-primary-dark);
+  border-color: var(--color-primary-dark);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.btn-outline-light {
+  font-weight: 600;
+  border-width: 2px;
+  transition: all 0.3s ease;
+}
+
+.btn-outline-light:hover {
+  background-color: white;
+  color: var(--color-primary) !important;
+  transform: translateY(-2px);
+}
+
+.btn-outline-bordeaux {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+  font-weight: 600;
+  border-width: 2px;
+  transition: all 0.3s ease;
+}
+
+.btn-outline-bordeaux:hover {
+  background-color: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+  transform: translateY(-2px);
+}
+
+/* Titres de section */
+.section-title {
+  color: var(--color-primary);
+  font-weight: 700;
+  position: relative;
+  padding-bottom: 20px;
+}
+
+.section-title::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 3px;
+  background-color: var(--color-secondary);
+  border-radius: 2px;
+}
+
+/* Cartes */
+.card {
+  border: none;
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  transition: all 0.3s ease;
+  overflow: hidden;
+  height: 100%;
+}
+
+.card:hover {
+  transform: translateY(-8px);
+  box-shadow: var(--shadow-lg);
+}
+
+.card h3 {
+  color: var(--color-primary);
+  font-weight: 700;
+  margin-top: 15px;
+  margin-bottom: 10px;
+}
+
+.card img {
+  height: 250px;
+  object-fit: cover;
+}
+
+/* Cartes menus */
+.card-menu {
+  background: white;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  transition: all 0.3s ease;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.card-menu:hover {
+  transform: translateY(-8px);
+  box-shadow: var(--shadow-lg);
+}
+
+.card-menu img {
+  width: 100%;
+  height: 250px;
+  object-fit: cover;
+}
+
+.card-menu-body {
+  padding: 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.card-menu h4 {
+  color: var(--color-primary);
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.card-menu-price {
+  font-size: 1.6em;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin-top: auto;
+  margin-bottom: 15px;
+}
+
+.card-menu-price-unit {
+  font-size: 0.6em;
+  color: #999;
+  display: block;
+  font-weight: normal;
+}
+
+.btn-detail {
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-weight: 600;
+  text-decoration: none;
+  display: inline-block;
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+.btn-detail:hover {
+  background-color: var(--color-primary-dark);
+  color: white;
+  text-decoration: none;
+  transform: translateY(-2px);
+}
+
+/* Inputs */
+.form-control, .form-select {
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 12px;
+  font-size: 1em;
+}
+
+.form-control:focus, .form-select:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 0.2rem rgba(139, 38, 53, 0.25);
+  outline: none;
+}
+
+.form-label {
+  color: var(--color-dark);
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+/* Footer */
+footer {
+  background-color: var(--color-primary);
+  color: white;
+  margin-top: auto;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+}
+
+footer p {
+  margin: 0;
+  font-size: 0.95em;
+}
+
+footer a {
+  color: #e0e0e0;
+  text-decoration: none;
+}
+
+footer a:hover {
+  color: white;
+  text-decoration: underline;
+}
+
+/* Filtres */
+.filtre {
+  font-weight: 600;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.filtre.active {
+  background-color: white;
+  color: var(--color-primary);
+  border-color: white;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .hero h1 {
+    font-size: 2.5rem;
+  }
+  
+  .hero .lead {
+    font-size: 1.1em;
+  }
+  
+  .section-title {
+    font-size: 2em;
+  }
+  
+  .container {
+    padding: 0 15px;
+  }
+}
+
+@media (max-width: 576px) {
+  .hero h1 {
+    font-size: 1.8rem;
+  }
+  
+  .btn-primary {
+    padding: 10px 25px;
+    font-size: 0.95em;
+  }
+  
+  .card-menu img {
+    height: 200px;
+  }
+}
+
+/* Utilitaires */
+.text-primary {
+  color: var(--color-primary) !important;
+}
+
+.bg-primary {
+  background-color: var(--color-primary) !important;
+}
+
+.mb-large {
+  margin-bottom: 40px;
+}
+
+.mt-large {
+  margin-top: 40px;
+}
+
+.text-muted {
+  color: #999 !important;
+}

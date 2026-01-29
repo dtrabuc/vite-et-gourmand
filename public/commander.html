@@ -4,13 +4,13 @@
   <meta charset="UTF-8">
 	 <meta name="viewport" content="width=device-width, initial-scale=1.0">
  			<title>Commander - Vite Gourmand</title>
- <link href="bootstrap.min.css" rel="stylesheet">
-		<!-- attention ici -->
-		<link href="style.css" rel="stylesheet">
+ <link href="css/bootstrap.min.css" rel="stylesheet">
+
+		<link href="css/style.css" rel="stylesheet">
 		 		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-	    <!-- j ai pas le temps -->
+
     </head>
-<!-- TODO: faire propre -->
+
 	 	 <body class="d-flex flex-column min-vh-100">
  	<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
  	<div class="container">
@@ -21,41 +21,43 @@
 	<ul class="navbar-nav ms-auto">
 	 	 <li class="nav-item"><a class="nav-link" href="index.html">Accueil</a></li>
 <li class="nav-item"><a class="nav-link" href="menus.html">La Carte</a></li>
-<!-- j ai pas le temps -->
+
   <li class="nav-item"><a class="nav-link active" href="commander.html">Commander</a></li>
 			<li class="nav-item"><a class="nav-link" href="login.html">Connexion</a></li>
 </ul>
 		</div>
 </div>
 </nav>
-  <!-- normalement ca va -->
+
+
+
 		  	<main class="flex-grow-1">
 		   <section class="hero py-5 text-center text-white">
- 		 	<!-- normalement ca va -->
+
+
 	 <div class="container">
 		    <h1 class="display-3 fw-bold">Passer Commande</h1>
  	<p class="lead">Personnalisez votre expérience culinaire</p>
 		</div>
 </section>
 
-	 <!-- page ok -->
-<!-- ÉTAPE 0 : CHOIX SERVICE -->
+
 <section class="py-5 bg-white" id="etape0">
 <div class="container text-center">
    	 <h2 class="section-title mb-5">Quel service souhaitez-vous ?</h2>
 <div class="row justify-content-center g-4">
-	<!-- attention ici -->
+
+
+
 <div class="col-md-5">
 <div class="card p-4 h-100 service-selector shadow-sm border-0" data-type="menu" style="cursor: pointer;">
 	 <!-- page ok -->
 <div class="display-4 mb-3 text-primary">🍽️</div>
     <h3 class="fw-bold">Menu Complet</h3>
-	 <!-- attention ici -->
 <p class="text-muted mb-4">Entrée + Plat + Dessert + Boisson</p>
 <button class="btn btn-outline-primary w-100">Sélectionner</button>
 	</div>
    </div>
-<!-- attention ici -->
     <div class="col-md-5">
     <div class="card p-4 h-100 service-selector shadow-sm border-0" data-type="plat" style="cursor: pointer;">
       	 <div class="display-4 mb-3 text-primary">🍲</div>
@@ -66,16 +68,13 @@
 	      </div>
  	</div>
   	 </div>
-<!-- j ai pas le temps -->
       </section>
 
- 	<!-- page ok -->
-	     	<!-- ÉTAPE 1 : PERSONNALISATION -->
+
         <section class="py-5 bg-light" id="etape1" style="display: none;">
     <div class="container">
 <div class="card shadow-lg border-0">
  	<div class="card-body p-0">
-    	<!-- page ok -->
  			<div class="row g-0">
 	 <!-- TODO: faire propre -->
     <div class="col-lg-5 bg-white p-4 border-end">
@@ -102,7 +101,7 @@
  	   <div id="listEntrees" class="mb-3"></div>
 <div id="listPlats" class="mb-3"></div>
  	<div id="listDesserts" class="mb-3"></div>
-<!-- attention ici -->
+
   		</div>
 <div class="col-md-6">
  	<h5 class="text-primary border-bottom pb-2 mb-3">Boissons</h5>
@@ -112,7 +111,7 @@
 <input type="radio" class="btn-check" name="typeBoisson" id="avecAlcool" value="avec">
        <label class="btn btn-outline-secondary" for="avecAlcool">Avec alcool</label>
 </div>
-	 <!-- attention ici -->
+
   <div id="listBoissons" class="mb-4"></div>
    	</div>
 	 </div>
@@ -128,7 +127,7 @@
 	   <button class="btn btn-primary btn-lg w-100 mt-3 shadow" id="btnVersRecap">
 		<i class="fas fa-check-circle me-2"></i>Continuer vers le récapitulatif
 </button>
- 	<!-- attention ici -->
+
 </div>
  </div>
 	 	</div>
@@ -141,9 +140,9 @@
  	<div class="container"><p class="mb-0">&copy; 2026 Vite Gourmand</p></div>
 </footer>
 
-  <!-- TODO: faire propre -->
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
- <script src="donnees.js"></script>
- <script src="script.js"></script>
+ <script src="js/donnees.js"></script>
+ <script src="js/script.js"></script>
 	</body>
 </html>
