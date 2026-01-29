@@ -4,70 +4,74 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Connexion - Vite & Gourmand</title>
-    <link rel="stylesheet" href="style.css">
+    <link href="bootstrap.min.css" rel="stylesheet">
+    <link href="style.css" rel="stylesheet">
 </head>
 <body>
-    <header>
-        <nav class="navbar">
-            <div class="logo">
-                <h1>🍴 Vite & Gourmand</h1>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">🍴 Vite & Gourmand</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="index.html">Accueil</a></li>
+                    <li class="nav-item"><a class="nav-link" href="menus.html">Menus</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="login.html">Connexion</a></li>
+                    <li class="nav-item"><a class="nav-link" href="contact.html">Contact</a></li>
+                </ul>
             </div>
-            <ul id="menuLiens">
-                <li><a href="index.html">Accueil</a></li>
-                <li><a href="nos-menus.html">Nos Menus</a></li>
-                <li><a href="login.html" class="actif">Connexion</a></li>
-                <li><a href="contact.html">Contact</a></li>
-            </ul>
-        </nav>
-    </header>
-
-    <div class="container" style="margin-top: 60px; max-width: 500px;">
-        <h2 class="titre-section">Connexion</h2>
-        <div class="formulaire-commande">
-            <form id="formLogin" onsubmit="handleLogin(event)">
-                <div class="champ">
-                    <label>Email *</label>
-                    <input type="email" id="email" required value="admin@vitegourmand.fr">
-                </div>
-                <div class="champ">
-                    <label>Mot de passe *</label>
-                    <input type="password" id="password" required placeholder="Entrez votre mot de passe">
-                </div>
-                <div id="erreurLogin" style="display: none; background: #ffebee; padding: 15px; border-radius: 8px; margin: 15px 0; color: #d32f2f; font-weight: 500;">
-                    ❌ Identifiants incorrects
-                </div>
-                <button type="submit" class="btn btn-principal btn-large">Se connecter</button>
-                <p style="text-align: center; margin-top: 20px;">
-                    <a href="nos-menus.html" style="color: var(--couleur-principale);">← Retour aux menus</a>
-                </p>
-            </form>
         </div>
-        <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin-top: 20px; text-align: center;">
-            <p style="margin: 5px 0; font-size: 0.9em;">🔑 <strong>Compte test :</strong></p>
-            <p style="margin: 5px 0; font-size: 0.85em;">Email: <code>admin@vitegourmand.fr</code></p>
-            <p style="margin: 5px 0; font-size: 0.85em;">Mot de passe: <code>admin123</code></p>
-        </div>
-    </div>
+    </nav>
 
-    <footer>
-        <p>&copy; 2026 Vite & Gourmand</p>
+    <!-- Hero -->
+    <section class="hero py-5 text-center text-white">
+        <div class="container">
+            <h1 class="display-3 fw-bold mb-4">Connexion</h1>
+            <p class="lead mb-5">Accédez à votre espace personnel</p>
+        </div>
+    </section>
+
+    <!-- Formulaire Centré -->
+    <section class="py-5">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-12 col-sm-10 col-md-8 col-lg-5">
+                    <div class="card shadow-lg border-0">
+                        <div class="card-body p-4 p-md-5">
+                            <h2 class="text-center mb-4 section-title">Identifiez-vous</h2>
+                            <form id="formLogin">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Email</label>
+                                    <input type="email" class="form-control" id="email" placeholder="Votre email" value="admin@vitegourmand.fr">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Mot de passe</label>
+                                    <input type="password" class="form-control" id="password" placeholder="Votre mot de passe">
+                                </div>
+                                <div id="erreurLogin" class="alert alert-danger" style="display:none;">Identifiants incorrects</div>
+                                <button type="submit" class="btn btn-primary w-100 mb-3 btn-lg fw-bold">Se connecter</button>
+                                <div class="text-center">
+                                    <small class="text-muted">Test: admin@vitegourmand.fr / admin123</small>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-4 mt-5">
+        <div class="container text-center">
+            <p>&copy; 2026 Vite & Gourmand | Bordeaux</p>
+        </div>
     </footer>
 
-    <script>
-        function handleLogin(event) {
-            event.preventDefault();
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const erreur = document.getElementById('erreurLogin');
-
-            if (email === 'admin@vitegourmand.fr' && password === 'admin123') {
-                localStorage.setItem('user', JSON.stringify({ email, nom: 'Jean Dupont' }));
-                window.location.href = 'compte.html';
-            } else {
-                erreur.style.display = 'block';
-                setTimeout(() => erreur.style.display = 'none', 3000);
-            }
-        }
-    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>

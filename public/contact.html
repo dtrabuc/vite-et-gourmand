@@ -1,122 +1,98 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
-  <meta charset="utf-8">
-  <title>Contact</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact - Vite & Gourmand</title>
+    <link href="bootstrap.min.css" rel="stylesheet">
+    <link href="style.css" rel="stylesheet">
 </head>
 <body>
-  <div class="menu-top">
-    <div class="conteneur">
-      <a href="index.html" style="text-decoration: none;">
-        <div style="display: flex; align-items: center;">
-          <div class="rond-logo">V&G</div>
-          <span style="color: #8b2635; font-weight: bold; margin-left: 10px;">Vite & Gourmand</span>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">🍴 Vite & Gourmand</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="index.html">Accueil</a></li>
+                    <li class="nav-item"><a class="nav-link" href="menus.html">Menus</a></li>
+                    <li class="nav-item"><a class="nav-link" href="login.html">Connexion</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="contact.html">Contact</a></li>
+                </ul>
+            </div>
         </div>
-      </a>
-      <div class="menu-liens">
-        <a href="index.html" class="lien">Accueil</a>
-        <a href="menus.html" class="lien">Menus</a>
-        <a href="login.html" class="lien">Connexion</a>
-        <a href="contact.html" class="lien actif">Contact</a>
-      </div>
-    </div>
-  </div>
+    </nav>
 
-  <div style="padding: 40px 20px;">
-    <div class="conteneur">
-      <h1>Contactez-nous</h1>
-      <p style="font-size: 1.1em; color: #6b6b6b; text-align: center;">Une question ? Un projet ? Notre équipe est à votre écoute</p>
-      
-      <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 40px; margin-top: 40px;">
-        
-        <!-- formulaire -->
-        <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-          <form id="formContact" onsubmit="return envoyerContact()">
-            <div class="champ">
-              <label>Nom complet *</label>
-              <input type="text" required>
-            </div>
-            <div class="champ">
-              <label>Email *</label>
-              <input type="email" id="emailContact" required>
-            </div>
-            <div class="champ">
-              <label>Téléphone</label>
-              <input type="tel">
-            </div>
-            <div class="champ">
-              <label>Sujet *</label>
-              <select required>
-                <option value="">Choisir un sujet</option>
-                <option value="devis">Demande de devis</option>
-                <option value="info">Demande d'information</option>
-                <option value="autre">Autre</option>
-              </select>
-            </div>
-            <div class="champ">
-              <label>Message *</label>
-              <textarea rows="6" required></textarea>
-            </div>
-            <button type="submit" class="bouton-primaire">Envoyer</button>
-          </form>
-          
-          <!-- message succes -->
-          <div id="msgSucces" style="display: none; text-align: center; padding: 40px;">
-            <div style="width: 80px; height: 80px; background: #2d7a3e; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 3em; margin: 0 auto 20px;">✓</div>
-            <h3>Message envoyé !</h3>
-            <p>Merci de nous avoir contactés. Notre équipe vous répondra dans les plus brefs délais.</p>
-          </div>
+    <!-- Hero -->
+    <section class="hero py-5 text-center text-white">
+        <div class="container">
+            <h1 class="display-3 fw-bold mb-4">Contactez-Nous</h1>
+            <p class="lead mb-5">Nous sommes à votre écoute</p>
         </div>
+    </section>
 
-        <!-- infos contact -->
-        <div>
-          <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px;">
-            <div style="font-size: 2em; margin-bottom: 10px;">📍</div>
-            <h3>Adresse</h3>
-            <p style="margin: 0;">15 rue de la Gastronomie<br>75001 Paris<br>France</p>
-          </div>
-          
-          <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px;">
-            <div style="font-size: 2em; margin-bottom: 10px;">📞</div>
-            <h3>Téléphone</h3>
-            <p style="margin: 0;">+33 (0)1 23 45 67 89</p>
-          </div>
-          
-          <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px;">
-            <div style="font-size: 2em; margin-bottom: 10px;">✉️</div>
-            <h3>Email</h3>
-            <p style="margin: 0;">contact@vite-et-gourmand.fr</p>
-          </div>
-          
-          <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-            <div style="font-size: 2em; margin-bottom: 10px;">🕐</div>
-            <h3>Horaires</h3>
-            <p style="margin: 0;">Lun-Ven: 9h00 - 19h00<br>Sam: 10h00 - 18h00<br>Dim: 10h00 - 16h00</p>
-          </div>
+    <!-- Contenu Contact -->
+    <section class="py-5">
+        <div class="container">
+            <div class="row g-4 g-lg-5">
+                <div class="col-12 col-lg-8">
+                    <div class="card shadow-lg border-0">
+                        <div class="card-body p-4 p-md-5">
+                            <h3 class="section-title mb-4">Envoyez-nous un message</h3>
+                            <form>
+                                <div class="row g-3">
+                                    <div class="col-12 col-md-6">
+                                        <label class="form-label fw-bold">Nom *</label>
+                                        <input type="text" class="form-control" placeholder="Votre nom complet" required>
+                                    </div>
+                                    <div class="col-12 col-md-6">
+                                        <label class="form-label fw-bold">Email *</label>
+                                        <input type="email" class="form-control" placeholder="Votre email" required>
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label fw-bold">Sujet *</label>
+                                        <input type="text" class="form-control" placeholder="Objet de votre message" required>
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label fw-bold">Message *</label>
+                                        <textarea class="form-control" rows="6" placeholder="Votre message" required></textarea>
+                                    </div>
+                                    <div class="col-12 pt-3">
+                                        <button type="submit" class="btn btn-primary w-100 btn-lg fw-bold">Envoyer le Message</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-lg-4">
+                    <div class="card h-100 shadow-lg border-0">
+                        <div class="card-body text-center p-4 p-md-5">
+                            <h3 class="mb-4 text-primary fw-bold">Nos Coordonnées</h3>
+                            <p class="mb-3 fs-5"><strong>📍 Bordeaux</strong></p>
+                            <p class="mb-3 fs-5">
+                                <strong>📞</strong> <a href="tel:0556000000" class="text-decoration-none text-dark">05 56 00 00 00</a>
+                            </p>
+                            <p class="fs-5">
+                                <strong>✉️</strong> <a href="mailto:contact@vitegourmand.fr" class="text-decoration-none text-dark">contact@vitegourmand.fr</a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        
-      </div>
-    </div>
-  </div>
+    </section>
 
-  <div class="footer">
-    <div class="conteneur">
-      <div style="text-align: center; padding: 20px;">© 2026 Vite & Gourmand</div>
-    </div>
-  </div>
+    <!-- Footer -->
+    <footer class="py-4 mt-5">
+        <div class="container text-center">
+            <p>&copy; 2026 Vite & Gourmand | Bordeaux</p>
+        </div>
+    </footer>
 
-  <script>
-    function envoyerContact() {
-      var form = document.getElementById('formContact');
-      var msg = document.getElementById('msgSucces');
-      
-      // cacher formulaire et afficher message
-      form.style.display = 'none';
-      msg.style.display = 'block';
-      
-      return false; // empecher envoi
-    }
-  </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
