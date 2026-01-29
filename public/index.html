@@ -1,74 +1,88 @@
-<!DOCTYPE html>
+        <!DOCTYPE html>
 <html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vite & Gourmand - Accueil</title>
-    <link href="bootstrap.min.css" rel="stylesheet">
-    <link href="style.css" rel="stylesheet">
-</head>
-<body>
-    <!-- Navbar Uniforme -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
-        <div class="container">
-            <a class="navbar-brand" href="index.html">🍴 Vite & Gourmand</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link active" href="index.html">Accueil</a></li>
-                    <li class="nav-item"><a class="nav-link" href="menus.html">Menus</a></li>
-                    <li class="nav-item"><a class="nav-link" href="login.html">Connexion</a></li>
-                    <li class="nav-item"><a class="nav-link" href="contact.html">Contact</a></li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+	 <!-- j ai pas le temps -->
+ 	  <head>
+ 	<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vite Gourmand - Accueil</title>
+     		<link href="bootstrap.min.css" rel="stylesheet">
+       <link href="style.css" rel="stylesheet">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+		</head>
+	  <body class="d-flex flex-column min-vh-100">
+<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
+    <div class="container">
+	   <a class="navbar-brand text-primary fw-bold" href="index.html">
+    		 <i class="fas fa-utensils me-2"></i>Vite Gourmand
+    </a>
+<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+		<span class="navbar-toggler-icon"></span>
+	<!-- page ok -->
+	 </button>
+<div class="collapse navbar-collapse" id="navbarNav">
+				<ul class="navbar-nav ms-auto">
+ <!-- normalement ca va -->
+			<li class="nav-item"><a class="nav-link active" href="index.html">Accueil</a></li>
+		<li class="nav-item"><a class="nav-link" href="menus.html">La Carte</a></li>
+<li class="nav-item"><a class="nav-link" href="commander.html">Commander</a></li>
+	     <li class="nav-item"><a class="nav-link" href="login.html">Connexion</a></li>
+</ul>
+ 	</div>
+    		 	</div>
+ 	</nav>
 
-    <!-- Hero -->
-    <section class="hero py-5 text-center text-white">
-        <div class="container">
-            <h1 class="display-3 fw-bold mb-4">Menus Raffinés</h1>
-            <p class="lead mb-5">Traiteur professionnel à Bordeaux</p>
-            <a href="menus.html" class="btn btn-primary btn-lg">Découvrir Menus</a>
-        </div>
+ <main class="flex-grow-1">
+				<section class="hero py-5 text-center text-white d-flex align-items-center" style="min-height: 60vh; background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1559339352-11d035aa65de?w=1920') center/cover;">
+	 <div class="container">
+  	 <h1 class="display-2 fw-bold mb-4">L'Excellence Traiteur</h1>
+	<p class="lead fs-4 mb-5">Des saveurs authentiques pour vos événements à Bordeaux</p>
+		<div class="d-flex justify-content-center gap-3">
+       <a href="menus.html" class="btn btn-light btn-lg text-primary fw-bold shadow"><i class="fas fa-book-open me-2"></i>Découvrir</a>
+		<a href="commander.html" class="btn btn-primary btn-lg fw-bold shadow"><i class="fas fa-cart-plus me-2"></i>Commander</a>
+   <!-- j ai pas le temps -->
+	</div>
+     	</div>
+		 </section>
+
+   <section class="py-5 bg-light">
+ 	<div class="container">
+   <h2 class="text-center text-primary fw-bold mb-5">Avis Clients</h2>
+	 	<!-- attention ici -->
+  <div id="avisClients" class="row g-4"></div>
+ </div>
     </section>
 
-    <!-- Avantages -->
-    <section class="py-5">
-        <div class="container">
-            <h2 class="section-title display-5 text-center mb-5">Pourquoi Nous Choisir ?</h2>
-            <div class="row g-4">
-                <div class="col-lg-4">
-                    <div class="card h-100 text-center p-4">
-                        <div class="display-1 mb-3">👨‍🍳</div>
-                        <h3>Expertise</h3>
-                        <p>25 ans d'expérience</p>
-                    </div>
-                </div>
-                <!-- Répète pour 2 autres -->
-            </div>
-        </div>
-    </section>
+ <section class="py-5 bg-white">
+ <div class="container">
+<div class="row text-center g-4">
+  <div class="col-md-4">
+ <i class="fas fa-leaf text-success display-4 mb-3"></i>
+<h4 class="fw-bold">Produits Frais</h4>
+	 <p class="text-muted">Circuits courts et saison</p>
+    </div>
+	 <div class="col-md-4">
+    <i class="fas fa-shipping-fast text-primary display-4 mb-3"></i>
+    <h4 class="fw-bold">Livraison Rapide</h4>
+ <p class="text-muted">À l'heure garantie</p>
+     </div>
+ 	<div class="col-md-4">
+ 	<i class="fas fa-award text-warning display-4 mb-3"></i>
+<h4 class="fw-bold">Service Premium</h4>
+   <p class="text-muted">Équipe dévouée</p>
+       </div>
+			 </div>
+     </div>
+		</section>
+  	 </main>
 
-    <!-- Avis -->
-    <section class="py-5">
-        <div class="container">
-            <h2 class="section-title display-5 text-center mb-5">Avis Clients</h2>
-            <div id="avisClients" class="row g-4"></div>
-        </div>
-    </section>
+ 		  <footer class="py-4 bg-primary text-white text-center">
+<div class="container"><p class="mb-0">&copy; 2026 Vite Gourmand</p></div>
+   </footer>
 
-    <!-- Footer -->
-    <footer class="py-4 mt-5">
-        <div class="container text-center">
-            <p>&copy; 2026 Vite & Gourmand | Bordeaux</p>
-        </div>
-    </footer>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="donnees.js"></script>
-    <script src="script.js"></script>
+   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="donnees.js"></script>
+<!-- normalement ca va -->
+	<script src="script.js"></script>
 </body>
-</html>
+ </html>

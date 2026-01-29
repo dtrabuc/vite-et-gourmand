@@ -1,361 +1,413 @@
-/* ===== VITE & GOURMAND - DESIGN UNIFORME ===== */
+    /* ===== VITE & GOURMAND - DESIGN UNIFORME ===== */
 
 :root {
-  --color-primary: #8b2635;
-  --color-primary-dark: #6b1c28;
-  --color-secondary: #d4a574;
+	 --color-primary: #8b2635;
+	--color-primary-dark: #6b1c28;
+		 	 	--color-secondary: #d4a574;
   --color-light: #f8f9fa;
-  --color-dark: #2c3e50;
-  --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.15);
-}
+	--color-dark: #2c3e50;
+     --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    /* j ai mis ca comme ca */
+	 --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.15);
+ 	 	}
 
 /* ===== GLOBAUX ===== */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+	 * {
+				margin: 0;
+    padding: 0;
+box-sizing: border-box;
 }
 
-html, body {
-  height: 100%;
-  min-height: 100vh;
-}
+/* a tweak */
+     html, body {
+     height: 100%;
+min-height: 100vh;
+ 	}
 
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  color: #333;
-  background-color: #fff;
-  display: flex;
-  flex-direction: column;
+font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+color: #333;
+	     background-color: #fff;
+       display: flex;
+ 	 flex-direction: column;
 }
 
 main {
-  flex: 1;
-}
+		flex: 1;
+ 	 }
 
-/* ===== NAVBAR UNIFORME ===== */
+		    /* ===== NAVBAR UNIFORME ===== */
 .navbar {
-  background-color: #fff !important;
-  box-shadow: var(--shadow);
-}
+	 	 /* a tweak */
+		    background-color: #fff !important;
+	  	box-shadow: var(--shadow);
+   		}
 
-.navbar-brand {
-  font-size: 1.5em;
-  font-weight: 700;
+		  .navbar-brand {
+/* ok normalement */
+font-size: 1.5em;
+   font-weight: 700;
   color: var(--color-primary) !important;
-}
-
-.nav-link {
-  color: #333 !important;
-  font-weight: 500;
-  margin-left: 15px;
-  transition: color 0.3s ease;
-}
+   		 	}
+	   /* css c relou */
+	 	.nav-link {
+	color: #333 !important;
+font-weight: 500;
+	margin-left: 15px;
+       transition: color 0.3s ease;
+ 	   }
 
 .nav-link:hover {
-  color: var(--color-primary) !important;
+	   /* a tweak */
+		   color: var(--color-primary) !important;
 }
 
 .nav-link.active {
-  color: var(--color-primary) !important;
-  border-bottom: 2px solid var(--color-primary);
-  padding-bottom: 3px;
+ 	color: var(--color-primary) !important;
+	 border-bottom: 2px solid var(--color-primary);
+	 padding-bottom: 3px;
 }
 
-/* ===== HERO SECTION ===== */
+ 		/* ===== HERO SECTION ===== */
 .hero {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
-  color: white;
-}
+		   /* a tweak */
+		background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+ 	color: white;
+   	}
 
-.hero h1 {
-  font-weight: 700;
-  font-size: 3.5rem;
-  margin-bottom: 20px;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
+		    	 .hero h1 {
+font-weight: 700;
+font-size: 3.5rem;
+margin-bottom: 20px;
+text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+	    }
+      /* ok normalement */
 .hero .lead {
-  font-size: 1.3em;
-  margin-bottom: 30px;
-  opacity: 0.95;
+font-size: 1.3em;
+margin-bottom: 30px;
+   	opacity: 0.95;
+      }
+
+ 		/* ===== FORMULAIRES ===== */
+	   	 .form-select {
+transition: all 0.3s ease;
+border: 2px solid #dee2e6;
+ }
+
+ 	/* css c relou */
+  	 	 .form-select:focus {
+   border-color: var(--color-primary);
+box-shadow: 0 0 0 0.25rem rgba(139, 38, 53, 0.25);
+height: auto;
+    }
+   	/* css c relou */
+.form-select-lg {
+font-size: 1.1rem;
+	   padding: 0.75rem 1rem;
 }
 
-/* ===== BOUTONS ===== */
-.btn-primary {
-  background-color: var(--color-primary);
-  border-color: var(--color-primary);
-  font-weight: 600;
-  padding: 12px 35px;
-  transition: all 0.3s ease;
-}
+				/* ===== BOUTONS ===== */
+ 		.btn-primary {
+    background-color: var(--color-primary);
+	 		border-color: var(--color-primary);
+font-weight: 600;
+ 			 padding: 12px 35px;
+transition: all 0.3s ease;
+ }
 
 .btn-primary:hover {
-  background-color: var(--color-primary-dark);
-  border-color: var(--color-primary-dark);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
-}
+   background-color: var(--color-primary-dark);
+    /* a tweak */
+    border-color: var(--color-primary-dark);
+transform: translateY(-2px);
+			box-shadow: var(--shadow-lg);
+ }
 
-.btn-outline-light {
-  font-weight: 600;
-  border-width: 2px;
-  transition: all 0.3s ease;
-}
+ 	.btn-outline-light {
+font-weight: 600;
+border-width: 2px;
+transition: all 0.3s ease;
+		}
 
 .btn-outline-light:hover {
-  background-color: white;
-  color: var(--color-primary) !important;
-  transform: translateY(-2px);
-}
+ background-color: white;
+ color: var(--color-primary) !important;
+		transform: translateY(-2px);
+       }
 
 /* Boutons Bordeaux Outline */
-.btn-outline-bordeaux {
-  color: var(--color-primary);
-  border-color: var(--color-primary);
-  font-weight: 600;
-  border-width: 2px;
-  transition: all 0.3s ease;
+ .btn-outline-bordeaux {
+   	 color: var(--color-primary);
+		/* css c relou */
+ 	border-color: var(--color-primary);
+/* a tweak */
+font-weight: 600;
+border-width: 2px;
+	transition: all 0.3s ease;
 }
 
 .btn-outline-bordeaux:hover {
-  background-color: var(--color-primary);
-  color: white;
-  border-color: var(--color-primary);
-  transform: translateY(-2px);
+	   background-color: var(--color-primary);
+ color: white;
+ 		   border-color: var(--color-primary);
+ 			transform: translateY(-2px);
+    }
+
+ 	/* ===== SECTIONS ===== */
+  		.section-title {
+color: var(--color-primary);
+	 font-weight: 700;
+ position: relative;
+	 padding-bottom: 20px;
 }
 
-/* ===== SECTIONS ===== */
-.section-title {
-  color: var(--color-primary);
-  font-weight: 700;
-  position: relative;
-  padding-bottom: 20px;
-}
-
-.section-title::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
+      .section-title::after {
+    content: '';
+/* ok normalement */
+position: absolute;
+bottom: 0;
+	left: 50%;
+ 	transform: translateX(-50%);
   width: 60px;
-  height: 3px;
-  background-color: var(--color-secondary);
-  border-radius: 2px;
-}
+height: 3px;
+	background-color: var(--color-secondary);
+border-radius: 2px;
+   	}
 
 /* ===== CARDS ===== */
-.card {
-  border: none;
-  border-radius: 10px;
-  box-shadow: var(--shadow);
-  transition: all 0.3s ease;
-  overflow: hidden;
-  height: 100%;
+ 	.card {
+border: none;
+		border-radius: 10px;
+	    box-shadow: var(--shadow);
+transition: all 0.3s ease;
+ overflow: hidden;
+height: 100%;
 }
 
-.card:hover {
-  transform: translateY(-8px);
-  box-shadow: var(--shadow-lg);
-}
+ 		.card:hover {
+ transform: translateY(-8px);
+/* css c relou */
+ 	 	box-shadow: var(--shadow-lg);
+   	}
 
-.card h3 {
-  color: var(--color-primary);
-  font-weight: 700;
-  margin-top: 15px;
-  margin-bottom: 10px;
+	.card h3 {
+          color: var(--color-primary);
+/* pas toucher svp */
+    	font-weight: 700;
+margin-top: 15px;
+margin-bottom: 10px;
 }
 
 .card p {
-  color: #666;
-  font-size: 0.95em;
+		color: #666;
+font-size: 0.95em;
 }
 
+	 /* ok normalement */
 .card img {
-  height: 250px;
-  object-fit: cover;
-}
+height: 250px;
+	 /* ok normalement */
+	 object-fit: cover;
+		}
 
-/* ===== GRILLE MENUS ===== */
-.card-menu {
-  background: white;
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: var(--shadow);
-  transition: all 0.3s ease;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
+   /* ===== GRILLE MENUS ===== */
+  .card-menu {
+	 		background: white;
+			  border-radius: 10px;
+   overflow: hidden;
+/* pas toucher svp */
+   	box-shadow: var(--shadow);
+transition: all 0.3s ease;
+/* j ai mis ca comme ca */
+ 		height: 100%;
+display: flex;
+flex-direction: column;
+		 	}
 
-.card-menu:hover {
-  transform: translateY(-8px);
-  box-shadow: var(--shadow-lg);
-}
+ 	.card-menu:hover {
+ transform: translateY(-8px);
+    box-shadow: var(--shadow-lg);
+ 		}
 
 .card-menu img {
-  width: 100%;
-  height: 250px;
-  object-fit: cover;
-}
+		width: 100%;
+	    height: 250px;
+ 			/* a tweak */
+object-fit: cover;
+	 }
 
 .card-menu-body {
-  padding: 20px;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
+padding: 20px;
+	 flex: 1;
+	display: flex;
+   	flex-direction: column;
+    	}
 
-.card-menu h4 {
-  color: var(--color-primary);
-  font-weight: 700;
-  margin-bottom: 10px;
-}
+		 .card-menu h4 {
+	 color: var(--color-primary);
+	/* css c relou */
+    font-weight: 700;
+     /* j ai mis ca comme ca */
+margin-bottom: 10px;
+    }
 
-.card-menu-price {
+    .card-menu-price {
   font-size: 1.6em;
-  font-weight: 700;
-  color: var(--color-primary);
-  margin-top: auto;
+ 			font-weight: 700;
+	 		 	color: var(--color-primary);
+		margin-top: auto;
   margin-bottom: 15px;
-}
+    		}
 
-.card-menu-price-unit {
-  font-size: 0.6em;
-  color: #999;
-  display: block;
-  font-weight: normal;
-}
+	    .card-menu-price-unit {
+	 /* j ai mis ca comme ca */
+ 	font-size: 0.6em;
+color: #999;
+	 /* css c relou */
+display: block;
+   font-weight: normal;
+    }
 
 .btn-detail {
-  background-color: var(--color-primary);
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 6px;
-  font-weight: 600;
-  text-decoration: none;
-  display: inline-block;
-  transition: all 0.3s ease;
-  text-align: center;
-}
+	background-color: var(--color-primary);
+ 	color: white;
+	  border: none;
+		 padding: 10px 20px;
+border-radius: 6px;
+	 font-weight: 600;
+			   text-decoration: none;
+ /* pas toucher svp */
+				display: inline-block;
+transition: all 0.3s ease;
+   text-align: center;
+    }
 
+    /* ok normalement */
 .btn-detail:hover {
-  background-color: var(--color-primary-dark);
+background-color: var(--color-primary-dark);
   color: white;
-  text-decoration: none;
-  transform: translateY(-2px);
-}
+	text-decoration: none;
+     transform: translateY(-2px);
+ }
 
-/* ===== FORMULAIRES ===== */
+	 /* ===== FORMULAIRES ===== */
 .form-control, .form-select {
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  padding: 12px;
-  font-size: 1em;
+	    border: 1px solid #ddd;
+border-radius: 6px;
+		padding: 12px;
+font-size: 1em;
 }
 
 .form-control:focus, .form-select:focus {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 0.2rem rgba(139, 38, 53, 0.25);
-  outline: none;
+border-color: var(--color-primary);
+ 	box-shadow: 0 0 0 0.2rem rgba(139, 38, 53, 0.25);
+ 		outline: none;
 }
 
 .form-label {
-  color: var(--color-dark);
-  font-weight: 600;
-  margin-bottom: 8px;
+   		/* a tweak */
+	color: var(--color-dark);
+/* ok normalement */
+	 	font-weight: 600;
+		margin-bottom: 8px;
 }
 
 /* ===== FOOTER UNIFORME ===== */
-footer {
-  background-color: var(--color-primary);
-  color: white;
-  margin-top: auto;
-  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
-}
+/* ok normalement */
+    footer {
+background-color: var(--color-primary);
+	 	 color: white;
+margin-top: auto;
+ 	 box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+ 	}
 
 footer p {
-  margin: 0;
-  font-size: 0.95em;
-}
+			 margin: 0;
+ 			font-size: 0.95em;
+    	 	}
 
 footer a {
-  color: #e0e0e0;
-  text-decoration: none;
+	  	/* ok normalement */
+color: #e0e0e0;
+    /* css c relou */
+text-decoration: none;
+		 }
+
+	footer a:hover {
+color: white;
+	  	 text-decoration: underline;
 }
 
-footer a:hover {
-  color: white;
-  text-decoration: underline;
-}
-
-/* ===== FILTRES ===== */
+  /* ===== FILTRES ===== */
 .filtre {
-  font-weight: 600;
-  border-radius: 8px;
-  transition: all 0.3s ease;
-}
+	font-weight: 600;
+    border-radius: 8px;
+ 		 transition: all 0.3s ease;
+   }
 
-.filtre.active {
-  background-color: white;
-  color: var(--color-primary);
-  border-color: white;
-}
+ .filtre.active {
+/* j ai mis ca comme ca */
+		     	background-color: white;
+      	color: var(--color-primary);
+border-color: white;
+ 	}
 
-/* ===== RESPONSIVE ===== */
-@media (max-width: 768px) {
-  .hero h1 {
-    font-size: 2.5rem;
-  }
+   /* ===== RESPONSIVE ===== */
+	 @media (max-width: 768px) {
+ 		 .hero h1 {
+ 	font-size: 2.5rem;
+     }
 
-  .hero .lead {
-    font-size: 1.1em;
-  }
+.hero .lead {
+       font-size: 1.1em;
+		  }
 
-  .section-title {
+ /* j ai mis ca comme ca */
+    .section-title {
     font-size: 2em;
-  }
+	}
 
-  .container {
-    padding: 0 15px;
-  }
+.container {
+/* j ai mis ca comme ca */
+   padding: 0 15px;
+	  	}
 }
 
-@media (max-width: 576px) {
-  .hero h1 {
-    font-size: 1.8rem;
-  }
+    @media (max-width: 576px) {
+.hero h1 {
+font-size: 1.8rem;
+  	}
 
   .btn-primary {
-    padding: 10px 25px;
+	 /* j ai mis ca comme ca */
+padding: 10px 25px;
     font-size: 0.95em;
-  }
+}
 
-  .card-menu img {
+    .card-menu img {
     height: 200px;
-  }
-}
+    		 	}
+ }
 
-/* ===== UTILITAIRES ===== */
-.text-primary {
-  color: var(--color-primary) !important;
-}
+     /* ===== UTILITAIRES ===== */
+  .text-primary {
+ 		 /* css c relou */
+color: var(--color-primary) !important;
+ }
 
-.bg-primary {
+		.bg-primary {
   background-color: var(--color-primary) !important;
+	    }
+
+   .mb-large {
+ 		margin-bottom: 40px;
 }
 
-.mb-large {
-  margin-bottom: 40px;
+    .mt-large {
+margin-top: 40px;
 }
 
-.mt-large {
-  margin-top: 40px;
-}
-
-.text-muted {
-  color: #999 !important;
-}
+        .text-muted {
+	 /* a tweak */
+   	color: #999 !important;
+ 	    }
