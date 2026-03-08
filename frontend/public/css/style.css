@@ -370,3 +370,33 @@ footer a:hover {
 .text-muted {
   color: #999 !important;
 }
+
+.admin-access-btn {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1030;
+}
+
+.admin-stat-card {
+  border-left: 4px solid var(--color-primary);
+}
+
+.admin-stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.review-snippet {
+  background: #fff7f8;
+  border: 1px solid rgba(139, 38, 53, 0.12);
+  border-radius: 10px;
+  padding: 1rem;
+}
