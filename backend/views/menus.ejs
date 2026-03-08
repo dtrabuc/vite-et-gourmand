@@ -1,0 +1,8 @@
+<%- include('partials/head', { title: 'Nos Menus - Vite & Gourmand', bodyClass: '' }) %>
+<%- include('partials/header', { page: 'menus' }) %>
+<main class="flex-grow-1">
+  <section class="hero py-5 text-center text-white" style="background:linear-gradient(rgba(0,0,0,.45),rgba(0,0,0,.45)),url('https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1600') center/cover;"><div class="container"><h1 class="display-3 fw-bold">Notre Carte</h1><p class="lead">Des créations culinaires pour tous les goûts</p></div></section>
+  <section class="py-5"><div class="container"><h2 class="section-title text-center mb-5">Nos Menus Complets</h2><div class="d-flex justify-content-center mb-5 flex-wrap gap-2"><button class="btn btn-outline-primary filtre active px-4" data-categorie="all">Tous</button><button class="btn btn-outline-primary filtre px-4" data-categorie="premium">Premium</button><button class="btn btn-outline-primary filtre px-4" data-categorie="vegetarien">Végétarien</button><button class="btn btn-outline-primary filtre px-4" data-categorie="enfant">Enfant</button></div><div id="grilleMenus" class="row g-4"></div></div></section>
+  <section class="py-5 bg-light"><div class="container"><h2 class="section-title text-center mb-5">À la Carte (16,50 €)</h2><div id="grilleCarte" class="row justify-content-center g-4"></div></div></section>
+</main>
+<%- include('partials/footer', { extraScripts: [] }) %>

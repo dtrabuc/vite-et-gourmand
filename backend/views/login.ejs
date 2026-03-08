@@ -1,0 +1,42 @@
+<%- include('partials/head', { title: 'Connexion - Vite & Gourmand', bodyClass: 'bg-light' }) %>
+<%- include('partials/header', { page: 'login' }) %>
+<main class="flex-grow-1 py-5">
+  <div class="container">
+    <div id="notificationArea" class="mx-auto mb-4" style="max-width:960px;"></div>
+    <div class="row g-4 justify-content-center">
+      <div class="col-lg-5">
+        <div class="card shadow-lg border-0 h-100"><div class="card-body p-4 p-md-5">
+          <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-2 mb-3">Déjà client ?</span>
+          <h1 class="h2 text-primary fw-bold mb-3">Connexion</h1>
+          <p class="text-muted">Accède à ton espace personnel et retrouve tes commandes.</p>
+          <form id="formLogin" novalidate>
+            <div class="mb-3"><label class="form-label" for="loginEmail">Email</label><input type="email" class="form-control" id="loginEmail" required></div>
+            <div class="mb-4"><label class="form-label" for="loginPassword">Mot de passe</label><input type="password" class="form-control" id="loginPassword" required></div>
+            <button type="submit" class="btn btn-primary w-100 btn-lg">Se connecter</button>
+          </form>
+          <div class="alert alert-secondary small mt-4 mb-0">Compte de démonstration : <strong>client@vite-gourmand.local</strong> / <strong>Client123!</strong></div>
+        </div></div>
+      </div>
+      <div class="col-lg-7">
+        <div class="card shadow-lg border-0 h-100"><div class="card-body p-4 p-md-5">
+          <span class="badge bg-dark-subtle text-dark border rounded-pill px-3 py-2 mb-3">Nouveau client</span>
+          <h2 class="h2 text-primary fw-bold mb-3">Créer un compte</h2>
+          <p class="text-muted">Ce formulaire crée uniquement un compte utilisateur standard dans PostgreSQL. Les droits d’administration restent réservés au back-office.</p>
+          <form id="formRegister" novalidate>
+            <div class="row g-3">
+              <div class="col-md-6"><label class="form-label" for="registerFirstName">Prénom</label><input type="text" class="form-control" id="registerFirstName"></div>
+              <div class="col-md-6"><label class="form-label" for="registerLastName">Nom</label><input type="text" class="form-control" id="registerLastName"></div>
+              <div class="col-md-6"><label class="form-label" for="registerUsername">Nom d'utilisateur</label><input type="text" class="form-control" id="registerUsername" required></div>
+              <div class="col-md-6"><label class="form-label" for="registerEmail">Email</label><input type="email" class="form-control" id="registerEmail" required></div>
+              <div class="col-md-6"><label class="form-label" for="registerPassword">Mot de passe</label><input type="password" class="form-control" id="registerPassword" required></div>
+              <div class="col-md-6"><label class="form-label" for="registerPasswordConfirm">Confirmer le mot de passe</label><input type="password" class="form-control" id="registerPasswordConfirm" required></div>
+            </div>
+            <div class="form-text mt-3">Minimum 8 caractères, avec au moins une majuscule, une minuscule et un chiffre.</div>
+            <button type="submit" class="btn btn-outline-primary w-100 btn-lg mt-4">Créer mon compte</button>
+          </form>
+        </div></div>
+      </div>
+    </div>
+  </div>
+</main>
+<%- include('partials/footer', { extraScripts: [] }) %>

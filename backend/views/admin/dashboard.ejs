@@ -1,0 +1,60 @@
+<%- include('../partials/head', { title: 'Administration - Dashboard', bodyClass: 'bg-light' }) %>
+<%- include('../partials/header', { page: 'admin-dashboard' }) %>
+
+<main class="flex-grow-1 py-5">
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+      <div>
+        <span class="badge bg-dark-subtle text-primary border border-primary-subtle px-3 py-2 rounded-pill">Administration</span>
+        <h1 class="h2 text-primary fw-bold mt-3 mb-1">Tableau de bord</h1>
+        <p class="text-muted mb-0">Vue synthétique du back-office sans casser la charte Bootstrap du front.</p>
+      </div>
+      <button class="btn btn-outline-primary" id="adminLogoutBtn">Déconnexion admin</button>
+    </div>
+
+    <div class="row g-4 mb-4" id="adminStats"></div>
+
+    <div class="row g-4">
+      <div class="col-lg-6">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-body">
+            <h2 class="h4 text-primary mb-3">Dernières commandes</h2>
+            <div class="table-responsive">
+              <table class="table align-middle">
+                <thead class="table-light">
+                  <tr><th>Réf</th><th>Client</th><th>Total</th><th>Statut</th></tr>
+                </thead>
+                <tbody id="adminOrdersTable"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-body">
+            <h2 class="h4 text-primary mb-3">Avis récents</h2>
+            <div id="adminReviewsList" class="d-grid gap-3"></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-12">
+        <div class="card shadow-sm border-0">
+          <div class="card-body">
+            <h2 class="h4 text-primary mb-3">Journal applicatif</h2>
+            <div class="table-responsive">
+              <table class="table align-middle">
+                <thead class="table-light">
+                  <tr><th>Date</th><th>Niveau</th><th>Action</th><th>Message</th></tr>
+                </thead>
+                <tbody id="adminLogsTable"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<%- include('../partials/footer', { extraScripts: ['/js/admin.js'] }) %>

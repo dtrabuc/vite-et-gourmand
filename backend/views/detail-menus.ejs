@@ -1,0 +1,7 @@
+<%- include('partials/head', { title: 'Détails des Menus - Vite & Gourmand', bodyClass: '' }) %>
+<%- include('partials/header', { page: 'detail-menus' }) %>
+<main class="flex-grow-1">
+  <section class="hero py-5 text-center text-white" style="background:linear-gradient(rgba(0,0,0,.45),rgba(0,0,0,.45)),url('https://images.unsplash.com/photo-1559339352-11d035aa65de?w=1600') center/cover;"><div class="container"><h1 class="display-3 fw-bold mb-4">Détails des Menus</h1><p class="lead mb-0">Entrées, plats, desserts et options disponibles</p></div></section>
+  <section class="py-5"><div class="container"><h2 class="section-title display-5 text-center mb-5">Nos menus en détail</h2><div id="detailMenus" class="row g-4"></div></div></section>
+</main>
+<%- include('partials/footer', { extraScripts: [] }) %>

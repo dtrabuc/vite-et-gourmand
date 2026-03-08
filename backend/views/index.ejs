@@ -1,0 +1,57 @@
+<%- include('partials/head', { title: 'Accueil - Vite & Gourmand', bodyClass: '' }) %>
+<%- include('partials/header', { page: 'index' }) %>
+
+<main class="flex-grow-1">
+  <section class="hero py-5 text-center text-white d-flex align-items-center" style="min-height:60vh;background:linear-gradient(rgba(0,0,0,.45),rgba(0,0,0,.45)),url('https://images.unsplash.com/photo-1555244162-803834f70033?w=1600') center/cover;">
+    <div class="container">
+      <h1 class="display-3 fw-bold mb-4">L'excellence traiteur à Bordeaux</h1>
+      <p class="lead fs-4 mb-5">Des menus évolutifs, une équipe expérimentée et des commandes simplifiées en ligne.</p>
+      <div class="d-flex justify-content-center gap-3 flex-wrap">
+        <a href="/menus.html" class="btn btn-light btn-lg text-primary fw-bold shadow">Découvrir les menus</a>
+        <a href="/commander.html" class="btn btn-primary btn-lg fw-bold shadow">Commander</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="py-5 bg-white">
+    <div class="container">
+      <div class="row g-4 text-center">
+        <div class="col-md-4">
+          <div class="card h-100 border-0 shadow-sm p-4">
+            <i class="fas fa-user-tie text-primary display-5 mb-3"></i>
+            <h2 class="h4 fw-bold">Professionnalisme</h2>
+            <p class="text-muted mb-0">Une équipe habituée aux événements privés, associatifs et professionnels depuis plus de 25 ans.</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card h-100 border-0 shadow-sm p-4">
+            <i class="fas fa-seedling text-success display-5 mb-3"></i>
+            <h2 class="h4 fw-bold">Menus variés</h2>
+            <p class="text-muted mb-0">Thèmes, régimes alimentaires, allergènes et conditions du menu sont clairement indiqués.</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card h-100 border-0 shadow-sm p-4">
+            <i class="fas fa-truck text-warning display-5 mb-3"></i>
+            <h2 class="h4 fw-bold">Commande simplifiée</h2>
+            <p class="text-muted mb-0">Le site vitrine et l'API travaillent ensemble pour afficher les menus, gérer les comptes et les commandes.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="py-5 bg-light">
+    <div class="container">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+        <div>
+          <h2 class="text-primary fw-bold mb-1">Avis clients validés</h2>
+          <p class="text-muted mb-0">Ces avis sont chargés depuis MongoDB via l'API publique.</p>
+        </div>
+      </div>
+      <div id="avisClients" class="row g-4"></div>
+    </div>
+  </section>
+</main>
+
+<%- include('partials/footer', { extraScripts: [] }) %>

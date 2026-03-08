@@ -1,0 +1,34 @@
+<%- include('partials/head', { title: 'Mon compte - Vite & Gourmand', bodyClass: '' }) %>
+<%- include('partials/header', { page: 'compte' }) %>
+
+<main class="flex-grow-1 py-5 bg-light">
+  <div class="container">
+    <div id="notificationArea" class="mb-3"></div>
+    <div class="row g-4">
+      <div class="col-lg-4">
+        <div class="card p-4 shadow-sm border-0 text-center h-100">
+          <div class="display-1 text-primary mb-3">👤</div>
+          <h1 class="h3 mb-1" id="compteNom">Mon compte</h1>
+          <p class="text-muted mb-2" id="compteRole">Profil utilisateur chargé depuis PostgreSQL</p>
+          <p class="small text-muted mb-4">Tes commandes sont récupérées via l’API sécurisée.</p>
+          <button class="btn btn-outline-danger w-100" id="logoutBtn" type="button">Déconnexion</button>
+        </div>
+      </div>
+      <div class="col-lg-8">
+        <div class="card p-4 shadow-sm border-0">
+          <h2 class="h3 text-primary mb-4">Mes commandes</h2>
+          <div class="table-responsive">
+            <table class="table table-hover align-middle">
+              <thead class="table-light">
+                <tr><th>Réf</th><th>Formule</th><th>Date</th><th>Total</th><th>Statut</th></tr>
+              </thead>
+              <tbody id="tableCommandes"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<%- include('partials/footer', { extraScripts: [] }) %>

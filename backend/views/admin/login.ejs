@@ -1,0 +1,32 @@
+<%- include('../partials/head', { title: 'Administration - Connexion', bodyClass: 'bg-light' }) %>
+<%- include('../partials/header', { page: 'admin-login' }) %>
+
+<main class="flex-grow-1 d-flex align-items-center py-5">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-5">
+        <div class="card shadow-lg border-0 p-4 p-md-5">
+          <div class="text-center mb-4">
+            <span class="badge bg-dark-subtle text-primary border border-primary-subtle px-3 py-2 rounded-pill">Accès isolé</span>
+            <h1 class="h2 text-primary fw-bold mt-3 mb-2">Connexion administration</h1>
+            <p class="text-muted mb-0">Espace réservé au personnel administrateur.</p>
+          </div>
+          <form id="adminLoginForm">
+            <div class="mb-3">
+              <label class="form-label" for="adminEmail">Email administrateur</label>
+              <input type="email" class="form-control" id="adminEmail" placeholder="admin@test.com" required />
+            </div>
+            <div class="mb-4">
+              <label class="form-label" for="adminPassword">Mot de passe</label>
+              <input type="password" class="form-control" id="adminPassword" required />
+            </div>
+            <button type="submit" class="btn btn-primary w-100 btn-lg">Connexion</button>
+          </form>
+          <div class="alert alert-secondary small mt-4 mb-0">Compte de démonstration seedé au démarrage : <strong>admin@test.com</strong> / <strong>Admin1234!</strong></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<%- include('../partials/footer', { extraScripts: ['/js/admin.js'] }) %>

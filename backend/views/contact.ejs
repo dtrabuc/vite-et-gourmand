@@ -1,0 +1,38 @@
+<%- include('partials/head', { title: 'Contact - Vite & Gourmand', bodyClass: '' }) %>
+<%- include('partials/header', { page: 'contact' }) %>
+
+<main class="flex-grow-1 py-5 bg-light">
+  <div class="container">
+    <div class="row g-4 g-lg-5">
+      <div class="col-lg-8">
+        <div class="card shadow-lg border-0">
+          <div class="card-body p-4 p-md-5">
+            <h1 class="h2 section-title mb-4">Contact</h1>
+            <p class="text-muted">Page vitrine minimale conservée côté front. Tu peux brancher ici un futur POST /api/contact.</p>
+            <form>
+              <div class="row g-3">
+                <div class="col-md-6"><label class="form-label fw-bold">Nom</label><input type="text" class="form-control"></div>
+                <div class="col-md-6"><label class="form-label fw-bold">Email</label><input type="email" class="form-control"></div>
+                <div class="col-12"><label class="form-label fw-bold">Sujet</label><input type="text" class="form-control"></div>
+                <div class="col-12"><label class="form-label fw-bold">Message</label><textarea class="form-control" rows="6"></textarea></div>
+                <div class="col-12"><button type="button" class="btn btn-primary w-100 btn-lg fw-bold" disabled>Endpoint contact à brancher</button></div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="card h-100 shadow-lg border-0">
+          <div class="card-body text-center p-4 p-md-5">
+            <h2 class="h4 mb-4 text-primary fw-bold">Nos coordonnées</h2>
+            <p class="mb-3 fs-5"><strong>📍 Bordeaux</strong></p>
+            <p class="mb-3 fs-5"><strong>📞</strong> 05 56 00 00 00</p>
+            <p class="fs-5"><strong>✉️</strong> contact@vitegourmand.fr</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<%- include('partials/footer', { extraScripts: [] }) %>
