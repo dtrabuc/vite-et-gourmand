@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Administration - Dashboard</title>
+  <link href="./assets/css/bootstrap.min.css" rel="stylesheet">
+  <link href="./assets/css/style.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+</head>
+<body class="d-flex flex-column min-vh-100 bg-light" data-page="admin-dashboard">
+  <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
+    <div class="container">
+      <a class="navbar-brand text-primary fw-bold" href="./index.html">
+        <i class="fas fa-utensils me-2"></i>Vite &amp; Gourmand
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Basculer la navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto align-items-lg-center">
+          <li class="nav-item"><a class="nav-link" href="./index.html">Accueil</a></li>
+          <li class="nav-item"><a class="nav-link" href="./menus.html">Menus</a></li>
+          <li class="nav-item"><a class="nav-link" href="./commander.html">Commander</a></li>
+          <li class="nav-item"><a class="nav-link" href="./contact.html">Contact</a></li>
+          <li class="nav-item"><a class="nav-link" href="./login.html">Espace client</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <main class="flex-grow-1 py-5 bg-light">
+    <div class="container">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+        <div>
+          <span class="badge bg-dark-subtle text-primary border border-primary-subtle px-3 py-2 rounded-pill">Administration</span>
+          <h1 class="h2 text-primary fw-bold mt-3 mb-1">Tableau de bord</h1>
+          <p class="text-muted mb-0">Vue d ensemble du suivi commercial, des commandes recentes et des retours clients.</p>
+        </div>
+        <button class="btn btn-outline-primary" id="adminLogoutBtn">Deconnexion admin</button>
+      </div>
+
+      <div class="row g-4 mb-4" id="adminStats"></div>
+
+      <div class="row g-4">
+        <div class="col-lg-6">
+          <div class="card shadow-sm border-0 h-100">
+            <div class="card-body">
+              <h2 class="h4 text-primary mb-3">Dernieres commandes</h2>
+              <div class="table-responsive">
+                <table class="table align-middle">
+                  <thead class="table-light">
+                    <tr><th>Reference</th><th>Client</th><th>Total</th><th>Statut</th></tr>
+                  </thead>
+                  <tbody id="adminOrdersTable"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="card shadow-sm border-0 h-100">
+            <div class="card-body">
+              <h2 class="h4 text-primary mb-3">Avis recents</h2>
+              <div id="adminReviewsList" class="d-grid gap-3"></div>
+            </div>
+          </div>
+        </div>
+        <div class="col-12">
+          <div class="card shadow-sm border-0">
+            <div class="card-body">
+              <h2 class="h4 text-primary mb-3">Journal d activite</h2>
+              <div class="table-responsive">
+                <table class="table align-middle">
+                  <thead class="table-light">
+                    <tr><th>Date</th><th>Niveau</th><th>Action</th><th>Message</th></tr>
+                  </thead>
+                  <tbody id="adminLogsTable"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="bg-primary text-white mt-auto pt-5 pb-4">
+    <div class="container">
+      <div class="row g-4">
+        <div class="col-md-4">
+          <h5 class="fw-bold">Vite &amp; Gourmand</h5>
+          <p class="small mb-0">Traiteur evenementiel a Bordeaux. Menus sur mesure, livraison et accompagnement pour vos mariages, receptions privees et evenements professionnels.</p>
+        </div>
+        <div class="col-md-4">
+          <h6 class="fw-bold">Horaires</h6>
+          <ul class="list-unstyled small mb-0">
+            <li>Lundi au vendredi : 09h00 - 18h00</li>
+            <li>Samedi : 10h00 - 16h00</li>
+            <li>Dimanche : sur reservation</li>
+          </ul>
+        </div>
+        <div class="col-md-4">
+          <h6 class="fw-bold">Informations</h6>
+          <ul class="list-unstyled small mb-0">
+            <li><a class="link-light text-decoration-none" href="./contact.html">Contact</a></li>
+            <li><a class="link-light text-decoration-none" href="./menus.html">Nos formules</a></li>
+            <li><a class="link-light text-decoration-none" href="./login.html">Espace client</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="./assets/js/api.js"></script>
+  <script src="./assets/js/admin.js"></script>
+</body>
+</html>
