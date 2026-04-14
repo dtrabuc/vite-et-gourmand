@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact - Vite &amp; Gourmand</title>
+  <link href="./assets/css/bootstrap.min.css" rel="stylesheet">
+  <link href="./assets/css/style.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+</head>
+<body class="d-flex flex-column min-vh-100 bg-light" data-page="contact">
+  <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
+    <div class="container">
+      <a class="navbar-brand text-primary fw-bold" href="./index.html">
+        <i class="fas fa-utensils me-2"></i>Vite &amp; Gourmand
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Basculer la navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto align-items-lg-center">
+          <li class="nav-item"><a class="nav-link" href="./index.html">Accueil</a></li>
+          <li class="nav-item"><a class="nav-link" href="./menus.html">Menus</a></li>
+          <li class="nav-item"><a class="nav-link" href="./commander.html">Commander</a></li>
+          <li class="nav-item"><a class="nav-link active" href="./contact.html">Contact</a></li>
+          <li class="nav-item"><a class="nav-link" href="./login.html">Espace client</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <main class="flex-grow-1 py-5 bg-light">
+    <div class="container">
+      <div id="notificationArea" class="mb-4"></div>
+      <div class="row g-4 g-lg-5">
+        <div class="col-lg-8">
+          <div class="card shadow-lg border-0">
+            <div class="card-body p-4 p-md-5">
+              <h1 class="h2 text-primary fw-bold mb-3">Parlez-nous de votre evenement</h1>
+              <p class="text-muted mb-4">Mariage, cocktail, anniversaire, repas d equipe ou demande ponctuelle : indiquez-nous votre besoin et nous vous recontactons rapidement.</p>
+              <form id="contactForm">
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <label class="form-label fw-bold" for="contactNom">Nom</label>
+                    <input type="text" class="form-control" id="contactNom" required>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label fw-bold" for="contactEmail">Email</label>
+                    <input type="email" class="form-control" id="contactEmail" required>
+                  </div>
+                  <div class="col-12">
+                    <label class="form-label fw-bold" for="contactSujet">Sujet</label>
+                    <input type="text" class="form-control" id="contactSujet" placeholder="Exemple : Cocktail entreprise pour 40 personnes" required>
+                  </div>
+                  <div class="col-12">
+                    <label class="form-label fw-bold" for="contactMessage">Message</label>
+                    <textarea class="form-control" id="contactMessage" rows="6" placeholder="Date souhaitee, lieu, nombre de convives, style de prestation..." required></textarea>
+                  </div>
+                  <div class="col-12">
+                    <button type="submit" class="btn btn-primary w-100 btn-lg fw-bold">Envoyer la demande</button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="card h-100 shadow-lg border-0">
+            <div class="card-body p-4 p-md-5">
+              <h2 class="h4 mb-4 text-primary fw-bold">Coordonnees</h2>
+              <p class="mb-3"><strong>Adresse :</strong><br>12 quai des Chartrons, 33000 Bordeaux</p>
+              <p class="mb-3"><strong>Telephone :</strong><br>05 56 00 00 00</p>
+              <p class="mb-4"><strong>Email :</strong><br>contact@vitegourmand.fr</p>
+              <h3 class="h6 text-primary fw-bold">Zone d intervention</h3>
+              <p class="text-muted mb-0">Bordeaux, metropole bordelaise et prestations ponctuelles dans le reste de la Gironde.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <a href="./admin-login.html" class="admin-access-btn btn btn-primary shadow" aria-label="Acces administrateur" title="Acces administrateur">
+    <i class="fas fa-user-shield"></i>
+  </a>
+  <footer class="bg-primary text-white mt-auto pt-5 pb-4">
+    <div class="container">
+      <div class="row g-4">
+        <div class="col-md-4">
+          <h5 class="fw-bold">Vite &amp; Gourmand</h5>
+          <p class="small mb-0">Traiteur evenementiel a Bordeaux. Menus sur mesure, livraison et accompagnement pour vos mariages, receptions privees et evenements professionnels.</p>
+        </div>
+        <div class="col-md-4">
+          <h6 class="fw-bold">Horaires</h6>
+          <ul class="list-unstyled small mb-0">
+            <li>Lundi au vendredi : 09h00 - 18h00</li>
+            <li>Samedi : 10h00 - 16h00</li>
+            <li>Dimanche : sur reservation</li>
+          </ul>
+        </div>
+        <div class="col-md-4">
+          <h6 class="fw-bold">Informations</h6>
+          <ul class="list-unstyled small mb-0">
+            <li><a class="link-light text-decoration-none" href="./contact.html">Contact</a></li>
+            <li><a class="link-light text-decoration-none" href="./menus.html">Nos formules</a></li>
+            <li><a class="link-light text-decoration-none" href="./admin-login.html">Administration</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="./assets/js/api.js"></script>
+  <script src="./assets/js/script.js"></script>
+</body>
+</html>
