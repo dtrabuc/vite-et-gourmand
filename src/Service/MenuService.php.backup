@@ -1,0 +1,106 @@
+<?php
+namespace Src\Service;
+
+use Src\Entity\Menu;
+use Src\Repository\MenuRepository;
+
+class MenuService
+{
+    private MenuRepository $menuRepository;
+
+    public function __construct(MenuRepository $menuRepository)
+    {
+        $this->menuRepository = $menuRepository;
+    }
+
+    public function getAllMenus(): array
+    {
+        return $this->menuRepository->findAll();
+    }
+
+    public function getMenuById(int $id): ?Menu
+    {
+        return $this->menuRepository->findById($id);
+    }
+
+    public function filterMenus(array $filters): array
+    {
+        return $this->menuRepository->filter($filters);
+    }
+
+    public function createMenu(array $data): int
+    {
+        // Validate data
+        if (empty($data['title'])) {
+            throw new \InvalidArgumentException('Le titre est requis');
+        }
+        if (empty($data['description'])) {
+            throw new \InvalidArgumentException('La description est requise');
+        }
+        if (empty($data['theme'])) {
+            throw new \InvalidArgumentException('Le thème est requis');
+        }
+        if (empty($data['min_people']) || !is_numeric($data['min_people']) || (int)$data['min_people'] < 1) {
+            throw new \InvalidArgumentException('Le nombre minimum de personnes doit être un nombre positif');
+        }
+        if (empty($data['base_price']) || !is_numeric($data['base_price']) || (float)$data['base_price'] < 0) {
+            throw new \InvalidArgumentException('Le prix de base doit être un nombre positif');
+        }
+        if (empty($data['conditions'])) {
+            throw new \InvalidArgumentException('Les conditions sont requises');
+        }
+        if (!isset($data['available_stock']) || !is_numeric($data['available_stock']) || (int)$data['available_stock'] < 0) {
+            throw new \InvalidArgumentException('Le stock disponible doit être un nombre positif ou zéro');
+        }
+
+        $menu = new Menu();
+        $menu->setTitle($data['title']);
+        $menu->setDescription($data['description']);
+        $menu->setTheme($data['theme']);
+        $menu->setMinPeople((int)$data['min_people']);
+        $menu->setBasePrice((float)$data['base_price']);
+        $menu->setConditions($data['conditions']);
+        $menu->setAvailableStock((int)$data['available_stock']);
+        // createdAt and updatedAt will be set by the repository (default to current timestamp)
+
+        return $this->menuRepository->create($menu);
+    }
+
+    public function updateMenu(int $id, array $data): void
+    {
+        // Validate data (same as create but allow partial updates)
+        $menu = $this->menuRepository->findById($id);
+        if ($menu === null) {
+            throw new \InvalidArgumentException('Menu non trouvé');
+        }
+
+        if (isset($data['title']) && $data['title'] !== '') {
+            $menu->setTitle($data['title']);
+        }
+        if (isset($data['description']) && $data['description'] !== '') {
+            $menu->setDescription($data['description']);
+        }
+        if (isset($data['theme']) && $data['theme'] !== '') {
+            $menu->setTheme($data['theme']);
+        }
+        if (isset($data['min_people']) && is_numeric($data['min_people']) && (int)$data['min_people'] >= 1) {
+            $menu->setMinPeople((int)$data['min_people']);
+        }
+        if (isset($data['base_price']) && is_numeric($data['base_price']) && (float)$data['base_price'] >= 0) {
+            $menu->setBasePrice((float)$data['base_price']);
+        }
+        if (isset($data['conditions']) && $data['conditions'] !== '') {
+            $menu->setConditions($data['conditions']);
+        }
+        if (isset($data['available_stock']) && is_numeric($data['available_stock']) && (int)$data['available_stock'] >= 0) {
+            $menu->setAvailableStock((int)$data['available_stock']);
+        }
+
+        $this->menuRepository->update($menu);
+    }
+
+    public function deleteMenu(int $id): void
+    {
+        $this->menuRepository->delete($id);
+    }
+}
