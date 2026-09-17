@@ -1,8 +1,8 @@
 <?php
-namespace Src\Service;
+namespace App\Service;
 
-use Src\Entity\User;
-use Src\Repository\UserRepository;
+use App\Entity\User;
+use App\Repository\UserRepository;
 
 class AuthService
 {
@@ -57,7 +57,8 @@ class AuthService
         $userData = [
             'email' => $data['email'],
             'password' => $hashedPassword,
-            'role' => $data['role'] ?? 'user',
+            // Le rôle est imposé côté serveur lors d'une inscription publique.
+            'role' => 'user',
             'first_name' => $data['first_name'],
             'last_name' => $data['last_name'],
             'phone' => $data['phone'],

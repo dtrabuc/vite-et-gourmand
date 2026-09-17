@@ -1,7 +1,7 @@
 <?php
-namespace Src\Middleware;
+namespace App\Middleware;
 
-use Src\Service\CacheService;
+use App\Service\CacheService;
 
 class Security
 {

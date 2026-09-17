@@ -3,84 +3,114 @@ namespace App\Core;
 
 class Router
 {
-  private $routes;
-  public function __construct()
-  {
-    $this->routes = [];
+    private $routes;
+    private $config;
 
-  }
-
-  public static function redirect($path = '')
-  {
-    header("Location: " . ROOT . "/" . $path);
-    die;
-  }
-
-
-  public function goRoute($router)
-  {
-    $method = $_SERVER['REQUEST_METHOD'];
-    $uri = BASE_URL . $_SERVER['REQUEST_URI'];
-
-    $getRoute = $router->getRoute($method, $uri);
-    if ($getRoute == null) {
-      $this->redirect('error');
+    public function __construct(array $config)
+    {
+        $this->config = $config;
+        $this->routes = [];
     }
-    $controller = new $getRoute['controller']();
-    $action = $getRoute['action'];
-    $controller->$action($getRoute['params']);
 
-  }
-  public function addRoute(string $method, string $path, string $controller, string $action)
-  {
-    $this->routes[] = [
-      'method' => $method,
-      'path' => $path,
-      'controller' => 'App\Controller\\' . $controller,
-      'action' => $action,
-    ];
+    public function addRoute(string $method, string $uri, string $controllerAction, array $middlewares = []): void
+    {
+        $this->routes[] = [
+            'method' => $method,
+            'uri' => $uri,
+            'controller_action' => $controllerAction,
+            'middlewares' => $middlewares,
+        ];
+    }
 
-  }
-  private function getRoute(string $method, string $uri): ?array
-  {
-    foreach ($this->routes as $route) {
-      $routeParts = explode('/', $route['path']);
-      $uriParts = explode('/', $uri);
+    public function setRoutes(array $routes): void
+    {
+        $this->routes = $routes;
+    }
 
-      if (
-        $route['method'] === $method && count($routeParts) === count($uriParts)
-      ) {
-        $params = [];
-        $paramName = null;
-        $match = true;
+    public function dispatch(): void
+    {
+        $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+        $method = $_SERVER['REQUEST_METHOD'];
 
-        foreach ($routeParts as $index => $part) {
+        foreach ($this->routes as $route) {
+            // Route format: [HTTP_METHOD, URI, CONTROLLER@ACTION, MIDDLEWARES]
+            $routeMethod = $route[0];
+            $routeUri = $route[1];
+            $controllerAction = $route[2];
+            $middlewares = $route[3] ?? [];
 
-          if (isset($part[0]) && $part[0] === '{' && $part[strlen($part) - 1] === '}') {
-            $paramName = trim($part, '{}');
-            $params[$paramName] = $uriParts[$index];
+            // Convert route uri pattern to regex
+            // Example: /users/{id} -> #^/users/([^/]+)$#
+            $pattern = '#^' . preg_replace('/\{([a-zA-Z0-9_]+)\}/', '([^/]+)', $routeUri) . '$#';
 
-            if (str_contains($params[$paramName], '?')) {
-              $params[$paramName] = strstr($params[$paramName], '?', true);
+            if (preg_match($pattern, $uri, $matches) && strtoupper($routeMethod) === $method) {
+                // Remove the first match (the entire string)
+                array_shift($matches);
+
+                // Split controller@action
+                [$controllerName, $actionName] = explode('@', $controllerAction);
+                error_log("DEBUG: controllerName='$controllerName', actionName='$actionName'");
+
+                // Apply middlewares
+                foreach ($middlewares as $middleware) {
+                    $this->applyMiddleware($middleware);
+                }
+
+                // Execute controller action
+                $this->executeControllerAction($controllerAction, $matches);
+
+                return;
             }
-
-          } elseif ($part !== $uriParts[$index]) {
-            $match = false;
-            break;
-          }
         }
 
-        if ($match) {
-          return [
-            'method' => $route['method'],
-            'controller' => $route['controller'],
-            'action' => $route['action'],
-            'params' => $params ?? null,
-          ];
-        }
-      }
+        // If no route matched, throw 404
+        http_response_code(404);
+        echo 'Not Found';
     }
 
-    return null;
-  }
+    private function applyMiddleware(string $middleware): void
+    {
+        $middlewarePath = __DIR__ . '/../../App/Middleware/' . $middleware . '.php';
+        if (file_exists($middlewarePath)) {
+            require_once $middlewarePath;
+            // First, try to instantiate a class with the given name in the App\Middleware namespace
+            $className = '\\App\\Middleware\\' . $middleware;
+            if (class_exists($className)) {
+                $instance = new $className();
+                $instance();
+            } elseif (function_exists($middleware)) {
+                $middleware();
+            }
+        }
+    }
+
+    private function executeControllerAction(string $controllerAction, array $params): void
+    {
+        // Split controller@action
+        [$controllerName, $actionName] = explode('@', $controllerAction);
+
+        // Build the controller class name
+        $controllerClass = '\\App\\Controller\\' . $controllerName;
+        error_log("DEBUG: Trying to load controller class (App): $controllerClass");
+
+        // Check if the controller class exists
+        if (!class_exists($controllerClass)) {
+            http_response_code(500);
+            echo 'Controller not found: ' . $controllerClass;
+            return;
+        }
+
+        // Instantiate the controller
+        $controller = new $controllerClass();
+
+        // Check if the action method exists
+        if (!method_exists($controller, $actionName)) {
+            http_response_code(500);
+            echo 'Method not found: ' . $actionName . ' in ' . $controllerClass;
+            return;
+        }
+
+        // Call the action with parameters
+        call_user_func_array([$controller, $actionName], $params);
+    }
 }

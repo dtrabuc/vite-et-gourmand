@@ -1,8 +1,8 @@
 <?php
-namespace Src\Repository;
+namespace App\Repository;
 
-use Src\Entity\Menu;
-use Src\Database\Database;
+use App\Entity\Menu;
+use App\Core\Database;
 
 class MenuRepository
 {

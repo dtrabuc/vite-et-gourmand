@@ -31,7 +31,7 @@ $config = require __DIR__ . '/../config/app.php';
 session_start();
 
 // Initialize router
-$router = new \Src\Router\Router($config);
+$router = new \App\Core\Router($config);
 
 // Define routes (could be loaded from a separate file)
 $routes = require __DIR__ . '/../config/routes.php';

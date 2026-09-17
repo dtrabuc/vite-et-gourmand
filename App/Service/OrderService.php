@@ -1,13 +1,13 @@
 <?php
-namespace Src\Service;
+namespace App\Service;
 
-use Src\Entity\Order;
-use Src\Entity\User;
-use Src\Entity\Menu;
-use Src\Repository\OrderRepository;
-use Src\Repository\UserRepository;
-use Src\Repository\MenuRepository;
-use Src\Service\MailService;
+use App\Entity\Order;
+use App\Entity\User;
+use App\Entity\Menu;
+use App\Repository\OrderRepository;
+use App\Repository\UserRepository;
+use App\Repository\MenuRepository;
+use App\Service\MailService;
 
 class OrderService
 {

@@ -1,8 +1,8 @@
 <?php
-namespace Src\Repository;
+namespace App\Repository;
 
-use Src\Entity\User;
-use Src\Database\Database;
+use App\Entity\User;
+use App\Core\Database;
 
 class UserRepository
 {

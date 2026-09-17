@@ -1,15 +1,14 @@
 <?php
-namespace Src\Repository;
+namespace App\Repository;
 
-use Src\Entity\Comment;
-use Src\Database\Database;
+use App\Entity\Comment;
+use App\Core\Database;
 
 class CommentRepository
 {
     public function findAllValidated(): array
     {
-        $mongo = Database::getMongo();
-        $database = $mongo->selectDatabase('viteetgourmand');
+        $database = Database::getMongoDatabase();
         $collection = $database->selectCollection('comments');
 
         $cursor = $collection->find(['isValidated' => true]);
@@ -17,7 +16,7 @@ class CommentRepository
         $reviews = [];
         foreach ($cursor as $doc) {
             // Get user details from MariaDB
-            $userRepository = new \Src\Repository\UserRepository();
+            $userRepository = new \App\Repository\UserRepository();
             $user = $userRepository->findById((int)$doc['userId']);
 
             $reviews[] = [
@@ -28,14 +27,14 @@ class CommentRepository
                 'comment' => $doc['comment'],
                 'is_validated' => (bool)$doc['isValidated'],
                 'created_at' => $doc['createdAt'] instanceof \MongoDB\BSON\UTCDateTime
-                    ? (new \DateTimeImmutable())->setTimestamp($doc['createdAt']->getSeconds() / 1000)
+                    ? \DateTimeImmutable::createFromMutable($doc['createdAt']->toDateTime())
                     : null,
                 'updated_at' => $doc['updatedAt'] instanceof \MongoDB\BSON\UTCDateTime
-                    ? (new \DateTimeImmutable())->setTimestamp($doc['updatedAt']->getSeconds() / 1000)
+                    ? \DateTimeImmutable::createFromMutable($doc['updatedAt']->toDateTime())
                     : null,
                 'first_name' => $user !== null ? $user->getFirstName() : '',
                 'last_name' => $user !== null ? $user->getLastName() : '',
-                'user_name' => $user !== null ? $user->getFirstName() . ' ' . $user->getLastName() : '',
+                'user_name' => $user !== null ? $user->getFirstName() . ' ' . $user->getLastName() : ($doc['authorName'] ?? ''),
             ];
         }
 
@@ -44,8 +43,7 @@ class CommentRepository
 
     public function getHomepageReviews(): array
     {
-        $mongo = Database::getMongo();
-        $database = $mongo->selectDatabase('viteetgourmand');
+        $database = Database::getMongoDatabase();
         $collection = $database->selectCollection('comments');
 
         $cursor = $collection->find(['isValidated' => true])->sort(['createdAt' => -1])->limit(3);
@@ -53,7 +51,7 @@ class CommentRepository
         $reviews = [];
         foreach ($cursor as $doc) {
             // Get user details from MariaDB
-            $userRepository = new \Src\Repository\UserRepository();
+            $userRepository = new \App\Repository\UserRepository();
             $user = $userRepository->findById((int)$doc['userId']);
 
             $reviews[] = [
@@ -64,12 +62,12 @@ class CommentRepository
                 'comment' => $doc['comment'],
                 'is_validated' => (bool)$doc['isValidated'],
                 'created_at' => $doc['createdAt'] instanceof \MongoDB\BSON\UTCDateTime
-                    ? (new \DateTimeImmutable())->setTimestamp($doc['createdAt']->getSeconds() / 1000)
+                    ? \DateTimeImmutable::createFromMutable($doc['createdAt']->toDateTime())
                     : null,
                 'updated_at' => $doc['updatedAt'] instanceof \MongoDB\BSON\UTCDateTime
-                    ? (new \DateTimeImmutable())->setTimestamp($doc['updatedAt']->getSeconds() / 1000)
+                    ? \DateTimeImmutable::createFromMutable($doc['updatedAt']->toDateTime())
                     : null,
-                'first_name' => $user !== null ? $user->getFirstName() : '',
+                'first_name' => $user !== null ? $user->getFirstName() : ($doc['authorName'] ?? ''),
                 'last_name' => $user !== null ? $user->getLastName() : '',
             ];
         }
@@ -79,29 +77,36 @@ class CommentRepository
 
     public function create(array $data): int
     {
-        // For now, we'll still insert into MariaDB for compatibility with existing code.
-        // In the future, we should switch to MongoDB.
-        $pdo = Database::getPDO();
-        $stmt = $pdo->prepare('INSERT INTO comments (user_id, menu_id, rating, comment, is_validated)
-                               VALUES (:user_id, :menu_id, :rating, :comment, :is_validated)');
-        $stmt->execute([
-            'user_id' => $data['user_id'],
-            'menu_id' => $data['menu_id'] ?? null,
-            'rating' => $data['rating'],
-            'comment' => $data['comment'],
-            'is_validated' => $data['is_validated'] ?? 0,
-        ]);
+        $database = Database::getMongoDatabase();
+        $collection = $database->selectCollection('comments');
 
-        return (int)$pdo->lastInsertId();
+        $document = [
+            'userId' => (int)$data['user_id'],
+            'menuId' => $data['menu_id'] ?? null,
+            'rating' => (int)$data['rating'],
+            'comment' => $data['comment'],
+            'isValidated' => (bool)($data['is_validated'] ?? false),
+            'createdAt' => new \MongoDB\BSON\UTCDateTime(new \DateTimeImmutable()),
+            'updatedAt' => new \MongoDB\BSON\UTCDateTime(new \DateTimeImmutable())
+        ];
+
+        $result = $collection->insertOne($document);
+        return (int)$result->getInsertedCount();
     }
 
-    public function updateValidation(int $id, bool $isValidated): void
+    public function updateValidation(string $id, bool $isValidated): void
     {
-        $pdo = Database::getPDO();
-        $stmt = $pdo->prepare('UPDATE comments SET is_validated = :is_validated, updated_at = NOW() WHERE id = :id');
-        $stmt->execute([
-            'id' => $id,
-            'is_validated' => $isValidated ? 1 : 0,
-        ]);
+        $database = Database::getMongoDatabase();
+        $collection = $database->selectCollection('comments');
+
+        $filter = ['_id' => new \MongoDB\BSON\ObjectId((string)$id)];
+        $update = [
+            '$set' => [
+                'isValidated' => $isValidated,
+                'updatedAt' => new \MongoDB\BSON\UTCDateTime(new \DateTimeImmutable())
+            ]
+        ];
+
+        $collection->updateOne($filter, $update);
     }
 }

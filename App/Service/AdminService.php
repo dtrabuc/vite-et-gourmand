@@ -1,11 +1,11 @@
 <?php
-namespace Src\Service;
+namespace App\Service;
 
-use Src\Entity\User;
-use Src\Repository\UserRepository;
-use Src\Repository\OrderRepository;
-use Src\Repository\MenuRepository;
-use Src\Database\Database;
+use App\Entity\User;
+use App\Repository\UserRepository;
+use App\Repository\OrderRepository;
+use App\Repository\MenuRepository;
+use App\Core\Database;
 
 class AdminService
 {

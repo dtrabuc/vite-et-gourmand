@@ -2,8 +2,10 @@
 return [
     // Public routes
     ['GET', '/', 'PublicController@index', ['Security']],
-    ['GET', '/menus', 'PublicController@getMenus', ['Security']],
-    ['GET', '/menu/{id}', 'PublicController@getMenuById', ['Security']],
+    ['GET', '/menus', 'PublicController@menusPage', ['Security']],
+    ['GET', '/menus/{id}', 'PublicController@menuDetail', ['Security']],
+    ['GET', '/public/menus', 'PublicController@getMenus', ['Security']],
+    ['GET', '/public/menus/{id}', 'PublicController@getMenuById', ['Security']],
     ['GET', '/menus/filter', 'PublicController@filterMenus', ['Security']],
     ['GET', '/reviews/homepage', 'PublicController@getHomepageReviews', ['Security']],
     // NEW ENDPOINTS for frontend alignment
@@ -29,10 +31,7 @@ return [
 
     // Order routes
     ['GET', '/orders', 'OrderController@index', ['Security']],
-    ['GET', '/orders/new', 'OrderController@create', ['Security']], // Actually, we don't have a method for displaying the form. We'll need to add one or use a different controller.
-    // Let's assume we have a method for displaying the order form. We'll add it later if needed.
-    // For now, we'll map the form display to a new method, say 'new', but we don't have it.
-    // We'll skip and only have the processing route for now.
+    ['GET', '/orders/new', 'OrderController@new', ['Security']],
     ['POST', '/orders', 'OrderController@create', ['Security']],
     ['GET', '/orders/confirmation/{id}', 'OrderController@confirmation', ['Security']],
     ['PUT', '/orders/{id}/status', 'OrderController@updateStatus', ['Security']],

@@ -1,259 +1,234 @@
--- phpMyAdmin SQL Dump
--- version 5.2.1
--- https://www.phpmyadmin.net/
---
--- Hôte : localhost:3307
--- Généré le : sam. 12 sep. 2026 à 06:59
--- Version du serveur : 10.11.8-MariaDB-1:10.11.8+maria~ubu2204
--- Version de PHP : 8.5.10
+-- Vite & Gourmand — schéma MariaDB initial
+-- Import phpMyAdmin : sélectionner l'onglet « Importer », puis ce fichier.
+-- Prévu pour une base vierge. Il ne supprime aucune table existante.
+-- Encodage : UTF-8 / utf8mb4 ; moteur : InnoDB.
 
-SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
-START TRANSACTION;
-SET time_zone = "+00:00";
+CREATE DATABASE IF NOT EXISTS `vitegourmand`
+    DEFAULT CHARACTER SET utf8mb4
+    COLLATE utf8mb4_unicode_ci;
 
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
-/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!40101 SET NAMES utf8mb4 */;
-
---
--- Base de données : `vitegourmand`
---
-CREATE DATABASE IF NOT EXISTS `vitegourmand` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE `vitegourmand`;
 
--- --------------------------------------------------------
+-- ================================================================
+-- UTILISATEURS ET SÉCURITÉ (MariaDB)
+-- ================================================================
+CREATE TABLE IF NOT EXISTS `users` (
+    `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `email` VARCHAR(255) NOT NULL,
+    `password` VARCHAR(255) NOT NULL COMMENT 'Résultat de password_hash(), jamais le mot de passe en clair',
+    `role` ENUM('user', 'employee', 'admin') NOT NULL DEFAULT 'user',
+    `first_name` VARCHAR(100) NOT NULL,
+    `last_name` VARCHAR(100) NOT NULL,
+    `phone` VARCHAR(20) NOT NULL,
+    `gsm` VARCHAR(20) NOT NULL,
+    `address` VARCHAR(255) NOT NULL,
+    `failed_attempts` TINYINT UNSIGNED NOT NULL DEFAULT 0,
+    `locked_until` DATETIME NULL,
+    `reset_token_hash` CHAR(64) NULL COMMENT 'SHA-256 du jeton de réinitialisation',
+    `reset_token_expires_at` DATETIME NULL,
+    `is_active` TINYINT(1) NOT NULL DEFAULT 1,
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uq_users_email` (`email`),
+    KEY `idx_users_role_active` (`role`, `is_active`),
+    KEY `idx_users_reset_token` (`reset_token_hash`)
+) ENGINE=InnoDB;
 
---
--- Structure de la table `users`
---
+-- ================================================================
+-- CATALOGUE : un plat peut appartenir à plusieurs menus (MariaDB)
+-- ================================================================
+CREATE TABLE IF NOT EXISTS `menus` (
+    `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `title` VARCHAR(150) NOT NULL,
+    `description` TEXT NOT NULL,
+    `theme` VARCHAR(80) NOT NULL COMMENT 'Exemples : Noël, Pâques, classique, événement',
+    `dietary_regime` ENUM('classic', 'vegetarian', 'vegan', 'other') NOT NULL DEFAULT 'classic',
+    `min_people` SMALLINT UNSIGNED NOT NULL,
+    `base_price` DECIMAL(10,2) NOT NULL COMMENT 'Prix TTC par personne',
+    `conditions` TEXT NOT NULL,
+    `available_stock` SMALLINT UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Nombre de commandes encore possibles',
+    `is_active` TINYINT(1) NOT NULL DEFAULT 1,
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    KEY `idx_menus_catalogue` (`is_active`, `available_stock`),
+    KEY `idx_menus_theme` (`theme`),
+    KEY `idx_menus_regime` (`dietary_regime`),
+    KEY `idx_menus_price` (`base_price`),
+    KEY `idx_menus_min_people` (`min_people`)
+) ENGINE=InnoDB;
 
-CREATE TABLE `users` (
-  `id` int(11) NOT NULL,
-  `email` varchar(255) NOT NULL,
-  `password` varchar(255) NOT NULL,
-  `role` enum('user','employee','admin') NOT NULL DEFAULT 'user',
-  `first_name` varchar(100) NOT NULL,
-  `last_name` varchar(100) NOT NULL,
-  `phone` varchar(20) DEFAULT NULL,
-  `gsm` varchar(20) DEFAULT NULL,
-  `address` varchar(255) DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS `menu_images` (
+    `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `menu_id` INT UNSIGNED NOT NULL,
+    `path` VARCHAR(255) NOT NULL COMMENT 'Chemin relatif sous public/uploads',
+    `alt_text` VARCHAR(150) NOT NULL,
+    `position` TINYINT UNSIGNED NOT NULL DEFAULT 1,
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uq_menu_images_position` (`menu_id`, `position`),
+    CONSTRAINT `fk_menu_images_menu`
+        FOREIGN KEY (`menu_id`) REFERENCES `menus` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB;
 
---
--- Index pour les tables déchargées
---
+CREATE TABLE IF NOT EXISTS `dishes` (
+    `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `name` VARCHAR(150) NOT NULL,
+    `description` TEXT NULL,
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uq_dishes_name` (`name`)
+) ENGINE=InnoDB;
 
---
--- Index pour la table `users`
---
-ALTER TABLE `users`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `email` (`email`);
+CREATE TABLE IF NOT EXISTS `menu_dishes` (
+    `menu_id` INT UNSIGNED NOT NULL,
+    `dish_id` INT UNSIGNED NOT NULL,
+    `category` ENUM('starter', 'main', 'dessert') NOT NULL,
+    `position` TINYINT UNSIGNED NOT NULL DEFAULT 1,
+    PRIMARY KEY (`menu_id`, `dish_id`),
+    KEY `idx_menu_dishes_category` (`menu_id`, `category`),
+    CONSTRAINT `fk_menu_dishes_menu`
+        FOREIGN KEY (`menu_id`) REFERENCES `menus` (`id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_menu_dishes_dish`
+        FOREIGN KEY (`dish_id`) REFERENCES `dishes` (`id`) ON DELETE RESTRICT
+) ENGINE=InnoDB;
 
--- --------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `allergens` (
+    `id` TINYINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `name` VARCHAR(80) NOT NULL,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uq_allergens_name` (`name`)
+) ENGINE=InnoDB;
 
---
--- Structure de la table `menus`
---
+CREATE TABLE IF NOT EXISTS `dish_allergens` (
+    `dish_id` INT UNSIGNED NOT NULL,
+    `allergen_id` TINYINT UNSIGNED NOT NULL,
+    PRIMARY KEY (`dish_id`, `allergen_id`),
+    CONSTRAINT `fk_dish_allergens_dish`
+        FOREIGN KEY (`dish_id`) REFERENCES `dishes` (`id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_dish_allergens_allergen`
+        FOREIGN KEY (`allergen_id`) REFERENCES `allergens` (`id`) ON DELETE RESTRICT
+) ENGINE=InnoDB;
 
-CREATE TABLE `menus` (
-  `id` int(11) NOT NULL,
-  `title` varchar(255) NOT NULL,
-  `description` text NOT NULL,
-  `theme` varchar(100) NOT NULL,
-  `min_people` int(11) NOT NULL,
-  `base_price` decimal(10,2) NOT NULL,
-  `conditions` text DEFAULT NULL,
-  `available_stock` int(11) NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- ================================================================
+-- COMMANDES ET SUIVI (MariaDB)
+-- Les montants sont mémorisés : ils restent exacts si un menu évolue.
+-- ================================================================
+CREATE TABLE IF NOT EXISTS `orders` (
+    `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `order_number` VARCHAR(30) NULL,
+    `user_id` INT UNSIGNED NOT NULL,
+    `menu_id` INT UNSIGNED NOT NULL,
+    `number_of_people` SMALLINT UNSIGNED NOT NULL,
+    `order_date` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `delivery_date` DATE NOT NULL,
+    `delivery_time` TIME NOT NULL,
+    `delivery_address` VARCHAR(255) NOT NULL,
+    `delivery_city` VARCHAR(100) NULL,
+    `delivery_postal_code` VARCHAR(10) NULL,
+    `delivery_distance_km` DECIMAL(7,2) NULL,
+    `delivery_cost` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    `menu_price` DECIMAL(10,2) NOT NULL,
+    `discount_rate` DECIMAL(5,2) NOT NULL DEFAULT 0.00 COMMENT 'Pourcentage, par exemple 10.00',
+    `total_price` DECIMAL(10,2) NOT NULL,
+    `status` ENUM('pending', 'accepted', 'preparing', 'delivering', 'delivered', 'awaiting_return', 'completed', 'cancelled') NOT NULL DEFAULT 'pending',
+    `cancellation_reason` TEXT NULL,
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uq_orders_number` (`order_number`),
+    KEY `idx_orders_user_date` (`user_id`, `delivery_date`),
+    KEY `idx_orders_status_date` (`status`, `delivery_date`),
+    KEY `idx_orders_menu` (`menu_id`),
+    CONSTRAINT `fk_orders_user`
+        FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT,
+    CONSTRAINT `fk_orders_menu`
+        FOREIGN KEY (`menu_id`) REFERENCES `menus` (`id`) ON DELETE RESTRICT
+) ENGINE=InnoDB;
 
---
--- Index pour les tables déchargées
---
+CREATE TABLE IF NOT EXISTS `order_status_history` (
+    `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `order_id` INT UNSIGNED NOT NULL,
+    `status` ENUM('pending', 'accepted', 'preparing', 'delivering', 'delivered', 'awaiting_return', 'completed', 'cancelled') NOT NULL,
+    `changed_by` INT UNSIGNED NULL COMMENT 'Utilisateur ayant effectué le changement',
+    `changed_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `notes` TEXT NULL,
+    PRIMARY KEY (`id`),
+    KEY `idx_history_order_date` (`order_id`, `changed_at`),
+    CONSTRAINT `fk_history_order`
+        FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_history_user`
+        FOREIGN KEY (`changed_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB;
 
---
--- Index pour la table `menus`
---
-ALTER TABLE `menus`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_theme` (`theme`),
-  ADD KEY `idx_min_people` (`min_people`),
-  ADD KEY `idx_base_price` (`base_price`);
+-- ================================================================
+-- INFORMATIONS GÉRÉES PAR L'ÉQUIPE (MariaDB)
+-- ================================================================
+CREATE TABLE IF NOT EXISTS `opening_hours` (
+    `day_of_week` TINYINT UNSIGNED NOT NULL COMMENT '1 = lundi, 7 = dimanche',
+    `is_open` TINYINT(1) NOT NULL DEFAULT 1,
+    `opening_time` TIME NULL,
+    `closing_time` TIME NULL,
+    PRIMARY KEY (`day_of_week`)
+) ENGINE=InnoDB;
 
--- --------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `contact_messages` (
+    `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `email` VARCHAR(255) NOT NULL,
+    `subject` VARCHAR(150) NOT NULL,
+    `message` TEXT NOT NULL,
+    `status` ENUM('new', 'processed', 'closed') NOT NULL DEFAULT 'new',
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    KEY `idx_contact_status_date` (`status`, `created_at`)
+) ENGINE=InnoDB;
 
---
--- AUTO_INCREMENT pour les tables déchargées
---
+-- ================================================================
+-- JEU DE DÉMONSTRATION SANS COMPTE ADMINISTRATEUR PRÉCONFIGURÉ
+-- Créer les comptes depuis l'interface afin que password_hash() soit utilisé.
+-- ================================================================
+INSERT INTO `menus` (`id`, `title`, `description`, `theme`, `dietary_regime`, `min_people`, `base_price`, `conditions`, `available_stock`)
+VALUES
+    (1, 'Menu de Noël', 'Une formule festive pour les repas de fin d’année.', 'Noël', 'classic', 4, 35.50, 'Commande au minimum 48 heures à l’avance.', 10),
+    (2, 'Menu de Pâques', 'Une formule de saison pour partager un repas convivial.', 'Pâques', 'classic', 4, 32.00, 'Commande au minimum 24 heures à l’avance.', 8),
+    (3, 'Menu végétarien', 'Une formule végétarienne composée de produits de saison.', 'Classique', 'vegetarian', 2, 25.00, 'Disponible toute l’année selon le stock.', 15)
+ON DUPLICATE KEY UPDATE `title` = VALUES(`title`), `updated_at` = CURRENT_TIMESTAMP;
 
---
--- AUTO_INCREMENT pour la table `menus`
---
-ALTER TABLE `menus`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+INSERT INTO `dishes` (`id`, `name`, `description`) VALUES
+    (1, 'Foie gras maison', 'Foie gras de canard et confit d’oignon.'),
+    (2, 'Dinde aux marrons', 'Dinde rôtie aux marrons et champignons.'),
+    (3, 'Bûche de Noël', 'Bûche traditionnelle au chocolat.'),
+    (4, 'Œufs mimosa', 'Œufs durs, mayonnaise et ciboulette.'),
+    (5, 'Agneau pascal', 'Gigot d’agneau rôti aux herbes.'),
+    (6, 'Nid de Pâques', 'Dessert chocolaté de saison.'),
+    (7, 'Salade composée', 'Légumes de saison et vinaigrette maison.'),
+    (8, 'Lasagnes végétariennes', 'Légumes grillés et béchamel végétarienne.'),
+    (9, 'Tarte aux pommes', 'Tarte aux pommes et cannelle.')
+ON DUPLICATE KEY UPDATE `description` = VALUES(`description`), `updated_at` = CURRENT_TIMESTAMP;
 
--- --------------------------------------------------------
+INSERT INTO `menu_dishes` (`menu_id`, `dish_id`, `category`, `position`) VALUES
+    (1, 1, 'starter', 1), (1, 2, 'main', 1), (1, 3, 'dessert', 1),
+    (2, 4, 'starter', 1), (2, 5, 'main', 1), (2, 6, 'dessert', 1),
+    (3, 7, 'starter', 1), (3, 8, 'main', 1), (3, 9, 'dessert', 1)
+ON DUPLICATE KEY UPDATE `position` = VALUES(`position`);
 
---
--- Structure de la table `menu_items` (plats possibles dans un menu)
---
+INSERT INTO `allergens` (`id`, `name`) VALUES
+    (1, 'Gluten'), (2, 'Lactose'), (3, 'Œufs'), (4, 'Poisson')
+ON DUPLICATE KEY UPDATE `name` = VALUES(`name`);
 
-CREATE TABLE `menu_items` (
-  `id` int(11) NOT NULL,
-  `menu_id` int(11) NOT NULL,
-  `name` varchar(255) NOT NULL,
-  `description` text DEFAULT NULL,
-  `category` enum('entrée','plat','dessert') NOT NULL,
-  `allergens` varchar(255) DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+INSERT INTO `dish_allergens` (`dish_id`, `allergen_id`) VALUES
+    (1, 1), (1, 2), (2, 1), (2, 2), (3, 1), (3, 2), (3, 3),
+    (4, 3), (6, 1), (6, 2), (6, 3), (7, 4), (9, 1), (9, 2)
+ON DUPLICATE KEY UPDATE `allergen_id` = VALUES(`allergen_id`);
 
---
--- Index pour les tables déchargées
---
+INSERT INTO `opening_hours` (`day_of_week`, `is_open`, `opening_time`, `closing_time`) VALUES
+    (1, 1, '09:00:00', '18:00:00'), (2, 1, '09:00:00', '18:00:00'),
+    (3, 1, '09:00:00', '18:00:00'), (4, 1, '09:00:00', '18:00:00'),
+    (5, 1, '09:00:00', '18:00:00'), (6, 1, '09:00:00', '18:00:00'),
+    (7, 1, '09:00:00', '12:00:00')
+ON DUPLICATE KEY UPDATE `is_open` = VALUES(`is_open`), `opening_time` = VALUES(`opening_time`), `closing_time` = VALUES(`closing_time`);
 
---
--- Index pour la table `menu_items`
---
-ALTER TABLE `menu_items`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `menu_id` (`menu_id`),
-  ADD KEY `idx_category` (`category`);
-
--- --------------------------------------------------------
-
---
--- Contraintes pour les tables déchargées
---
-
---
--- Contraintes pour la table `menu_items`
---
-ALTER TABLE `menu_items`
-  ADD CONSTRAINT `menu_items_ibfk_1` FOREIGN KEY (`menu_id`) REFERENCES `menus` (`id`) ON DELETE CASCADE;
-
---
--- AUTO_INCREMENT pour les tables déchargées
---
-
---
--- AUTO_INCREMENT pour la table `menu_items`
---
-ALTER TABLE `menu_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
--- --------------------------------------------------------
-
---
--- Structure de la table `orders`
---
-
-CREATE TABLE `orders` (
-  `id` int(11) NOT NULL,
-  `user_id` int(11) NOT NULL,
-  `menu_id` int(11) NOT NULL,
-  `number_of_people` int(11) NOT NULL,
-  `delivery_date` date NOT NULL,
-  `delivery_time` time NOT NULL,
-  `delivery_address` varchar(255) NOT NULL,
-  `status` enum('pending','accepted','preparing','delivering','delivered','awaiting_return','completed','cancelled') NOT NULL DEFAULT 'pending',
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Index pour les tables déchargées
---
-
---
--- Index pour la table `orders`
---
-ALTER TABLE `orders`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `user_id` (`user_id`),
-  ADD KEY `menu_id` (`menu_id`),
-  ADD KEY `idx_delivery_date` (`delivery_date`),
-  ADD KEY `idx_status` (`status`);
-
--- --------------------------------------------------------
-
---
--- Contraintes pour les tables déchargées
---
-
---
--- Contraintes pour la table `orders`
---
-ALTER TABLE `orders`
-  ADD CONSTRAINT `orders_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
-  ADD CONSTRAINT `orders_ibfk_2` FOREIGN KEY (`menu_id`) REFERENCES `menus` (`id`);
-
---
--- AUTO_INCREMENT pour les tables déchargées
---
-
---
--- AUTO_INCREMENT pour la table `orders`
---
-ALTER TABLE `orders`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
--- --------------------------------------------------------
-
---
--- Données de test pour la table `users`
---
-
-INSERT INTO `users` (`id`, `email`, `password`, `role`, `first_name`, `last_name`, `phone`, `gsm`, `address`, `created_at`, `updated_at`) VALUES
-(1, 'admin@viteetgourmand.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin', 'Admin', 'Istrator', '0123456789', '0612345678', '123 Rue de la Paix', '2026-09-12 06:59:00', '2026-09-12 06:59:00'),
-(2, 'employee@viteetgourmand.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'employee', 'Employé', 'Modèle', '0123456789', '0612345678', '456 Avenue des Champs', '2026-09-12 06:59:00', '2026-09-12 06:59:00'),
-(3, 'user@viteetgourmand.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'user', 'Utilisateur', 'Modèle', '0123456789', '0612345678', '789 Boulevard Saint-Michel', '2026-09-12 06:59:00', '2026-09-12 06:59:00');
-
--- --------------------------------------------------------
-
---
--- Données de test pour la table `menus`
---
-
-INSERT INTO `menus` (`id`, `title`, `description`, `theme`, `min_people`, `base_price`, `conditions`, `available_stock`, `created_at`, `updated_at`) VALUES
-(1, 'Menu de Noël', 'Un délicieux menu pour les fêtes de fin d\'année', 'Noël', 4, 35.50, 'À commander 48h à l\'avance', 10, '2026-09-12 06:59:00', '2026-09-12 06:59:00'),
-(2, 'Menu de Pâques', 'Menu spécial pour célébrer Pâques', 'Pâques', 4, 32.00, 'À commander 24h à l\'avance', 8, '2026-09-12 06:59:00', '2026-09-12 06:59:00'),
-(3, 'Menu Classique', 'Notre menu classique disponible toute l\'année', 'classique', 2, 25.00, 'Aucune condition particulière', 15, '2026-09-12 06:59:00', '2026-09-12 06:59:00');
-
--- --------------------------------------------------------
-
---
--- Données de test pour la table `menu_items`
---
-
-INSERT INTO `menu_items` (`id`, `menu_id`, `name`, `description`, `category`, `allergens`, `created_at`, `updated_at`) VALUES
-(1, 1, 'Foie gras maison', 'Foie gras de canard accompagné de son confit d\'oignon', 'entrée', 'Gluten, Lactose', '2026-09-12 06:59:00', '2026-09-12 06:59:00'),
-(2, 1, 'Dinde aux marrons', 'Dinde rôtie farcie aux marrons et aux champignons', 'plat', 'Gluten, Lactose', '2026-09-12 06:59:00', '2026-09-12 06:59:00'),
-(3, 1, 'Bûche de Noël', 'Bûche traditionnelle au chocolat et à la crème au beurre', 'dessert', 'Gluten, Lactose, Œufs', '2026-09-12 06:59:00', '2026-09-12 06:59:00'),
-(4, 2, 'Œufs mimosa', 'Œufs durs mayonnaise et ciboulette', 'entrée', 'Œufs', '2026-09-12 06:59:00', '2026-09-12 06:59:00'),
-(5, 2, 'Agneau pascal', 'Gigot d\'agneau rôti aux herbes de Provence', 'plat', '', '2026-09-12 06:59:00', '2026-09-12 06:59:00'),
-(6, 2, 'Nid de Pâques', 'Nid en chocolat garnis d\'œufs en sucre', 'dessert', 'Gluten, Lactose, Œufs', '2026-09-12 06:59:00', '2026-09-12 06:59:00'),
-(7, 3, 'Salade composée', 'Salade verte, tomates, concombre, maïs et thon', 'entrée', 'Poisson', '2026-09-12 06:59:00', '2026-09-12 06:59:00'),
-(8, 3, 'Steak frites', 'Steak haché accompagné de frites maison', 'plat', 'Gluten', '2026-09-12 06:59:00', '2026-09-12 06:59:00'),
-(9, 3, 'Tarte aux pommes', 'Tarte traditionnelle aux pommes et à la cannelle', 'dessert', 'Gluten, Lactose', '2026-09-12 06:59:00', '2026-09-12 06:59:00');
-
--- --------------------------------------------------------
-
---
--- Données de test pour la table `orders`
---
-
-INSERT INTO `orders` (`id`, `user_id`, `menu_id`, `number_of_people`, `delivery_date`, `delivery_time`, `delivery_address`, `status`, `created_at`, `updated_at`) VALUES
-(1, 3, 1, 4, '2026-12-25', '19:00:00', '123 Rue de la Paix, 33000 Bordeaux', 'pending', '2026-09-12 06:59:00', '2026-09-12 06:59:00');
-
-COMMIT;
-
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+-- MongoDB contient uniquement les avis et les statistiques :
+-- voir docs/mongodb-comments.seed.json et docs/MONGODB_IMPORT.md.

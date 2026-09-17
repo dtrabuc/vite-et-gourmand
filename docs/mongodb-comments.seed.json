@@ -1,0 +1,38 @@
+[
+  {
+    "_id": {"$oid": "66f100000000000000000001"},
+    "userId": 1,
+    "authorName": "Camille D.",
+    "menuId": 1,
+    "orderId": 1,
+    "rating": 5,
+    "comment": "Une prestation soignée et un menu apprécié par tous nos invités.",
+    "isValidated": true,
+    "createdAt": {"$date": "2026-09-01T10:00:00.000Z"},
+    "updatedAt": {"$date": "2026-09-01T10:00:00.000Z"}
+  },
+  {
+    "_id": {"$oid": "66f100000000000000000002"},
+    "userId": 2,
+    "authorName": "Romain L.",
+    "menuId": 2,
+    "orderId": 2,
+    "rating": 4,
+    "comment": "Livraison ponctuelle et portions généreuses.",
+    "isValidated": true,
+    "createdAt": {"$date": "2026-09-03T15:30:00.000Z"},
+    "updatedAt": {"$date": "2026-09-03T15:30:00.000Z"}
+  },
+  {
+    "_id": {"$oid": "66f100000000000000000003"},
+    "userId": 3,
+    "authorName": "Aïcha M.",
+    "menuId": 3,
+    "orderId": 3,
+    "rating": 5,
+    "comment": "La formule végétarienne était savoureuse et bien présentée.",
+    "isValidated": false,
+    "createdAt": {"$date": "2026-09-05T09:15:00.000Z"},
+    "updatedAt": {"$date": "2026-09-05T09:15:00.000Z"}
+  }
+]

@@ -1,19 +1,19 @@
 <?php
-namespace Src\Service;
+namespace App\Service;
 
-use Src\Entity\Comment;
-use Src\Repository\CommentRepository;
+use App\Entity\Comment;
+use App\Repository\CommentRepository;
 
 class CommentService
 {
     private CommentRepository $commentRepository;
-    private \Src\Service\CacheService $cacheService;
+    private \App\Service\CacheService $cacheService;
 
-    public function __construct(CommentRepository $commentRepository, ?\Src\Service\CacheService $cacheService = null)
+    public function __construct(CommentRepository $commentRepository, ?\App\Service\CacheService $cacheService = null)
     {
         $this->commentRepository = $commentRepository;
         // Try to use RedisCacheService first, fall back to basic CacheService
-        $this->cacheService = $cacheService ?? new \Src\Service\RedisCacheService();
+        $this->cacheService = $cacheService ?? new \App\Service\RedisCacheService();
     }
 
     public function getAllValidated(): array
@@ -82,7 +82,7 @@ class CommentService
         return $id;
     }
 
-    public function validateComment(int $id): void
+    public function validateComment(string $id): void
     {
         $this->commentRepository->updateValidation($id, true);
         
@@ -90,7 +90,7 @@ class CommentService
         $this->clearCommentCache();
     }
 
-    public function rejectComment(int $id): void
+    public function rejectComment(string $id): void
     {
         $this->commentRepository->updateValidation($id, false);
         

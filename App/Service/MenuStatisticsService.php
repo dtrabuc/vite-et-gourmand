@@ -1,10 +1,10 @@
 <?php
-namespace Src\Service;
+namespace App\Service;
 
-use Src\Entity\Order;
-use Src\Repository\OrderRepository;
-use Src\Repository\MenuRepository;
-use Src\Database\Database;
+use App\Entity\Order;
+use App\Repository\OrderRepository;
+use App\Repository\MenuRepository;
+use App\Core\Database;
 
 class MenuStatisticsService
 {

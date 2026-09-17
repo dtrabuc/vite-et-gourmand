@@ -1,19 +1,19 @@
 <?php
-namespace Src\Service;
+namespace App\Service;
 
-use Src\Entity\Menu;
-use Src\Repository\MenuRepository;
+use App\Entity\Menu;
+use App\Repository\MenuRepository;
 
 class MenuService
 {
     private MenuRepository $menuRepository;
-    private \Src\Service\CacheService $cacheService;
+    private \App\Service\CacheService $cacheService;
 
-    public function __construct(MenuRepository $menuRepository, ?\Src\Service\CacheService $cacheService = null)
+    public function __construct(MenuRepository $menuRepository, ?\App\Service\CacheService $cacheService = null)
     {
         $this->menuRepository = $menuRepository;
         // Try to use RedisCacheService first, fall back to basic CacheService
-        $this->cacheService = $cacheService ?? new \Src\Service\RedisCacheService();
+        $this->cacheService = $cacheService ?? new \App\Service\RedisCacheService();
     }
 
     public function getAllMenus(): array

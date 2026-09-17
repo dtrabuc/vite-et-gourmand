@@ -1,8 +1,8 @@
 <?php
-namespace Src\Repository;
+namespace App\Repository;
 
-use Src\Entity\Order;
-use Src\Database\Database;
+use App\Entity\Order;
+use App\Core\Database;
 
 class OrderRepository
 {

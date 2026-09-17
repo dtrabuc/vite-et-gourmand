@@ -1,5 +1,5 @@
 <?php
-namespace Src\Service;
+namespace App\Service;
 
 class CacheService
 {
