@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Commander - Vite &amp; Gourmand</title>
+  <link href="./assets/css/bootstrap.min.css" rel="stylesheet">
+  <link href="./assets/css/style.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+</head>
+<body class="d-flex flex-column min-vh-100 bg-light" data-page="commander">
+  <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
+    <div class="container">
+      <a class="navbar-brand text-primary fw-bold" href="./index.html">
+        <i class="fas fa-utensils me-2"></i>Vite &amp; Gourmand
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Basculer la navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto align-items-lg-center">
+          <li class="nav-item"><a class="nav-link" href="./index.html">Accueil</a></li>
+          <li class="nav-item"><a class="nav-link" href="./menus.html">Menus</a></li>
+          <li class="nav-item"><a class="nav-link active" href="./commander.html">Commander</a></li>
+          <li class="nav-item"><a class="nav-link" href="./contact.html">Contact</a></li>
+          <li class="nav-item"><a class="nav-link" href="./login.html">Espace client</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <main class="flex-grow-1 py-5 bg-light">
+    <div class="container">
+      <div id="notificationArea" class="mb-4"></div>
+
+      <section id="etape0">
+        <div class="row align-items-end g-4 mb-4">
+          <div class="col-lg-8">
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-2">Etape 1</span>
+            <h1 class="h2 text-primary fw-bold mt-3 mb-3">Choisissez votre type de prestation</h1>
+            <p class="text-muted mb-0">Selectionnez un menu complet pour une reception structuree, ou une formule a la carte pour un besoin plus libre.</p>
+          </div>
+        </div>
+        <div class="row g-4">
+          <div class="col-md-6">
+            <div class="card service-selector h-100 p-4 shadow-sm border-0" data-type="menu">
+              <div class="display-5 text-primary mb-3"><i class="fas fa-cloche-cover"></i></div>
+              <h2 class="h4 fw-bold mb-3">Menu complet</h2>
+              <p class="text-muted mb-4">Une formule avec entrees, plats, desserts et boissons pour encadrer facilement votre evenement.</p>
+              <div class="mt-auto"><span class="btn btn-outline-primary w-100">Choisir cette formule</span></div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="card service-selector h-100 p-4 shadow-sm border-0" data-type="plat">
+              <div class="display-5 text-primary mb-3"><i class="fas fa-plate-wheat"></i></div>
+              <h2 class="h4 fw-bold mb-3">A la carte</h2>
+              <p class="text-muted mb-4">Des plats unitaires a composer avec boissons et dessert pour des besoins plus directs.</p>
+              <div class="mt-auto"><span class="btn btn-outline-primary w-100">Choisir cette formule</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="etape1" style="display:none;">
+        <div class="row g-4">
+          <div class="col-lg-5">
+            <div class="card shadow-sm border-0 h-100">
+              <div class="card-body p-4 p-lg-5">
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-2 mb-3">Etape 2</span>
+                <h2 id="titre-dynamique" class="h3 text-primary mb-3">Votre menu</h2>
+                <label class="form-label fw-bold" for="selectMenu">Selection</label>
+                <select id="selectMenu" class="form-select form-select-lg mb-4">
+                  <option value="">-- Selectionnez une formule --</option>
+                </select>
+                <div id="detailMenuSelectionne" style="display:none;">
+                  <img id="imageMenu" src="" alt="Selection en cours" class="rounded mb-3 w-100 shadow-sm" style="height:220px;object-fit:cover;">
+                  <h3 id="nomMenuAffiche" class="h4 text-primary fw-bold"></h3>
+                  <p id="descriptionMenu" class="text-muted small mb-3"></p>
+                  <p id="prixMenuAffiche" class="h4 text-primary fw-bold mb-0"></p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-7">
+            <div id="sectionPersonnalisation" class="card shadow-sm border-0" style="display:none;">
+              <div class="card-body p-4 p-lg-5">
+                <span class="badge bg-dark-subtle text-dark rounded-pill px-3 py-2 mb-3">Etape 3</span>
+                <h2 class="h3 text-primary mb-4">Personnalisez votre prestation</h2>
+
+                <div class="row g-4">
+                  <div class="col-md-4">
+                    <div class="summary-box p-3 h-100">
+                      <h3 class="h5 mb-3">Entrees</h3>
+                      <div id="listEntrees"></div>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="summary-box p-3 h-100">
+                      <h3 class="h5 mb-3">Plats</h3>
+                      <div id="listPlats"></div>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="summary-box p-3 h-100">
+                      <h3 class="h5 mb-3">Desserts</h3>
+                      <div id="listDesserts"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <hr class="my-4">
+
+                <div class="row g-4 align-items-start">
+                  <div class="col-lg-6">
+                    <h3 class="h5 mb-3">Boissons</h3>
+                    <div class="d-flex flex-wrap gap-3 mb-3">
+                      <div class="form-check">
+                        <input class="form-check-input" type="radio" name="typeBoisson" id="boissonSans" value="sans" checked>
+                        <label class="form-check-label" for="boissonSans">Sans alcool</label>
+                      </div>
+                      <div class="form-check">
+                        <input class="form-check-input" type="radio" name="typeBoisson" id="boissonAvec" value="avec">
+                        <label class="form-check-label" for="boissonAvec">Avec alcool</label>
+                      </div>
+                    </div>
+                    <div id="listBoissons"></div>
+                  </div>
+                  <div class="col-lg-6">
+                    <h3 class="h5 mb-3">Digestif</h3>
+                    <select id="selectDigestif" class="form-select">
+                      <option value="">Aucun</option>
+                    </select>
+                    <p class="text-muted small mt-2 mb-0">Ajout possible pour une prestation sur place.</p>
+                  </div>
+                </div>
+
+                <div class="d-grid d-lg-flex justify-content-lg-end mt-4">
+                  <button id="btnVersRecap" class="btn btn-primary btn-lg px-5" type="button">Continuer vers le recapitulatif</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <a href="./admin-login.html" class="admin-access-btn btn btn-primary shadow" aria-label="Acces administrateur" title="Acces administrateur">
+    <i class="fas fa-user-shield"></i>
+  </a>
+  <footer class="bg-primary text-white mt-auto pt-5 pb-4">
+    <div class="container">
+      <div class="row g-4">
+        <div class="col-md-4">
+          <h5 class="fw-bold">Vite &amp; Gourmand</h5>
+          <p class="small mb-0">Traiteur evenementiel a Bordeaux. Menus sur mesure, livraison et accompagnement pour vos mariages, receptions privees et evenements professionnels.</p>
+        </div>
+        <div class="col-md-4">
+          <h6 class="fw-bold">Horaires</h6>
+          <ul class="list-unstyled small mb-0">
+            <li>Lundi au vendredi : 09h00 - 18h00</li>
+            <li>Samedi : 10h00 - 16h00</li>
+            <li>Dimanche : sur reservation</li>
+          </ul>
+        </div>
+        <div class="col-md-4">
+          <h6 class="fw-bold">Informations</h6>
+          <ul class="list-unstyled small mb-0">
+            <li><a class="link-light text-decoration-none" href="./contact.html">Contact</a></li>
+            <li><a class="link-light text-decoration-none" href="./menus.html">Nos formules</a></li>
+            <li><a class="link-light text-decoration-none" href="./admin-login.html">Administration</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="./assets/js/api.js"></script>
+  <script src="./assets/js/script.js"></script>
+</body>
+</html>
