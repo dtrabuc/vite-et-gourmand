@@ -68,15 +68,6 @@ class AdminService
 
     public function disableEmployee(int $id): void
     {
-        // In a real implementation, we might set a disabled flag or delete
-        // For now, we'll just delete (but in production, we'd want to preserve data)
-        // Let's implement a soft delete approach by adding a status field
-        // Since we don't have a status field, we'll just update the role to something like 'disabled'
-        // But better to add an 'is_active' field to users table
-        // For simplicity in this implementation, we'll just delete
-
-        // Actually, let's not delete - we'll update to prevent login
-        // We'll add a method to update user status
         $this->userRepository->setActive($id, false);
     }
 
