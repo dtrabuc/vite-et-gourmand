@@ -204,6 +204,17 @@ class OrderService
 
         $this->orderRepository->updateStatus($orderId, $status, $status === 'cancelled' ? trim((string) $cancellationReason) : null);
         $this->orderRepository->addToHistory($orderId, $status, $changedByUserId, $notes);
+
+        $user = $this->userRepository->findById($order->getUserId());
+        if ($user !== null) {
+            try {
+                if ($status === 'awaiting_return') {
+                    $this->mailService->sendEquipmentReturnNoticeEmail($user->getEmail(), $user->getFirstName(), $orderId);
+                } elseif ($status === 'completed') {
+                    $this->mailService->sendReviewInvitationEmail($user->getEmail(), $user->getFirstName(), $orderId);
+                }
+            } catch (\Throwable $e) { error_log('Order status email error: ' . $e->getMessage()); }
+        }
     }
 
     public function getOrderHistory(int $orderId): array
