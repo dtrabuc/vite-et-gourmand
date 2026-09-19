@@ -55,7 +55,7 @@ class MenuStatisticsService
 
         // Get MongoDB connection
         $mongo = Database::getMongo();
-        $database = $mongo->selectDatabase('viteetgourmand');
+        $database = Database::getMongoDatabase();
         $collection = $database->selectCollection('menu_statistics');
 
         // Prepare period identifiers
@@ -109,7 +109,7 @@ class MenuStatisticsService
     public function getStatistics(?string $periodIdentifier = null): array
     {
         $mongo = Database::getMongo();
-        $database = $mongo->selectDatabase('viteetgourmand');
+        $database = Database::getMongoDatabase();
         $collection = $database->selectCollection('menu_statistics');
 
         $filter = [];
