@@ -10,7 +10,7 @@
 <h3 class="h6 mt-4">Suivi</h3><ol class="small ps-3">
 <?php foreach (($history[$order->getId()] ?? []) as $entry): ?><li><?= $escape($statusLabels[$entry['status']] ?? $entry['status']) ?> — <?= $entry['changed_at'] instanceof \DateTimeInterface ? $escape($entry['changed_at']->format('d/m/Y H:i')) : '' ?></li><?php endforeach; ?>
 </ol>
-<?php if (in_array($order->getStatus(), ['pending','accepted'], true)): ?>
+<?php if ($order->getStatus() === 'pending'): ?>
 <hr><details><summary class="fw-semibold">Modifier la commande</summary>
 <form method="post" action="/orders/<?= $order->getId() ?>/edit" class="row g-2 mt-2">
 <input type="hidden" name="csrf_token" value="<?= $escape($csrfToken) ?>">
