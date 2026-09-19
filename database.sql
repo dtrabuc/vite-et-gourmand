@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS `menus` (
     `theme` VARCHAR(80) NOT NULL COMMENT 'Exemples : Noël, Pâques, classique, événement',
     `dietary_regime` ENUM('classic', 'vegetarian', 'vegan', 'other') NOT NULL DEFAULT 'classic',
     `min_people` SMALLINT UNSIGNED NOT NULL,
-    `base_price` DECIMAL(10,2) NOT NULL COMMENT 'Prix TTC par personne',
+    `base_price` DECIMAL(10,2) NOT NULL COMMENT 'Prix TTC pour le nombre minimal de personnes',
     `conditions` TEXT NOT NULL,
     `available_stock` SMALLINT UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Nombre de commandes encore possibles',
     `is_active` TINYINT(1) NOT NULL DEFAULT 1,
@@ -134,6 +134,7 @@ CREATE TABLE IF NOT EXISTS `orders` (
     `discount_rate` DECIMAL(5,2) NOT NULL DEFAULT 0.00 COMMENT 'Pourcentage, par exemple 10.00',
     `total_price` DECIMAL(10,2) NOT NULL,
     `status` ENUM('pending', 'accepted', 'preparing', 'delivering', 'delivered', 'awaiting_return', 'completed', 'cancelled') NOT NULL DEFAULT 'pending',
+    `equipment_loaned` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '1 si du matériel a été prêté pour cette commande',
     `cancellation_reason` TEXT NULL,
     `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -147,6 +148,10 @@ CREATE TABLE IF NOT EXISTS `orders` (
     CONSTRAINT `fk_orders_menu`
         FOREIGN KEY (`menu_id`) REFERENCES `menus` (`id`) ON DELETE RESTRICT
 ) ENGINE=InnoDB;
+
+ALTER TABLE `orders`
+    ADD COLUMN IF NOT EXISTS `equipment_loaned` TINYINT(1) NOT NULL DEFAULT 0
+    AFTER `status`;
 
 CREATE TABLE IF NOT EXISTS `order_status_history` (
     `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
