@@ -12,8 +12,6 @@ return [
     ['GET', '/legal', 'PublicController@legal', ['Security']],
     ['GET', '/cgv', 'PublicController@cgv', ['Security']],
     // NEW ENDPOINTS for frontend alignment
-    ['GET', '/public/catalog', 'PublicController@getCatalog', ['Security']],
-    ['GET', '/public/reviews', 'PublicController@getReviews', ['Security']],
 
     // Auth routes
     ['GET', '/login', 'AuthController@showLogin', ['Security']],
