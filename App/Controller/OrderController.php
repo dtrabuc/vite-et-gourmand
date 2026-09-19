@@ -62,7 +62,10 @@ class OrderController extends BaseController
         $numberOfPeople = $_POST['number_of_people'] ?? null;
         $deliveryDate = $_POST['delivery_date'] ?? null;
         $deliveryTime = $_POST['delivery_time'] ?? null;
-        $deliveryAddress = $_POST['delivery_address'] ?? null;
+        $deliveryAddress = trim((string)($_POST['delivery_address'] ?? ''));
+        $deliveryCity = trim((string)($_POST['delivery_city'] ?? ''));
+        $deliveryDistanceKm = isset($_POST['delivery_distance_km']) && $_POST['delivery_distance_km'] !== ''
+            ? (float)$_POST['delivery_distance_km'] : null;
 
         $errors = [];
 
@@ -78,8 +81,14 @@ class OrderController extends BaseController
         if (empty($deliveryTime)) {
             $errors['delivery_time'] = 'Heure de livraison requise';
         }
-        if (empty($deliveryAddress)) {
+        if ($deliveryAddress === '') {
             $errors['delivery_address'] = 'Adresse de livraison requise';
+        }
+        if ($deliveryCity === '') {
+            $errors['delivery_city'] = 'Ville de livraison requise';
+        }
+        if ($deliveryCity !== '' && mb_strtolower($deliveryCity) !== 'bordeaux' && ($deliveryDistanceKm === null || $deliveryDistanceKm < 0)) {
+            $errors['delivery_distance_km'] = 'Distance de livraison requise hors Bordeaux';
         }
 
         if (!empty($errors)) {
@@ -104,7 +113,9 @@ class OrderController extends BaseController
                 (int)$numberOfPeople,
                 $deliveryDate,
                 $deliveryTime,
-                $deliveryAddress
+                $deliveryAddress,
+                $deliveryCity,
+                $deliveryDistanceKm
             );
 
             // For AJAX requests
