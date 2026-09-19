@@ -263,7 +263,7 @@ class OrderController extends BaseController
         $cancellationReason = trim((string) ($_POST['cancellation_reason'] ?? ''));
         $notes = trim((string) ($_POST['notes'] ?? ''));
         $equipmentLoaned = $isStaff && array_key_exists('equipment_loaned', $_POST)
-            ? (bool) $_POST['equipment_loaned']
+            ? ((string) $_POST['equipment_loaned'] === '1')
             : null;
 
         if (!$isStaff && ($status !== 'cancelled' || $order->getStatus() !== 'pending')) {
