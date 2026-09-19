@@ -12,7 +12,7 @@
 </ol>
 <?php if (in_array($order->getStatus(), ['pending','accepted'], true)): ?>
 <hr><details><summary class="fw-semibold">Modifier la commande</summary>
-<form method="post" action="/orders/<?= $order->getId() ?>" class="row g-2 mt-2">
+<form method="post" action="/orders/<?= $order->getId() ?>/edit" class="row g-2 mt-2">
 <input type="hidden" name="csrf_token" value="<?= $escape($csrfToken) ?>">
 <div class="col-md-3"><label class="form-label">Personnes</label><input class="form-control" type="number" min="1" name="number_of_people" value="<?= $order->getNumberOfPeople() ?>" required></div>
 <div class="col-md-3"><label class="form-label">Date</label><input class="form-control" type="date" name="delivery_date" value="<?= $escape($order->getDeliveryDate()) ?>" required></div>
