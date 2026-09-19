@@ -5,7 +5,7 @@
 <section class="card border-0 shadow-sm mb-4"><div class="card-body">
 <div class="d-flex justify-content-between flex-wrap gap-2"><h2 class="h5 mb-0">Commande #<?= $order->getId() ?></h2><span class="badge text-bg-secondary"><?= $escape($statusLabels[$order->getStatus()] ?? $order->getStatus()) ?></span></div>
 <p class="mb-1 mt-3"><strong>Prestation :</strong> <?= $escape($order->getDeliveryDate()) ?> à <?= $escape($order->getDeliveryTime()) ?></p>
-<p class="mb-1"><strong>Personnes :</strong> <?= $order->getNumberOfPeople() ?> — <strong>Total :</strong> <?= number_format($order->getTotalPrice(),2,',',' ') ?> €</p>
+<p class="mb-1"><strong>Personnes :</strong> <?= $order->getNumberOfPeople() ?> — <strong>Prix du menu :</strong> <?= number_format($order->getMenuPrice(),2,',',' ') ?> € — <strong>Total :</strong> <?= number_format($order->getTotalPrice(),2,',',' ') ?> €</p>
 <?php if ($order->getDiscountRate() > 0): ?><p class="small text-success">Remise : <?= number_format($order->getDiscountRate(),0) ?> %</p><?php endif; ?>
 <h3 class="h6 mt-4">Suivi</h3><ol class="small ps-3">
 <?php foreach (($history[$order->getId()] ?? []) as $entry): ?><li><?= $escape($statusLabels[$entry['status']] ?? $entry['status']) ?> — <?= $entry['changed_at'] instanceof \DateTimeInterface ? $escape($entry['changed_at']->format('d/m/Y H:i')) : '' ?></li><?php endforeach; ?>
