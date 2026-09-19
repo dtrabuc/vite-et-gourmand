@@ -58,6 +58,7 @@ return [
     ['POST', '/admin/employees/{id}/disable', 'AdminController@disableEmployee', ['Security']],
     ['PATCH', '/admin/employees/{id}', 'AdminController@enableEmployee', ['Security']],
     ['POST', '/admin/employees/{id}/enable', 'AdminController@enableEmployee', ['Security']],
+    ['GET', '/admin/revenue', 'AdminController@revenuePage', ['Security']],
     ['GET', '/admin/revenue/menu', 'AdminController@revenueByMenu', ['Security']],
     ['GET', '/admin/menus', 'AdminController@getMenus', ['Security']],
     ['POST', '/admin/menus', 'AdminController@createMenu', ['Security']],
