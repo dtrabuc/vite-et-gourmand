@@ -1,7 +1,6 @@
 <?php
 namespace App\Service;
 
-use App\Entity\Order;
 use App\Repository\OrderRepository;
 use App\Repository\MenuRepository;
 use App\Core\Database;
@@ -107,7 +106,6 @@ class MenuStatisticsService
      */
     public function getStatistics(?string $periodIdentifier = null): array
     {
-        $mongo = Database::getMongo();
         $database = Database::getMongoDatabase();
         $collection = $database->selectCollection('menu_statistics');
 
@@ -129,7 +127,7 @@ class MenuStatisticsService
                 'orderCount' => (int)$doc['orderCount'],
                 'revenue' => (float)$doc['revenue'],
                 'updatedAt' => $doc['updatedAt'] instanceof \MongoDB\BSON\UTCDateTime
-                    ? (new \DateTimeImmutable())->setTimestamp($doc['updatedAt']->getSeconds() / 1000)
+                    ? $doc['updatedAt']->toDateTime()
                     : null,
             ];
         }
