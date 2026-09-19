@@ -9,139 +9,86 @@ class MenuRepository
     public function findAll(): array
     {
         $pdo = Database::getPDO();
-        $stmt = $pdo->query('SELECT * FROM menus WHERE available_stock > 0');
-        $rows = $stmt->fetchAll();
-
-        $menus = [];
-        foreach ($rows as $row) {
-            $menu = new Menu();
-            $menu->setId((int)$row['id']);
-            $menu->setTitle($row['title']);
-            $menu->setDescription($row['description']);
-            $menu->setTheme($row['theme']);
-            $menu->setMinPeople((int)$row['min_people']);
-            $menu->setBasePrice((float)$row['base_price']);
-            $menu->setConditions($row['conditions']);
-            $menu->setAvailableStock((int)$row['available_stock']);
-            $menu->setCreatedAt($row['created_at'] ? new \DateTimeImmutable($row['created_at']) : null);
-            $menu->setUpdatedAt($row['updated_at'] ? new \DateTimeImmutable($row['updated_at']) : null);
-
-            $menus[] = $menu;
-        }
-
-        return $menus;
+        $stmt = $pdo->query('SELECT * FROM menus WHERE is_active = 1 AND available_stock > 0 ORDER BY id DESC');
+        return $this->hydrateMany($stmt->fetchAll());
     }
 
     public function findById(int $id): ?Menu
     {
         $pdo = Database::getPDO();
-        $stmt = $pdo->prepare('SELECT * FROM menus WHERE id = :id');
+        $stmt = $pdo->prepare('SELECT * FROM menus WHERE id = :id AND is_active = 1');
         $stmt->execute(['id' => $id]);
         $row = $stmt->fetch();
-
-        if ($row === false) {
-            return null;
-        }
-
-        $menu = new Menu();
-        $menu->setId((int)$row['id']);
-        $menu->setTitle($row['title']);
-        $menu->setDescription($row['description']);
-        $menu->setTheme($row['theme']);
-        $menu->setMinPeople((int)$row['min_people']);
-        $menu->setBasePrice((float)$row['base_price']);
-        $menu->setConditions($row['conditions']);
-        $menu->setAvailableStock((int)$row['available_stock']);
-        $menu->setCreatedAt($row['created_at'] ? new \DateTimeImmutable($row['created_at']) : null);
-        $menu->setUpdatedAt($row['updated_at'] ? new \DateTimeImmutable($row['updated_at']) : null);
-
-        return $menu;
+        return $row === false ? null : $this->hydrate($row);
     }
 
     public function filter(array $filters): array
     {
         $pdo = Database::getPDO();
-
-        $query = 'SELECT * FROM menus WHERE available_stock > 0';
+        $query = 'SELECT * FROM menus WHERE is_active = 1 AND available_stock > 0';
         $params = [];
 
-        if (!empty($filters['max_price'])) {
+        if (isset($filters['max_price']) && $filters['max_price'] !== '') {
             $query .= ' AND base_price <= :max_price';
-            $params[':max_price'] = $filters['max_price'];
+            $params['max_price'] = (float) $filters['max_price'];
         }
-
+        if (isset($filters['min_price']) && $filters['min_price'] !== '') {
+            $query .= ' AND base_price >= :min_price';
+            $params['min_price'] = (float) $filters['min_price'];
+        }
         if (!empty($filters['theme'])) {
             $query .= ' AND theme = :theme';
-            $params[':theme'] = $filters['theme'];
+            $params['theme'] = $filters['theme'];
+        }
+        if (!empty($filters['dietary_regime'])) {
+            $query .= ' AND dietary_regime = :dietary_regime';
+            $params['dietary_regime'] = $filters['dietary_regime'];
+        }
+        if (isset($filters['min_people']) && $filters['min_people'] !== '') {
+            $query .= ' AND min_people <= :min_people';
+            $params['min_people'] = (int) $filters['min_people'];
         }
 
-        if (!empty($filters['min_people'])) {
-            $query .= ' AND min_people >= :min_people';
-            $params[':min_people'] = $filters['min_people'];
-        }
-
-        // Add other filters as needed (dietary restrictions, etc.)
-
+        $query .= ' ORDER BY id DESC';
         $stmt = $pdo->prepare($query);
         $stmt->execute($params);
-        $rows = $stmt->fetchAll();
-
-        $menus = [];
-        foreach ($rows as $row) {
-            $menu = new Menu();
-            $menu->setId((int)$row['id']);
-            $menu->setTitle($row['title']);
-            $menu->setDescription($row['description']);
-            $menu->setTheme($row['theme']);
-            $menu->setMinPeople((int)$row['min_people']);
-            $menu->setBasePrice((float)$row['base_price']);
-            $menu->setConditions($row['conditions']);
-            $menu->setAvailableStock((int)$row['available_stock']);
-            $menu->setCreatedAt($row['created_at'] ? new \DateTimeImmutable($row['created_at']) : null);
-            $menu->setUpdatedAt($row['updated_at'] ? new \DateTimeImmutable($row['updated_at']) : null);
-
-            $menus[] = $menu;
-        }
-
-        return $menus;
+        return $this->hydrateMany($stmt->fetchAll());
     }
 
     public function create(Menu $menu): int
     {
         $pdo = Database::getPDO();
-        $stmt = $pdo->prepare('INSERT INTO menus (title, description, theme, min_people, base_price, conditions, available_stock)
-                               VALUES (:title, :description, :theme, :min_people, :base_price, :conditions, :available_stock)');
+        $stmt = $pdo->prepare('INSERT INTO menus
+            (title, description, theme, dietary_regime, min_people, base_price, conditions, available_stock)
+            VALUES (:title, :description, :theme, :dietary_regime, :min_people, :base_price, :conditions, :available_stock)');
         $stmt->execute([
             'title' => $menu->getTitle(),
             'description' => $menu->getDescription(),
             'theme' => $menu->getTheme(),
+            'dietary_regime' => $menu->getDietaryRegime(),
             'min_people' => $menu->getMinPeople(),
             'base_price' => $menu->getBasePrice(),
             'conditions' => $menu->getConditions(),
             'available_stock' => $menu->getAvailableStock(),
         ]);
-
-        return (int)$pdo->lastInsertId();
+        return (int) $pdo->lastInsertId();
     }
 
     public function update(Menu $menu): void
     {
         $pdo = Database::getPDO();
         $stmt = $pdo->prepare('UPDATE menus SET
-                               title = :title,
-                               description = :description,
-                               theme = :theme,
-                               min_people = :min_people,
-                               base_price = :base_price,
-                               conditions = :conditions,
-                               available_stock = :available_stock,
-                               updated_at = NOW()
-                               WHERE id = :id');
+            title = :title, description = :description, theme = :theme,
+            dietary_regime = :dietary_regime, min_people = :min_people,
+            base_price = :base_price, conditions = :conditions,
+            available_stock = :available_stock, updated_at = NOW()
+            WHERE id = :id');
         $stmt->execute([
             'id' => $menu->getId(),
             'title' => $menu->getTitle(),
             'description' => $menu->getDescription(),
             'theme' => $menu->getTheme(),
+            'dietary_regime' => $menu->getDietaryRegime(),
             'min_people' => $menu->getMinPeople(),
             'base_price' => $menu->getBasePrice(),
             'conditions' => $menu->getConditions(),
@@ -152,7 +99,29 @@ class MenuRepository
     public function delete(int $id): void
     {
         $pdo = Database::getPDO();
-        $stmt = $pdo->prepare('DELETE FROM menus WHERE id = :id');
+        $stmt = $pdo->prepare('UPDATE menus SET is_active = 0, updated_at = NOW() WHERE id = :id');
         $stmt->execute(['id' => $id]);
+    }
+
+    private function hydrateMany(array $rows): array
+    {
+        return array_map(fn(array $row): Menu => $this->hydrate($row), $rows);
+    }
+
+    private function hydrate(array $row): Menu
+    {
+        $menu = new Menu();
+        $menu->setId((int) $row['id']);
+        $menu->setTitle($row['title']);
+        $menu->setDescription($row['description']);
+        $menu->setTheme($row['theme']);
+        $menu->setDietaryRegime($row['dietary_regime'] ?? 'classic');
+        $menu->setMinPeople((int) $row['min_people']);
+        $menu->setBasePrice((float) $row['base_price']);
+        $menu->setConditions($row['conditions']);
+        $menu->setAvailableStock((int) $row['available_stock']);
+        $menu->setCreatedAt(!empty($row['created_at']) ? new \DateTimeImmutable($row['created_at']) : null);
+        $menu->setUpdatedAt(!empty($row['updated_at']) ? new \DateTimeImmutable($row['updated_at']) : null);
+        return $menu;
     }
 }
