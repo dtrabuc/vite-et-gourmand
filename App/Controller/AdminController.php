@@ -233,7 +233,7 @@ class AdminController extends BaseController
         // Apply admin middleware
         (new \App\Middleware\Admin())();
 
-        if ($_SERVER['REQUEST_METHOD'] !== 'DELETE') {
+        if ($_SERVER['REQUEST_METHOD'] !== 'DELETE' && $_SERVER['REQUEST_METHOD'] !== 'POST') {
             http_response_code(405);
             echo 'Method Not Allowed';
             return;
@@ -322,9 +322,7 @@ class AdminController extends BaseController
         }
 
         $menus = $this->menuService->getAllMenus();
-
-        header('Content-Type: application/json');
-        echo json_encode($menus);
+        $this->render('admin/menus', ['menus' => $menus]);
     }
 
     public function createMenu(): void
