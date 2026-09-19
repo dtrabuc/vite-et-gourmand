@@ -203,6 +203,9 @@ class OrderService
         }
 
         $this->orderRepository->updateStatus($orderId, $status, $status === 'cancelled' ? trim((string) $cancellationReason) : null);
+        if ($status === 'cancelled' && $order->getStatus() !== 'cancelled') {
+            $this->orderRepository->increaseMenuStock($order->getMenuId());
+        }
         $this->orderRepository->addToHistory($orderId, $status, $changedByUserId, $notes);
 
         $user = $this->userRepository->findById($order->getUserId());
