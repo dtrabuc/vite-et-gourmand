@@ -5,30 +5,31 @@ on:
     branches: ["dev", "main"]
   pull_request:
     branches: ["dev", "main"]
-  workflow_dispatch:
 
 jobs:
   syntax:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: shivammathur/setup-php@v2
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+
+      - name: Installer PHP
+        uses: shivammathur/setup-php@v2
         with:
-          php-version: "8.3"
-      - name: Check PHP syntax
+          php-version: "8.5"
+
+      - name: Vérifier la syntaxe PHP
         shell: bash
         run: |
-          set +e
-          : > syntax.log
-          find App config public -type f -name "*.php" -print0 | while IFS= read -r -d '' file; do
-            php -l "$file" >> syntax.log 2>&1
-          done
-          cat syntax.log
-          if grep -qE 'Parse error|Fatal error|Errors parsing' syntax.log; then exit 1; fi
-      - name: Upload syntax report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: php-syntax-report
-          path: syntax.log
-          if-no-files-found: error
+          set -uo pipefail
+          failures=0
+          while IFS= read -r -d '' file; do
+            if ! php -l "$file"; then
+              failures=$((failures + 1))
+            fi
+          done < <(find App config public -type f -name "*.php" -print0)
+
+          if [ "$failures" -gt 0 ]; then
+            echo "Le contrôle de syntaxe a détecté $failures fichier(s) PHP en erreur."
+            exit 1
+          fi
