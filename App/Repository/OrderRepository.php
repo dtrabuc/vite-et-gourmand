@@ -53,6 +53,23 @@ class OrderRepository
         return $row === false ? null : $this->hydrate($row);
     }
 
+    public function updateCustomerOrder(int $id, int $numberOfPeople, string $deliveryDate, string $deliveryTime, string $address, string $city, string $postalCode, ?float $distanceKm, float $menuPrice, float $deliveryCost, float $discountRate, float $totalPrice): void
+    {
+        $stmt = Database::getPDO()->prepare(
+            'UPDATE orders SET number_of_people = :people, delivery_date = :delivery_date, delivery_time = :delivery_time,
+             delivery_address = :address, delivery_city = :city, delivery_postal_code = :postal_code,
+             delivery_distance_km = :distance, menu_price = :menu_price, delivery_cost = :delivery_cost,
+             discount_rate = :discount_rate, total_price = :total_price, updated_at = NOW()
+             WHERE id = :id'
+        );
+        $stmt->execute([
+            'id' => $id, 'people' => $numberOfPeople, 'delivery_date' => $deliveryDate,
+            'delivery_time' => $deliveryTime, 'address' => $address, 'city' => $city,
+            'postal_code' => $postalCode, 'distance' => $distanceKm, 'menu_price' => $menuPrice,
+            'delivery_cost' => $deliveryCost, 'discount_rate' => $discountRate, 'total_price' => $totalPrice,
+        ]);
+    }
+
     public function updateStatus(int $id, string $status, ?string $cancellationReason = null): void
     {
         $pdo = Database::getPDO();
