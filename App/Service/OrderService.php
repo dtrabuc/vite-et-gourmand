@@ -157,12 +157,28 @@ class OrderService
         if ($order->getStatus() !== 'pending') {
             throw new \InvalidArgumentException('Cette commande ne peut plus être modifiée.');
         }
-        $menu = $this->menuRepository->findById($order->getMenuId());
-        if ($menu === null || $numberOfPeople < $menu->getMinPeople()) {
-            throw new \InvalidArgumentException('Le nombre de personnes est inférieur au minimum du menu.');
+        if ($numberOfPeople < 1) {
+            throw new \InvalidArgumentException('Le nombre de personnes doit être supérieur à 0.');
+        }
+        if (!preg_match('/^\\d{4}-\\d{2}-\\d{2}$/', $deliveryDate) || $deliveryDate < date('Y-m-d')) {
+            throw new \InvalidArgumentException('La date de livraison est invalide.');
+        }
+        if (!preg_match('/^\\d{2}:\\d{2}$/', $deliveryTime)) {
+            throw new \InvalidArgumentException('L’heure de livraison est invalide.');
+        }
+        $timeParts = array_map('intval', explode(':', $deliveryTime));
+        if ($timeParts[0] > 23 || $timeParts[1] > 59) {
+            throw new \InvalidArgumentException('L’heure de livraison est invalide.');
         }
         if (trim($address) === '' || trim($city) === '') {
             throw new \InvalidArgumentException('L’adresse et la ville sont requises.');
+        }
+        if ($distanceKm !== null && $distanceKm < 0) {
+            throw new \InvalidArgumentException('La distance de livraison est invalide.');
+        }
+        $menu = $this->menuRepository->findById($order->getMenuId());
+        if ($menu === null || $numberOfPeople < $menu->getMinPeople()) {
+            throw new \InvalidArgumentException('Le nombre de personnes est inférieur au minimum du menu.');
         }
         [$menuPrice, $discountRate] = $this->calculateMenuPrice($menu->getBasePrice(), $menu->getMinPeople(), $numberOfPeople);
         $deliveryCost = $this->calculateDeliveryCost($city, $distanceKm);
