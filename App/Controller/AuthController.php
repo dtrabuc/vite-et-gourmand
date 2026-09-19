@@ -172,19 +172,12 @@ class AuthController extends BaseController
             exit;
         }
 
-        // Get user data
-        // In a real implementation, we would fetch from repository
-        // For now, we'll use session data
-        $userData = [
-            'email' => $_SESSION['email'] ?? '',
-            'first_name' => $_SESSION['first_name'] ?? '',
-            'last_name' => $_SESSION['last_name'] ?? '',
-            'phone' => $_SESSION['phone'] ?? '',
-            'gsm' => $_SESSION['gsm'] ?? '',
-            'address' => $_SESSION['address'] ?? '',
-        ];
-
-        $this->render('auth/profile', ['user' => $userData]);
+        $user = (new UserRepository())->findById((int) $userId);
+        if ($user === null) { header('Location: /login'); exit; }
+        $this->render('auth/profile', ['user' => [
+            'email' => $user->getEmail(), 'first_name' => $user->getFirstName(), 'last_name' => $user->getLastName(),
+            'phone' => $user->getPhone(), 'gsm' => $user->getGsm(), 'address' => $user->getAddress(),
+        ]]);
     }
 
     public function updateProfile(): void
@@ -237,15 +230,22 @@ class AuthController extends BaseController
             exit;
         }
 
-        // Update user
-        // In a real implementation, we would use the AuthService
-        // For now, we'll just update session and redirect
-        $_SESSION['email'] = $_POST['email'];
-        $_SESSION['first_name'] = $_POST['first_name'];
-        $_SESSION['last_name'] = $_POST['last_name'];
-        $_SESSION['phone'] = $_POST['phone'];
-        $_SESSION['gsm'] = $_POST['gsm'];
-        $_SESSION['address'] = $_POST['address'];
+        try {
+            $this->authService->updateProfile((int) $userId, [
+                'email' => trim($_POST['email']), 'first_name' => trim($_POST['first_name']), 'last_name' => trim($_POST['last_name']),
+                'phone' => trim($_POST['phone']), 'gsm' => trim($_POST['gsm']), 'address' => trim($_POST['address']),
+            ]);
+        } catch (\Throwable $e) {
+            error_log('Profile update error: ' . $e->getMessage());
+            $_SESSION['profile_errors'] = ['general' => 'Impossible de mettre à jour le profil.'];
+            header('Location: /profile'); exit;
+        }
+        $_SESSION['email'] = trim($_POST['email']);
+        $_SESSION['first_name'] = trim($_POST['first_name']);
+        $_SESSION['last_name'] = trim($_POST['last_name']);
+        $_SESSION['phone'] = trim($_POST['phone']);
+        $_SESSION['gsm'] = trim($_POST['gsm']);
+        $_SESSION['address'] = trim($_POST['address']);
 
         // For AJAX requests
         if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
@@ -404,11 +404,7 @@ class AuthController extends BaseController
             exit;
         }
 
-        // Generate reset token and send email
-        $authService = new \App\Service\AuthService(
-            new \App\Repository\UserRepository()
-        );
-        $token = $authService->createResetToken($email);
+        $token = $this->authService->createResetToken($email);
 
         // Always show the same message to prevent user enumeration
         if ($token !== null) {
@@ -493,14 +489,10 @@ class AuthController extends BaseController
             exit;
         }
 
-        // In a real implementation, we would:
-        // 1. Validate the token
-        // 2. Get the user ID from the token
-        // 3. Update the password
-        // 4. Invalidate the token
-        // 5. Redirect to login
-
-        // For now, we'll just redirect to login with success
+        if (!$this->authService->resetPassword($token, $password)) {
+            $_SESSION['reset_errors'] = ['general' => 'Le lien de réinitialisation est invalide ou expiré.'];
+            header("Location: /reset-password/$token"); exit;
+        }
         $_SESSION['reset_success'] = 'Mot de passe réinitialisé avec succès. Vous pouvez maintenant vous connecter.';
         header('Location: /login');
         exit;
