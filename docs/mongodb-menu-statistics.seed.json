@@ -1,0 +1,32 @@
+[
+  {
+    "menuId": 1,
+    "menuTitle": "Menu de Noël",
+    "periodStart": null,
+    "periodEnd": null,
+    "periodIdentifier": "all_time",
+    "orderCount": 0,
+    "revenue": 0,
+    "updatedAt": {"$date": "2026-09-19T00:00:00.000Z"}
+  },
+  {
+    "menuId": 2,
+    "menuTitle": "Menu de Pâques",
+    "periodStart": null,
+    "periodEnd": null,
+    "periodIdentifier": "all_time",
+    "orderCount": 0,
+    "revenue": 0,
+    "updatedAt": {"$date": "2026-09-19T00:00:00.000Z"}
+  },
+  {
+    "menuId": 3,
+    "menuTitle": "Menu végétarien",
+    "periodStart": null,
+    "periodEnd": null,
+    "periodIdentifier": "all_time",
+    "orderCount": 0,
+    "revenue": 0,
+    "updatedAt": {"$date": "2026-09-19T00:00:00.000Z"}
+  }
+]
