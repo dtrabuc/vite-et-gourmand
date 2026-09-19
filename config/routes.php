@@ -1,6 +1,6 @@
 <?php
 return [
-    // Public routes
+    // Routes publiques
     ['GET', '/', 'PublicController@index', ['Security']],
     ['GET', '/menus', 'PublicController@menusPage', ['Security']],
     ['GET', '/menus/{id}', 'PublicController@menuDetail', ['Security']],
@@ -11,64 +11,54 @@ return [
     ['POST', '/contact', 'ContactController@send', ['Security']],
     ['GET', '/legal', 'PublicController@legal', ['Security']],
     ['GET', '/cgv', 'PublicController@cgv', ['Security']],
-    // NEW ENDPOINTS for frontend alignment
 
-    // Auth routes
+    // Authentification
     ['GET', '/login', 'AuthController@showLogin', ['Security']],
     ['POST', '/login', 'AuthController@login', ['Security']],
     ['GET', '/register', 'AuthController@showRegister', ['Security']],
     ['POST', '/register', 'AuthController@register', ['Security']],
     ['GET', '/profile', 'AuthController@profile', ['Security']],
-    ['PUT', '/profile', 'AuthController@updateProfile', ['Security']],
-    // Also accept POST with _method=PUT for updateProfile (we'll handle in controller or middleware)
-    ['POST', '/profile', 'AuthController@updateProfile', ['Security']], // Temporary, we'll rely on controller to check _method
-    ['PUT', '/password', 'AuthController@changePassword', ['Security']],
-    ['POST', '/password', 'AuthController@changePassword', ['Security']], // Temporary
+    ['POST', '/profile', 'AuthController@updateProfile', ['Security']],
+    ['POST', '/password', 'AuthController@changePassword', ['Security']],
     ['POST', '/logout', 'AuthController@logout', ['Security']],
     ['GET', '/forgot-password', 'AuthController@showForgotPassword', ['Security']],
     ['POST', '/forgot-password', 'AuthController@forgotPassword', ['Security']],
     ['GET', '/reset-password/{token}', 'AuthController@showResetPassword', ['Security']],
     ['POST', '/reset-password/{token}', 'AuthController@resetPassword', ['Security']],
 
-    // Order routes
+    // Commandes utilisateur
     ['GET', '/orders', 'OrderController@index', ['Security']],
     ['GET', '/orders/new', 'OrderController@new', ['Security']],
     ['POST', '/orders', 'OrderController@create', ['Security']],
     ['GET', '/orders/confirmation/{id}', 'OrderController@confirmation', ['Security']],
     ['POST', '/orders/{id}/review', 'OrderController@review', ['Security']],
     ['POST', '/orders/{id}/edit', 'OrderController@updateCustomerOrder', ['Security']],
-    ['PUT', '/orders/{id}/status', 'OrderController@updateStatus', ['Security']],
-    ['POST', '/orders/{id}/status', 'OrderController@updateStatus', ['Security']], // Temporary
+    ['POST', '/orders/{id}/status', 'OrderController@updateStatus', ['Security']],
 
-    // Admin routes
+    // Espace employé / administrateur
     ['GET', '/admin/login', 'AdminController@showLogin', ['Security']],
     ['POST', '/admin/login', 'AdminController@login', ['Security']],
     ['GET', '/admin/dashboard', 'AdminController@dashboard', ['Security']],
     ['GET', '/admin/orders', 'AdminController@orders', ['Security']],
+    ['POST', '/admin/orders/{id}/status', 'AdminController@updateOrderStatus', ['Security']],
     ['GET', '/admin/hours', 'AdminController@openingHours', ['Security']],
+    ['POST', '/admin/hours', 'AdminController@updateOpeningHours', ['Security']],
     ['GET', '/admin/dishes', 'AdminController@dishes', ['Security']],
     ['POST', '/admin/dishes', 'AdminController@createDish', ['Security']],
     ['POST', '/admin/dishes/{id}/edit', 'AdminController@updateDish', ['Security']],
     ['POST', '/admin/dishes/{id}/delete', 'AdminController@deleteDish', ['Security']],
-    ['POST', '/admin/hours', 'AdminController@updateOpeningHours', ['Security']],
-    ['POST', '/admin/orders/{id}/status', 'AdminController@updateOrderStatus', ['Security']],
     ['GET', '/admin/employees', 'AdminController@getEmployees', ['Security']],
     ['POST', '/admin/employees', 'AdminController@createEmployee', ['Security']],
-    ['DELETE', '/admin/employees/{id}', 'AdminController@disableEmployee', ['Security']],
     ['POST', '/admin/employees/{id}/disable', 'AdminController@disableEmployee', ['Security']],
-    ['PATCH', '/admin/employees/{id}', 'AdminController@enableEmployee', ['Security']],
     ['POST', '/admin/employees/{id}/enable', 'AdminController@enableEmployee', ['Security']],
-    ['GET', '/admin/revenue', 'AdminController@revenuePage', ['Security']],
-    ['GET', '/admin/revenue/menu', 'AdminController@revenueByMenu', ['Security']],
     ['GET', '/admin/menus', 'AdminController@getMenus', ['Security']],
     ['POST', '/admin/menus', 'AdminController@createMenu', ['Security']],
-    ['PUT', '/admin/menus/{id}', 'AdminController@updateMenu', ['Security']],
-    ['POST', '/admin/menus/{id}', 'AdminController@updateMenu', ['Security']], // Temporary
+    ['POST', '/admin/menus/{id}', 'AdminController@updateMenu', ['Security']],
     ['DELETE', '/admin/menus/{id}', 'AdminController@deleteMenu', ['Security']],
     ['POST', '/admin/menus/{id}/delete', 'AdminController@deleteMenu', ['Security']],
     ['GET', '/admin/comments/pending', 'AdminController@getPendingComments', ['Security']],
-    ['PUT', '/admin/comments/{id}/validate', 'AdminController@validateComment', ['Security']],
-    ['POST', '/admin/comments/{id}/validate', 'AdminController@validateComment', ['Security']], // Temporary
-    ['PUT', '/admin/comments/{id}/reject', 'AdminController@rejectComment', ['Security']],
-    ['POST', '/admin/comments/{id}/reject', 'AdminController@rejectComment', ['Security']], // Temporary
+    ['POST', '/admin/comments/{id}/validate', 'AdminController@validateComment', ['Security']],
+    ['POST', '/admin/comments/{id}/reject', 'AdminController@rejectComment', ['Security']],
+    ['GET', '/admin/revenue', 'AdminController@revenuePage', ['Security']],
+    ['GET', '/admin/revenue/menu', 'AdminController@revenueByMenu', ['Security']],
 ];
