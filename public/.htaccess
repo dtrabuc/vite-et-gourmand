@@ -1,0 +1,8 @@
+RewriteEngine On
+
+# Ne pas réécrire les fichiers et dossiers réellement présents.
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Toutes les autres requêtes passent par le contrôleur frontal.
+RewriteRule ^ index.php [QSA,L]
