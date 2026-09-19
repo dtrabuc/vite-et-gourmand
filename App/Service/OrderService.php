@@ -28,7 +28,7 @@ class OrderService
         $this->mailService = $mailService;
     }
 
-    public function createOrder(int $userId, int $menuId, int $numberOfPeople, string $deliveryDate, string $deliveryTime, string $deliveryAddress): array
+    public function createOrder(int $userId, int $menuId, int $numberOfPeople, string $deliveryDate, string $deliveryTime, string $deliveryAddress, string $deliveryCity = '', ?float $deliveryDistanceKm = null): array
     {
         // Get user and menu
         $user = $this->userRepository->findById($userId);
@@ -64,7 +64,7 @@ class OrderService
         // Le formulaire actuel ne fournit pas encore de distance GPS/code postal fiable :
         // on conserve donc la distance comme donnée métier explicite et refusons
         // de fabriquer une distance à partir d’une adresse texte.
-        $deliveryCost = $this->calculateDeliveryCost($deliveryAddress);
+        $deliveryCost = $this->calculateDeliveryCost($deliveryAddress, $deliveryCity, $deliveryDistanceKm);
 
         // Calculate total price
         $totalPrice = $menuPrice + $deliveryCost;
@@ -78,6 +78,8 @@ class OrderService
             'delivery_date' => $deliveryDate,
             'delivery_time' => $deliveryTime,
             'delivery_address' => $deliveryAddress,
+            'delivery_city' => $deliveryCity,
+            'delivery_distance_km' => $deliveryDistanceKm,
             'delivery_cost' => $deliveryCost,
             'menu_price' => $menuPrice,
             'total_price' => $totalPrice,
@@ -125,22 +127,23 @@ class OrderService
      * Le calcul doit recevoir une distance issue d'un service de géocodage
      * dans une étape dédiée.
      */
-    private function calculateDeliveryCost(string $deliveryAddress): float
+    private function calculateDeliveryCost(string $deliveryAddress, string $deliveryCity = '', ?float $deliveryDistanceKm = null): float
     {
-        $address = mb_strtolower(trim($deliveryAddress));
+        $city = mb_strtolower(trim($deliveryCity));
 
-        if ($address === '') {
-            throw new \InvalidArgumentException('L’adresse de livraison est requise.');
+        if ($city === '') {
+            throw new \InvalidArgumentException('La ville de livraison est requise.');
         }
 
-        // Une adresse contenant Bordeaux est considérée comme intra-ville
-        // uniquement pour préserver le fonctionnement local actuel.
-        // Le contrôle définitif devra utiliser la ville issue du formulaire.
-        if (preg_match('/\\bbordeaux\\b/u', $address) === 1) {
+        if ($city === 'bordeaux') {
             return 0.00;
         }
 
-        return 5.00;
+        if ($deliveryDistanceKm === null || $deliveryDistanceKm < 0) {
+            throw new \InvalidArgumentException('La distance de livraison est requise hors Bordeaux.');
+        }
+
+        return round(5.00 + (0.59 * $deliveryDistanceKm), 2);
     }
 
     public function getUserOrders(int $userId): array
