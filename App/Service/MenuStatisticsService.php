@@ -54,7 +54,6 @@ class MenuStatisticsService
         $rows = $stmt->fetchAll();
 
         // Get MongoDB connection
-        $mongo = Database::getMongo();
         $database = Database::getMongoDatabase();
         $collection = $database->selectCollection('menu_statistics');
 
