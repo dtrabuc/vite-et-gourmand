@@ -61,7 +61,7 @@ $selectedId = (int) ($oldInput['menu_id'] ?? $selectedMenuId);
                                     <option value="">Sélectionnez un menu</option>
                                     <?php foreach ($menus as $menu): ?>
                                         <option value="<?= $menu->getId() ?>" data-base-price="<?= $menu->getBasePrice() ?>" data-min-people="<?= $menu->getMinPeople() ?>" <?= $selectedId === $menu->getId() ? 'selected' : '' ?>>
-                                            <?= $escape($menu->getTitle()) ?> — <?= number_format($menu->getBasePrice(), 2, ',', ' ') ?> € / personne (minimum <?= $menu->getMinPeople() ?>)
+                                            <?= $escape($menu->getTitle()) ?> — <?= number_format($menu->getBasePrice(), 2, ',', ' ') ?> € (minimum <?= $menu->getMinPeople() ?> personnes)
                                         </option>
                                     <?php endforeach; ?>
                                 </select>
