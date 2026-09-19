@@ -108,7 +108,12 @@ class AdminService
         $totalRevenue = $totalRevenue === false ? 0 : (float)$totalRevenue;
 
         // Get menu stats from MongoDB
-        $menuStats = $this->getMenuStatsFromMongoDB();
+        try {
+            $menuStats = $this->getMenuStatsFromMongoDB();
+        } catch (\Throwable $e) {
+            error_log('MongoDB statistics unavailable: ' . $e->getMessage());
+            $menuStats = $this->getMenuStatsFromMariaDB();
+        }
 
         return [
             'total_users' => $totalUsers,
@@ -170,8 +175,8 @@ class AdminService
 
     public function getRevenueByMenu(): array
     {
-        // This should query MongoDB for analytics
-        return $this->getMenuStatsFromMongoDB();
+        try { return $this->getMenuStatsFromMongoDB(); }
+        catch (\Throwable $e) { return $this->getMenuStatsFromMariaDB(); }
     }
 
     /**
