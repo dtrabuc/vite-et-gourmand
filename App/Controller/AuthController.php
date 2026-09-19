@@ -500,6 +500,4 @@ class AuthController extends BaseController
         header('Location: /login');
         exit;
     }
-
-    
-    }
+}
