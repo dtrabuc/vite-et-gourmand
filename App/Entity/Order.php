@@ -19,6 +19,7 @@ class Order
     private float $discountRate;
     private float $totalPrice;
     private string $status;
+    private bool $equipmentLoaned = false;
     private ?string $cancellationReason;
     private ?\DateTimeInterface $createdAt;
     private ?\DateTimeInterface $updatedAt;
@@ -55,6 +56,8 @@ class Order
     public function setTotalPrice(float $totalPrice): void { $this->totalPrice = $totalPrice; }
     public function getStatus(): string { return $this->status; }
     public function setStatus(string $status): void { $this->status = $status; }
+    public function isEquipmentLoaned(): bool { return $this->equipmentLoaned; }
+    public function setEquipmentLoaned(bool $equipmentLoaned): void { $this->equipmentLoaned = $equipmentLoaned; }
     public function getCancellationReason(): ?string { return $this->cancellationReason; }
     public function setCancellationReason(?string $cancellationReason): void { $this->cancellationReason = $cancellationReason; }
     public function getCreatedAt(): ?\DateTimeInterface { return $this->createdAt; }
