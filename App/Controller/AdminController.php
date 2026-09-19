@@ -5,6 +5,7 @@ use App\Service\AdminService;
 use App\Service\AuthService;
 use App\Service\MenuService;
 use App\Service\CommentService;
+use App\Service\MailService;
 use App\Repository\UserRepository;
 use App\Repository\OrderRepository;
 use App\Repository\MenuRepository;
