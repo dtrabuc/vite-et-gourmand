@@ -229,7 +229,7 @@ class AdminController extends BaseController
         // Validate input
         $errors = [];
 
-        $requiredFields = ['email', 'first_name', 'last_name', 'phone', 'gsm', 'address'];
+        $requiredFields = ['email', 'password', 'first_name', 'last_name', 'phone', 'gsm', 'address'];
         foreach ($requiredFields as $field) {
             if (empty($_POST[$field] ?? '')) {
                 $errors[$field] = 'Ce champ est requis';
@@ -267,9 +267,11 @@ class AdminController extends BaseController
         }
 
         try {
-            // Aucun mot de passe n'est transmis par l'administrateur : un secret aléatoire est créé puis remplacé via un lien de réinitialisation.
-            $temporaryPassword = bin2hex(random_bytes(24));
-            $hashedPassword = password_hash($temporaryPassword, PASSWORD_DEFAULT);
+            $password = (string)($_POST['password'] ?? '');
+            if (strlen($password) < 10 || !preg_match('/[A-Z]/', $password) || !preg_match('/[a-z]/', $password) || !preg_match('/[0-9]/', $password) || !preg_match('/[^A-Za-z0-9]/', $password)) {
+                throw new \InvalidArgumentException('Le mot de passe doit contenir au moins 10 caractères avec majuscule, minuscule, chiffre et caractère spécial.');
+            }
+            $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
             // Create employee
             $employeeId = $this->adminService->createEmployee([
@@ -283,16 +285,11 @@ class AdminController extends BaseController
                 'address' => $_POST['address'],
             ]);
 
-            $resetToken = $this->authService->createResetToken($_POST['email']);
-            if ($resetToken !== null) {
-                $baseUrl = rtrim($_ENV['APP_URL'] ?? 'http://127.0.0.1:8080', '/');
-                $resetUrl = $baseUrl . '/reset-password/' . rawurlencode($resetToken);
-                $mail = new MailService(
-                    $_ENV['MAIL_FROM_ADDRESS'] ?? 'noreply@viteetgourmand.com',
-                    $_ENV['MAIL_FROM_NAME'] ?? 'Vite & Gourmand'
-                );
-                $mail->sendPasswordResetEmail($_POST['email'], $_POST['first_name'], $resetUrl);
-            }
+            $mail = new MailService(
+                $_ENV['MAIL_FROM_ADDRESS'] ?? 'noreply@viteetgourmand.com',
+                $_ENV['MAIL_FROM_NAME'] ?? 'Vite & Gourmand'
+            );
+            $mail->send($_POST['email'], 'Création de votre compte employé', "Bonjour " . $_POST['first_name'] . ",\\n\\nUn compte employé Vite & Gourmand vient d'être créé pour vous.\\nVotre mot de passe n'est pas communiqué dans cet email : rapprochez-vous de l'administrateur pour l'obtenir.\\n\\nL'équipe Vite & Gourmand");
 
             $_SESSION['admin_success'] = 'Employé créé avec succès';
             header('Location: /admin/employees');
