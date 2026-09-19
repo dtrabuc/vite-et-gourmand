@@ -72,6 +72,24 @@ HTML;
         return $this->send($to, $subject, $body);
     }
 
+    public function sendReviewInvitationEmail(string $to, string $firstName, int $orderId): bool
+    {
+        return $this->send(
+            $to,
+            'Votre commande est terminée : donnez votre avis',
+            "Bonjour {$firstName},\\n\\nVotre commande #{$orderId} est terminée. Vous pouvez maintenant vous connecter à votre espace client pour laisser une note de 1 à 5 et un commentaire.\\n\\nÀ bientôt,\\nL'équipe Vite & Gourmand"
+        );
+    }
+
+    public function sendEquipmentReturnNoticeEmail(string $to, string $firstName, int $orderId): bool
+    {
+        return $this->send(
+            $to,
+            'Retour du matériel prêté — commande #' . $orderId,
+            "Bonjour {$firstName},\\n\\nLe matériel prêté pour la commande #{$orderId} doit être restitué. À défaut de restitution sous 10 jours ouvrés, des frais de 600 euros sont prévus selon les conditions générales de vente.\\n\\nPour organiser le retour, veuillez prendre contact avec Vite & Gourmand."
+        );
+    }
+
     public function sendOrderConfirmationEmail(string $to, string $firstName, array $orderDetails): bool
     {
         $subject = 'Confirmation de votre commande';
