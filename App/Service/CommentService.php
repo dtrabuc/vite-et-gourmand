@@ -55,6 +55,11 @@ class CommentService
         return $comments;
     }
 
+    public function getByOrderId(int $orderId): ?array
+    {
+        return $this->commentRepository->findByOrderId($orderId);
+    }
+
     public function create(array $data): int
     {
         // Validate data
