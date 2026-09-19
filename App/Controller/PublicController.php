@@ -87,6 +87,16 @@ class PublicController extends BaseController
         echo $this->jsonSuccess(array_map([$this, 'menuToArray'], $menus));
     }
 
+    public function legal(): void
+    {
+        $this->render('home/legal');
+    }
+
+    public function cgv(): void
+    {
+        $this->render('home/cgv');
+    }
+
     private function menuToArray(\App\Entity\Menu $menu): array
     {
         return [
