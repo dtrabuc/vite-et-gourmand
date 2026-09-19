@@ -56,6 +56,7 @@ return [
     ['PUT', '/admin/menus/{id}', 'AdminController@updateMenu', ['Security']],
     ['POST', '/admin/menus/{id}', 'AdminController@updateMenu', ['Security']], // Temporary
     ['DELETE', '/admin/menus/{id}', 'AdminController@deleteMenu', ['Security']],
+    ['POST', '/admin/menus/{id}/delete', 'AdminController@deleteMenu', ['Security']],
     ['GET', '/admin/comments/pending', 'AdminController@getPendingComments', ['Security']],
     ['PUT', '/admin/comments/{id}/validate', 'AdminController@validateComment', ['Security']],
     ['POST', '/admin/comments/{id}/validate', 'AdminController@validateComment', ['Security']], // Temporary
