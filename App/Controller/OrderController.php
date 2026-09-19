@@ -178,6 +178,27 @@ class OrderController extends BaseController
         ]);
     }
 
+    public function updateCustomerOrder(array $params): void
+    {
+        (new \App\Middleware\Auth())();
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { http_response_code(405); return; }
+        $orderId = (int)($params[0] ?? 0);
+        $userId = (int)($_SESSION['user_id'] ?? 0);
+        try {
+            $distance = ($_POST['delivery_distance_km'] ?? '') !== '' ? (float)$_POST['delivery_distance_km'] : null;
+            $this->orderService->updateCustomerOrder(
+                $orderId, $userId, (int)$_POST['number_of_people'], trim((string)$_POST['delivery_date']),
+                trim((string)$_POST['delivery_time']), trim((string)$_POST['delivery_address']),
+                trim((string)$_POST['delivery_city']), trim((string)$_POST['delivery_postal_code']), $distance
+            );
+            $_SESSION['order_success'] = 'Commande modifiée.';
+        } catch (\Throwable $e) {
+            $_SESSION['order_error'] = $e->getMessage();
+        }
+        header('Location: /orders');
+        exit;
+    }
+
     public function review(array $params): void
     {
         (new \App\Middleware\Auth())();
