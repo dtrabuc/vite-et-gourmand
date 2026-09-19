@@ -69,8 +69,8 @@ class AdminController extends BaseController
         $_SESSION['first_name'] = $user->getFirstName();
         $_SESSION['last_name'] = $user->getLastName();
 
-        // Redirect to admin dashboard
-        header('Location: /admin/dashboard');
+        // Redirect according to role
+        header('Location: ' . ($user->getRole() === 'admin' ? '/admin/dashboard' : '/admin/orders'));
         exit;
     }
 
