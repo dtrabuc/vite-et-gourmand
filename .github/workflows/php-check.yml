@@ -13,16 +13,13 @@ jobs:
       - name: Récupérer le dépôt
         uses: actions/checkout@v4
 
-      - name: Installer PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: "8.4"
+      - name: Vérifier la version PHP
+        run: php -v
 
       - name: Vérifier la syntaxe PHP
         shell: bash
         run: |
           set -e
-          for file in $(find App config public -type f -name "*.php"); do
-            php -l "$file" >/dev/null
-          done
-
+          while IFS= read -r -d '' file; do
+            php -l "$file"
+          done < <(find App config public -type f -name "*.php" -print0)
