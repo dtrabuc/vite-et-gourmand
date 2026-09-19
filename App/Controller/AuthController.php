@@ -104,7 +104,7 @@ class AuthController extends BaseController
 
         // Password validation according to the ECF requirements
         $password = $_POST['password'] ?? '';
-        if (strlen($password) < 12) {
+        if (strlen($password) < 10) {
             $errors['password'] = 'Le mot de passe doit contenir au moins 10 caractères';
         }
         if (!preg_match('/[A-Z]/', $password)) {
