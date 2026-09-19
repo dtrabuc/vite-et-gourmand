@@ -32,7 +32,7 @@ $escape = static fn (mixed $value): string => htmlspecialchars((string) $value, 
                     <?php if ($role === 'admin'): ?>
                         <li class="nav-item"><a class="nav-link" href="/admin/dashboard">Administration</a></li>
                     <?php elseif ($role === 'employee'): ?>
-                        <li class="nav-item"><a class="nav-link" href="/admin/orders">Gestion</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/admin/orders">Commandes</a></li><li class="nav-item"><a class="nav-link" href="/admin/dishes">Plats</a></li><li class="nav-item"><a class="nav-link" href="/admin/hours">Horaires</a></li><li class="nav-item"><a class="nav-link" href="/admin/comments/pending">Avis</a></li>
                     <?php endif; ?>
                     <li class="nav-item">
                         <form method="post" action="/logout" class="d-inline">
