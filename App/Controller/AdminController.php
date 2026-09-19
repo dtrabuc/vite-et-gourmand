@@ -299,7 +299,10 @@ class AdminController extends BaseController
             return;
         }
 
-        $revenue = $this->adminService->getRevenueByMenu();
+        $from = isset($_GET['from']) ? trim((string)$_GET['from']) : null;
+        $to = isset($_GET['to']) ? trim((string)$_GET['to']) : null;
+        $menuId = isset($_GET['menu_id']) && is_numeric($_GET['menu_id']) ? (int)$_GET['menu_id'] : null;
+        $revenue = $this->adminService->getRevenueByMenu($from, $to, $menuId);
 
         header('Content-Type: application/json');
         echo json_encode($revenue);
