@@ -18,12 +18,14 @@ Depuis un terminal ayant accès à `mongoimport` :
 mongoimport --db vitegourmand --collection comments --file docs/mongodb-comments.seed.json --jsonArray
 ```
 
-Puis, dans `mongosh` ou MongoDB Compass, créer l’index utilisé par l’accueil et la modération :
+Puis, dans `mongosh` ou MongoDB Compass, créer les index utilisés par l’accueil, la modération et les statistiques :
 
 ```javascript
 db.comments.createIndex({ isValidated: 1, createdAt: -1 });
 db.comments.createIndex({ userId: 1, orderId: 1 }, { unique: true });
-db.menu_statistics.createIndex({ menuId: 1 }, { unique: true });
+db.menu_statistics.createIndex({ menuId: 1, periodIdentifier: 1 }, { unique: true });
 ```
+
+Pour les statistiques de démonstration, le fichier `mongodb-menu-statistics.seed.json` peut être importé dans la collection `menu_statistics` de la même base. Les valeurs initiales sont volontairement à zéro : les statistiques réelles sont calculées par l’application à partir des commandes terminées.
 
 Le fichier est un tableau JSON standard, compatible avec l’import visuel et avec `mongoimport --jsonArray`. Les trois documents sont des données de démonstration ; les identifiants `userId`, `menuId` et `orderId` sont des références applicatives, sans clé étrangère MongoDB. Les comptes et commandes correspondants doivent être créés dans MariaDB pour tester le parcours complet.
