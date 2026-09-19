@@ -262,7 +262,10 @@ class OrderController extends BaseController
 
         $cancellationReason = trim((string) ($_POST['cancellation_reason'] ?? ''));
         $notes = trim((string) ($_POST['notes'] ?? ''));
-        
+        $equipmentLoaned = $isStaff && array_key_exists('equipment_loaned', $_POST)
+            ? (bool) $_POST['equipment_loaned']
+            : null;
+
         if (!$isStaff && ($status !== 'cancelled' || $order->getStatus() !== 'pending')) {
             http_response_code(403);
             echo 'Une commande ne peut être annulée par le client que lorsqu’elle est en attente.';
@@ -291,7 +294,8 @@ class OrderController extends BaseController
                 $status,
                 $userId,
                 $notes,
-                $cancellationReason !== '' ? $cancellationReason : null
+                $cancellationReason !== '' ? $cancellationReason : null,
+                $equipmentLoaned
             );
 
             header('Location: /orders');
