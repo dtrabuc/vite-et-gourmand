@@ -13,7 +13,7 @@ class AuthService
         $this->userRepository = $userRepository;
     }
 
-    private function validatePassword(string $password): ?array
+    public function validatePassword(string $password): ?array
     {
         $errors = [];
         if (strlen($password) < 10) {
