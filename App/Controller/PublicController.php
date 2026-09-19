@@ -44,7 +44,8 @@ class PublicController extends BaseController
             $this->render('home/menu_detail', ['menu' => null]);
             return;
         }
-        $this->render('home/menu_detail', ['menu' => $menu]);
+        $details = (new MenuRepository())->findDetails($id);
+        $this->render('home/menu_detail', ['menu' => $menu, 'details' => $details]);
     }
 
     public function getMenus(): void
