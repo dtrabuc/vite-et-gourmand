@@ -21,7 +21,7 @@ class AuthService
     private function validatePassword(string $password): ?array
     {
         $errors = [];
-        if (strlen($password) < 12) {
+        if (strlen($password) < 10) {
             $errors[] = 'Le mot de passe doit contenir au moins 10 caractères';
         }
         if (!preg_match('/[A-Z]/', $password)) {
