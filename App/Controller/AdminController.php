@@ -589,7 +589,7 @@ class AdminController extends BaseController
         // Apply auth middleware
         (new \App\Middleware\Auth())();
         // Apply admin middleware
-        (new \App\Middleware\Admin())();
+        (new \App\Middleware\Staff())();
 
         if ($_SERVER['REQUEST_METHOD'] !== 'PUT' && $_SERVER['REQUEST_METHOD'] !== 'POST') {
             // Handle form submission via POST with _method=PUT
@@ -623,7 +623,7 @@ class AdminController extends BaseController
         // Apply auth middleware
         (new \App\Middleware\Auth())();
         // Apply admin middleware
-        (new \App\Middleware\Admin())();
+        (new \App\Middleware\Staff())();
 
         if ($_SERVER['REQUEST_METHOD'] !== 'PUT' && $_SERVER['REQUEST_METHOD'] !== 'POST') {
             // Handle form submission via POST with _method=PUT
