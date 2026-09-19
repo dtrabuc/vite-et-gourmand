@@ -137,7 +137,13 @@ class OrderRepository
     public function decreaseMenuStock(int $menuId): void
     {
         $pdo = Database::getPDO();
-        $stmt = $pdo->prepare('UPDATE menus SET available_stock = available_stock - 1 WHERE id = :id AND available_stock > 0');
+        $stmt = $pdo->prepare(
+            'UPDATE menus SET available_stock = available_stock - 1
+             WHERE id = :id AND is_active = 1 AND available_stock > 0'
+        );
         $stmt->execute(['id' => $menuId]);
+        if ($stmt->rowCount() !== 1) {
+            throw new \RuntimeException('Le stock du menu n’est plus disponible.');
+        }
     }
 }
