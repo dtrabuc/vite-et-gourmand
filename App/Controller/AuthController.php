@@ -259,13 +259,10 @@ class AuthController extends BaseController
         // Apply auth middleware
         (new \App\Middleware\Auth())();
 
-        if ($_SERVER['REQUEST_METHOD'] !== 'PUT' && $_SERVER['REQUEST_METHOD'] !== 'POST') {
-            // Handle form submission via POST with _method=PUT
-            if ($_SERVER['REQUEST_METHOD'] !== 'POST' || empty($_POST['_method']) || strtoupper($_POST['_method']) !== 'PUT') {
-                http_response_code(405);
-                echo 'Method Not Allowed';
-                return;
-            }
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo 'Method Not Allowed';
+            return;
         }
 
         $userId = $_SESSION['user_id'] ?? 0;
