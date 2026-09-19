@@ -6,9 +6,6 @@ on:
   pull_request:
     branches: ["dev", "main"]
 
-permissions:
-  contents: write
-
 jobs:
   syntax:
     runs-on: ubuntu-latest
@@ -24,24 +21,8 @@ jobs:
       - name: Vérifier la syntaxe PHP
         shell: bash
         run: |
-          set +e
-          status=0
-          : > syntax.log
-          while IFS= read -r -d '' file; do
-            echo "===== $file =====" | tee -a syntax.log
-            php -l "$file" 2>&1 | tee -a syntax.log
-            rc=${PIPESTATUS[0]}
-            if [ "$rc" -ne 0 ]; then status=1; fi
-          done < <(find App config public -type f -name "*.php" -print0)
-          exit "$status"
-
-      - name: Publier temporairement le rapport de syntaxe
-        if: failure()
-        shell: bash
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add syntax.log
-          git commit -m "Diagnostic temporaire de syntaxe PHP [skip ci]" || true
-          git push origin HEAD:dev || true
+          set -e
+          for file in $(find App config public -type f -name "*.php"); do
+            php -l "$file" >/dev/null
+          done
 
