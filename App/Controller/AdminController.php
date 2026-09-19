@@ -570,7 +570,7 @@ class AdminController extends BaseController
         // Apply auth middleware
         (new \App\Middleware\Auth())();
         // Apply admin middleware
-        (new \App\Middleware\Admin())();
+        (new \App\Middleware\Staff())();
 
         if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
             http_response_code(405);
