@@ -14,7 +14,7 @@ class AuthService
     }
 
     /**
-     * Validate password against ECF requirements (12 chars, upper, lower, digit, special)
+     * Validate password against ECF requirements (10 chars, upper, lower, digit, special)
      * @param string $password
      * @return array|null Returns null if valid, otherwise array of error messages
      */
@@ -22,7 +22,7 @@ class AuthService
     {
         $errors = [];
         if (strlen($password) < 12) {
-            $errors[] = 'Le mot de passe doit contenir au moins 12 caractères';
+            $errors[] = 'Le mot de passe doit contenir au moins 10 caractères';
         }
         if (!preg_match('/[A-Z]/', $password)) {
             $errors[] = 'Le mot de passe doit contenir au moins une majuscule';
