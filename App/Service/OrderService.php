@@ -41,6 +41,9 @@ class OrderService
         if ($menu === null) {
             throw new \InvalidArgumentException('Menu non trouvé ou indisponible.');
         }
+        if ($menu->getMinPeople() < 1) {
+            throw new \InvalidArgumentException('Le minimum de personnes du menu est invalide.');
+        }
         if ($numberOfPeople < $menu->getMinPeople()) {
             throw new \InvalidArgumentException(
                 'Le nombre de personnes doit être supérieur ou égal au minimum requis pour ce menu (' .
@@ -51,10 +54,7 @@ class OrderService
             throw new \InvalidArgumentException('L’adresse et la ville de livraison sont requises.');
         }
 
-        $discountRate = $numberOfPeople >= ($menu->getMinPeople() + 5) ? 10.0 : 0.0;
-        $pricePerPerson = $menu->getBasePrice() / $menu->getMinPeople();
-        $grossMenuPrice = round($pricePerPerson * $numberOfPeople, 2);
-        $menuPrice = round($grossMenuPrice * (1 - ($discountRate / 100)), 2);
+        [$menuPrice, $discountRate] = $this->calculateMenuPrice($menu->getBasePrice(), $menu->getMinPeople(), $numberOfPeople);
 
         $deliveryCost = $this->calculateDeliveryCost($deliveryCity, $deliveryDistanceKm);
         $totalPrice = round($menuPrice + $deliveryCost, 2);
@@ -164,10 +164,7 @@ class OrderService
         if (trim($address) === '' || trim($city) === '') {
             throw new \InvalidArgumentException('L’adresse et la ville sont requises.');
         }
-        $discountRate = $numberOfPeople >= $menu->getMinPeople() + 5 ? 10.0 : 0.0;
-        $pricePerPerson = $menu->getBasePrice() / $menu->getMinPeople();
-        $grossMenuPrice = round($pricePerPerson * $numberOfPeople, 2);
-        $menuPrice = round($grossMenuPrice * (1 - $discountRate / 100), 2);
+        [$menuPrice, $discountRate] = $this->calculateMenuPrice($menu->getBasePrice(), $menu->getMinPeople(), $numberOfPeople);
         $deliveryCost = $this->calculateDeliveryCost($city, $distanceKm);
         $this->orderRepository->updateCustomerOrder(
             $orderId, $numberOfPeople, $deliveryDate, $deliveryTime, trim($address), trim($city),
