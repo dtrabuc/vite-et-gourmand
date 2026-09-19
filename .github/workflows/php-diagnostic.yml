@@ -1,0 +1,94 @@
+name: Diagnostic PHP
+
+on:
+  push:
+    branches: ["dev"]
+
+jobs:
+  syntax:
+    strategy:
+      fail-fast: false
+      matrix:
+        file:
+          - 'App/Controller/AdminController.php'
+          - 'App/Controller/AuthController.php'
+          - 'App/Controller/BaseController.php'
+          - 'App/Controller/ContactController.php'
+          - 'App/Controller/OrderController.php'
+          - 'App/Controller/PublicController.php'
+          - 'App/Core/Autoloader.php'
+          - 'App/Core/Database.php'
+          - 'App/Core/Exception/AuthenticationException.php'
+          - 'App/Core/Exception/DatabaseException.php'
+          - 'App/Core/Exception/FileException.php'
+          - 'App/Core/Router.php'
+          - 'App/Core/Security.php'
+          - 'App/Core/UploadFile.php'
+          - 'App/Core/config.php'
+          - 'App/Core/functions.php'
+          - 'App/Entity/Comment.php'
+          - 'App/Entity/Menu.php'
+          - 'App/Entity/Order.php'
+          - 'App/Entity/User.php'
+          - 'App/Middleware/Admin.php'
+          - 'App/Middleware/Auth.php'
+          - 'App/Middleware/Guest.php'
+          - 'App/Middleware/MiddlewareInterface.php'
+          - 'App/Middleware/Security.php'
+          - 'App/Middleware/Staff.php'
+          - 'App/Repository/CommentRepository.php'
+          - 'App/Repository/DishRepository.php'
+          - 'App/Repository/MenuRepository.php'
+          - 'App/Repository/OpeningHoursRepository.php'
+          - 'App/Repository/OrderRepository.php'
+          - 'App/Repository/UserRepository.php'
+          - 'App/Service/AdminService.php'
+          - 'App/Service/AuthService.php'
+          - 'App/Service/CacheService.php'
+          - 'App/Service/CommentService.php'
+          - 'App/Service/ContactService.php'
+          - 'App/Service/MailService.php'
+          - 'App/Service/MenuService.php'
+          - 'App/Service/MenuStatisticsService.php'
+          - 'App/Service/OrderService.php'
+          - 'App/Service/RedisCacheService.php'
+          - 'App/View/admin/comments.php'
+          - 'App/View/admin/dashboard.php'
+          - 'App/View/admin/dishes.php'
+          - 'App/View/admin/employees.php'
+          - 'App/View/admin/menus.php'
+          - 'App/View/admin/opening_hours.php'
+          - 'App/View/admin/orders.php'
+          - 'App/View/admin/revenue.php'
+          - 'App/View/auth/admin_login.php'
+          - 'App/View/auth/forgot_password.php'
+          - 'App/View/auth/login.php'
+          - 'App/View/auth/profile.php'
+          - 'App/View/auth/register.php'
+          - 'App/View/auth/reset_password.php'
+          - 'App/View/contact/index.php'
+          - 'App/View/home/cgv.php'
+          - 'App/View/home/index.php'
+          - 'App/View/home/legal.php'
+          - 'App/View/home/menu_detail.php'
+          - 'App/View/home/menus.php'
+          - 'App/View/layout/flash.php'
+          - 'App/View/layout/footer.php'
+          - 'App/View/layout/header.php'
+          - 'App/View/order/confirmation.php'
+          - 'App/View/order/index.php'
+          - 'App/View/order/new.php'
+          - 'config/app.php'
+          - 'config/routes.php'
+          - 'public/index.php'
+    runs-on: ubuntu-latest
+    name: "PHP file"
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+      - name: Installer PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+      - name: Vérifier
+        run: php -l "${{ matrix.file }}"
