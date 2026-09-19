@@ -356,6 +356,18 @@ class AdminController extends BaseController
         }
     }
 
+    public function revenuePage(): void
+    {
+        (new \App\Middleware\Admin())();
+        $from=trim((string)($_GET['from']??'')); $to=trim((string)($_GET['to']??''));
+        $menuId=isset($_GET['menu_id'])&&is_numeric($_GET['menu_id'])?(int)$_GET['menu_id']:null;
+        $this->render('admin/revenue', [
+            'revenue'=>$this->adminService->getRevenueByMenu($from!==''?$from:null,$to!==''?$to:null,$menuId),
+            'menus'=>(new MenuRepository())->findAll(),
+            'from'=>$from,'to'=>$to,'menuId'=>$menuId
+        ]);
+    }
+
     public function revenueByMenu(): void
     {
         // Apply auth middleware
