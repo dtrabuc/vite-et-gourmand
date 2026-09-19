@@ -141,6 +141,32 @@ class OrderService
         return $this->orderRepository->findById($orderId);
     }
 
+    public function updateCustomerOrder(int $orderId, int $userId, int $numberOfPeople, string $deliveryDate, string $deliveryTime, string $address, string $city, string $postalCode, ?float $distanceKm): void
+    {
+        $order = $this->orderRepository->findById($orderId);
+        if ($order === null || $order->getUserId() !== $userId) {
+            throw new \InvalidArgumentException('Commande introuvable.');
+        }
+        if (!in_array($order->getStatus(), ['pending', 'accepted'], true)) {
+            throw new \InvalidArgumentException('Cette commande ne peut plus être modifiée.');
+        }
+        $menu = $this->menuRepository->findById($order->getMenuId());
+        if ($menu === null || $numberOfPeople < $menu->getMinPeople()) {
+            throw new \InvalidArgumentException('Le nombre de personnes est inférieur au minimum du menu.');
+        }
+        if (trim($address) === '' || trim($city) === '') {
+            throw new \InvalidArgumentException('L’adresse et la ville sont requises.');
+        }
+        $discountRate = $numberOfPeople >= $menu->getMinPeople() + 5 ? 10.0 : 0.0;
+        $menuPrice = round(($menu->getBasePrice() * $numberOfPeople) * (1 - $discountRate / 100), 2);
+        $deliveryCost = $this->calculateDeliveryCost($city, $distanceKm);
+        $this->orderRepository->updateCustomerOrder(
+            $orderId, $numberOfPeople, $deliveryDate, $deliveryTime, trim($address), trim($city),
+            trim($postalCode), $distanceKm, $menuPrice, $deliveryCost, $discountRate,
+            round($menuPrice + $deliveryCost, 2)
+        );
+    }
+
     public function updateOrderStatus(int $orderId, string $status, ?int $changedByUserId = null, string $notes = '', ?string $cancellationReason = null): void
     {
         $order = $this->orderRepository->findById($orderId);
