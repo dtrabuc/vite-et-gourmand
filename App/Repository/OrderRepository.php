@@ -38,8 +38,8 @@ class OrderRepository
 
     public function findForStaff(?string $status = null, ?string $customer = null): array
     {
-        $sql = 'SELECT o.*, CONCAT(u.first_name, ' ', u.last_name) AS customer_name, u.email AS customer_email
-                FROM orders o JOIN users u ON u.id = o.user_id WHERE 1=1';
+        $sql = "SELECT o.*, CONCAT(u.first_name, ' ', u.last_name) AS customer_name, u.email AS customer_email
+                FROM orders o JOIN users u ON u.id = o.user_id WHERE 1=1";
         $params = [];
         if ($status !== null && $status !== '') { $sql .= ' AND o.status = :status'; $params['status'] = $status; }
         if ($customer !== null && $customer !== '') {
