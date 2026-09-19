@@ -1,17 +1,9 @@
--- Vite & Gourmand — schéma MariaDB initial
--- Import phpMyAdmin : sélectionner l'onglet « Importer », puis ce fichier.
--- Prévu pour une base vierge. Il ne supprime aucune table existante.
--- Encodage : UTF-8 / utf8mb4 ; moteur : InnoDB.
-
 CREATE DATABASE IF NOT EXISTS `vitegourmand`
     DEFAULT CHARACTER SET utf8mb4
     COLLATE utf8mb4_unicode_ci;
 
 USE `vitegourmand`;
 
--- ================================================================
--- UTILISATEURS ET SÉCURITÉ (MariaDB)
--- ================================================================
 CREATE TABLE IF NOT EXISTS `users` (
     `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
     `email` VARCHAR(255) NOT NULL,
@@ -35,9 +27,6 @@ CREATE TABLE IF NOT EXISTS `users` (
     KEY `idx_users_reset_token` (`reset_token_hash`)
 ) ENGINE=InnoDB;
 
--- ================================================================
--- CATALOGUE : un plat peut appartenir à plusieurs menus (MariaDB)
--- ================================================================
 CREATE TABLE IF NOT EXISTS `menus` (
     `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
     `title` VARCHAR(150) NOT NULL,
@@ -168,9 +157,6 @@ CREATE TABLE IF NOT EXISTS `order_status_history` (
         FOREIGN KEY (`changed_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
--- ================================================================
--- INFORMATIONS GÉRÉES PAR L'ÉQUIPE (MariaDB)
--- ================================================================
 CREATE TABLE IF NOT EXISTS `opening_hours` (
     `day_of_week` TINYINT UNSIGNED NOT NULL COMMENT '1 = lundi, 7 = dimanche',
     `is_open` TINYINT(1) NOT NULL DEFAULT 1,
@@ -191,8 +177,7 @@ CREATE TABLE IF NOT EXISTS `contact_messages` (
 ) ENGINE=InnoDB;
 
 -- ================================================================
--- JEU DE DÉMONSTRATION SANS COMPTE ADMINISTRATEUR PRÉCONFIGURÉ
--- Créer les comptes depuis l'interface afin que password_hash() soit utilisé.
+-- Données de départ
 -- ================================================================
 INSERT INTO `menus` (`id`, `title`, `description`, `theme`, `dietary_regime`, `min_people`, `base_price`, `conditions`, `available_stock`)
 VALUES
@@ -235,5 +220,3 @@ INSERT INTO `opening_hours` (`day_of_week`, `is_open`, `opening_time`, `closing_
     (7, 1, '09:00:00', '12:00:00')
 ON DUPLICATE KEY UPDATE `is_open` = VALUES(`is_open`), `opening_time` = VALUES(`opening_time`), `closing_time` = VALUES(`closing_time`);
 
--- MongoDB contient uniquement les avis et les statistiques :
--- voir docs/mongodb-comments.seed.json et docs/MONGODB_IMPORT.md.
