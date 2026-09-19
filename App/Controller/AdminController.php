@@ -579,9 +579,7 @@ class AdminController extends BaseController
         }
 
         $comments = $this->commentService->getPendingComments();
-
-        header('Content-Type: application/json');
-        echo json_encode($comments);
+        $this->render('admin/comments', ['comments' => $comments]);
     }
 
     public function validateComment(array $params): void
