@@ -60,10 +60,11 @@ class OrderService
             $discountApplied = true;
         }
 
-        // Calculate delivery cost (simplified: 5€ base + 0.59€/km for addresses outside Bordeaux)
-        // For simplicity, we'll use a fixed delivery cost of 5€ for now
-        // In a real implementation, we would calculate distance from Bordeaux to delivery address
-        $deliveryCost = 5.00; // Simplified - would be calculated based on distance
+        // Bordeaux est la ville de référence indiquée par l’ECF.
+        // Le formulaire actuel ne fournit pas encore de distance GPS/code postal fiable :
+        // on conserve donc la distance comme donnée métier explicite et refusons
+        // de fabriquer une distance à partir d’une adresse texte.
+        $deliveryCost = $this->calculateDeliveryCost($deliveryAddress);
 
         // Calculate total price
         $totalPrice = $menuPrice + $deliveryCost;
@@ -114,6 +115,32 @@ class OrderService
             'total_price' => $totalPrice,
             'discount_applied' => $discountApplied,
         ];
+    }
+
+    /**
+     * Règle ECF : livraison hors Bordeaux = 5 € + 0,59 €/km.
+     *
+     * Tant que le formulaire ne fournit pas une distance calculée de manière
+     * fiable, cette méthode ne tente pas de géocoder une adresse elle-même.
+     * Le calcul doit recevoir une distance issue d'un service de géocodage
+     * dans une étape dédiée.
+     */
+    private function calculateDeliveryCost(string $deliveryAddress): float
+    {
+        $address = mb_strtolower(trim($deliveryAddress));
+
+        if ($address === '') {
+            throw new \InvalidArgumentException('L’adresse de livraison est requise.');
+        }
+
+        // Une adresse contenant Bordeaux est considérée comme intra-ville
+        // uniquement pour préserver le fonctionnement local actuel.
+        // Le contrôle définitif devra utiliser la ville issue du formulaire.
+        if (preg_match('/\\bbordeaux\\b/u', $address) === 1) {
+            return 0.00;
+        }
+
+        return 5.00;
     }
 
     public function getUserOrders(int $userId): array
