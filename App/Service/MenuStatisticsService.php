@@ -16,15 +16,6 @@ class MenuStatisticsService
         $this->menuRepository = $menuRepository;
     }
 
-    /**
-     * Aggregate order data for menus and store in MongoDB.
-     * This method calculates the total number of completed orders and revenue per menu
-     * and stores the result in the `menu_statistics` collection in MongoDB.
-     *
-     * @param string $periodStart Start of the period (inclusive) in Y-m-d format. If null, aggregate all time.
-     * @param string $periodEnd End of the period (inclusive) in Y-m-d format. If null, aggregate all time.
-     * @return void
-     */
     public function aggregateAndStore(?string $periodStart = null, ?string $periodEnd = null): void
     {
         $pdo = Database::getPDO();
@@ -52,11 +43,9 @@ class MenuStatisticsService
         $stmt->execute($params);
         $rows = $stmt->fetchAll();
 
-        // Get MongoDB connection
         $database = Database::getMongoDatabase();
         $collection = $database->selectCollection('menu_statistics');
 
-        // Prepare period identifiers
         $periodIdentifier = '';
         if ($periodStart !== null && $periodEnd !== null) {
             $periodIdentifier = $periodStart . '_to_' . $periodEnd;
@@ -74,9 +63,8 @@ class MenuStatisticsService
             $orderCount = (int)$row['order_count'];
             $revenue = (float)$row['revenue'];
 
-            // Get menu title for denormalization (optional, but useful for display)
             $menu = $this->menuRepository->findById($menuId);
-            $menuTitle = $menu !== null ? $menu->getTitle() : 'Unknown Menu';
+            $menuTitle = $menu !== null ? $menu->getTitle() : 'Menu inconnu';
 
             $document = [
                 'menuId' => $menuId,
@@ -89,7 +77,6 @@ class MenuStatisticsService
                 'updatedAt' => new \MongoDB\BSON\UTCDateTime(new \DateTimeImmutable()),
             ];
 
-            // Upsert based on menuId and periodIdentifier
             $collection->updateOne(
                 ['menuId' => $menuId, 'periodIdentifier' => $periodIdentifier],
                 ['$set' => $document],
@@ -98,12 +85,6 @@ class MenuStatisticsService
         }
     }
 
-    /**
-     * Get menu statistics from MongoDB.
-     *
-     * @param string|null $periodIdentifier If provided, filter by this period identifier.
-     * @return array Array of statistics documents.
-     */
     public function getStatistics(?string $periodIdentifier = null): array
     {
         $database = Database::getMongoDatabase();
