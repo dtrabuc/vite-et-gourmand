@@ -101,6 +101,7 @@ class MenuService
         $menu->setTitle($data['title']);
         $menu->setDescription($data['description']);
         $menu->setTheme($data['theme']);
+        $menu->setDietaryRegime($data['dietary_regime'] ?? 'classic');
         $menu->setMinPeople((int)$data['min_people']);
         $menu->setBasePrice((float)$data['base_price']);
         $menu->setConditions($data['conditions']);
@@ -131,6 +132,9 @@ class MenuService
         }
         if (isset($data['theme']) && $data['theme'] !== '') {
             $menu->setTheme($data['theme']);
+        }
+        if (isset($data['dietary_regime']) && $data['dietary_regime'] !== '') {
+            $menu->setDietaryRegime($data['dietary_regime']);
         }
         if (isset($data['min_people']) && is_numeric($data['min_people']) && (int)$data['min_people'] >= 1) {
             $menu->setMinPeople((int)$data['min_people']);
