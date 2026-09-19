@@ -20,7 +20,6 @@ class MenuStatisticsService
     {
         $pdo = Database::getPDO();
 
-        // Build query to get completed orders within period
         $query = '
             SELECT o.menu_id, COUNT(o.id) as order_count, SUM(o.total_price) as revenue
             FROM orders o
@@ -57,7 +56,6 @@ class MenuStatisticsService
             $periodIdentifier = 'all_time';
         }
 
-        // Upsert each menu's statistics
         foreach ($rows as $row) {
             $menuId = (int)$row['menu_id'];
             $orderCount = (int)$row['order_count'];
