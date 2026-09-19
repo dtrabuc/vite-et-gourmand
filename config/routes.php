@@ -46,6 +46,8 @@ return [
     ['GET', '/admin/login', 'AdminController@showLogin', ['Security']],
     ['POST', '/admin/login', 'AdminController@login', ['Security']],
     ['GET', '/admin/dashboard', 'AdminController@dashboard', ['Security']],
+    ['GET', '/admin/orders', 'AdminController@orders', ['Security']],
+    ['POST', '/admin/orders/{id}/status', 'AdminController@updateOrderStatus', ['Security']],
     ['GET', '/admin/employees', 'AdminController@getEmployees', ['Security']],
     ['POST', '/admin/employees', 'AdminController@createEmployee', ['Security']],
     ['DELETE', '/admin/employees/{id}', 'AdminController@disableEmployee', ['Security']],
