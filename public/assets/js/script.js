@@ -43,7 +43,6 @@
   });
 })();
 
-
 function updateOrderPrice() {
     const menuSelect = document.getElementById('menu_id');
     const peopleInput = document.getElementById('number_of_people');
@@ -58,23 +57,25 @@ function updateOrderPrice() {
     }
 
     const option = menuSelect.options[menuSelect.selectedIndex];
-    const basePrice = Number(option?.dataset.basePrice || 0);
-    const minimumPeople = Number(option?.dataset.minPeople || 0);
-    const people = Math.max(Number(peopleInput.value || 0), 0);
+    const calculator = new window.OrderPriceCalculator(
+        option?.dataset.minPeople || 0,
+        option?.dataset.basePrice || 0
+    );
+    const result = calculator.calculate(peopleInput.value);
 
     let menuPrice = 0;
-    if (basePrice > 0 && minimumPeople > 0 && people >= minimumPeople) {
-        menuPrice = (basePrice / minimumPeople) * people;
-        if (people >= minimumPeople + 5) {
-            menuPrice *= 0.90;
-        }
+    if (result !== null) {
+        menuPrice = result.menuPrice;
     }
 
     const city = (cityInput?.value || '').trim().toLowerCase();
     let deliveryPrice = 0;
+
     if (city !== '' && city !== 'bordeaux') {
         const distance = Number(distanceInput?.value || 0);
-        deliveryPrice = distance >= 0 ? 5 + (0.59 * distance) : 0;
+        if (Number.isFinite(distance) && distance >= 0) {
+            deliveryPrice = 5 + (0.59 * distance);
+        }
     }
 
     const formatPrice = (value) => new Intl.NumberFormat('fr-FR', {
