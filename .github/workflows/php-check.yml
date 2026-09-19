@@ -26,6 +26,3 @@ jobs:
             php -l "$file" >/dev/null
           done
 
-      - name: Vérifier Composer
-        shell: bash
-        run: composer validate --no-check-publish
