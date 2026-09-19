@@ -37,6 +37,7 @@ return [
     ['GET', '/orders/new', 'OrderController@new', ['Security']],
     ['POST', '/orders', 'OrderController@create', ['Security']],
     ['GET', '/orders/confirmation/{id}', 'OrderController@confirmation', ['Security']],
+    ['POST', '/orders/{id}/review', 'OrderController@review', ['Security']],
     ['PUT', '/orders/{id}/status', 'OrderController@updateStatus', ['Security']],
     ['POST', '/orders/{id}/status', 'OrderController@updateStatus', ['Security']], // Temporary
 
