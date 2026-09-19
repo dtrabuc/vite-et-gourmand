@@ -136,48 +136,6 @@ class AdminController extends BaseController
         header('Location: /admin/dishes'); exit;
     }
 
-    public function openingHours(): void
-    {
-        (new \App\Middleware\Staff())();
-        $this->render('admin/opening_hours', ['openingHours' => (new \App\Repository\OpeningHoursRepository())->findAll()]);
-    }
-
-    public function updateOpeningHours(): void
-    {
-        (new \App\Middleware\Staff())();
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { http_response_code(405); return; }
-        $repo = new \App\Repository\OpeningHoursRepository();
-        for ($day = 1; $day <= 7; $day++) {
-            $isOpen = isset($_POST['is_open'][$day]);
-            $opening = $isOpen ? trim((string)($_POST['opening_time'][$day] ?? '')) : null;
-            $closing = $isOpen ? trim((string)($_POST['closing_time'][$day] ?? '')) : null;
-            $repo->saveDay($day, $isOpen, $opening !== '' ? $opening : null, $closing !== '' ? $closing : null);
-        }
-        $_SESSION['admin_success'] = 'Horaires mis à jour.';
-        header('Location: /admin/hours'); exit;
-    }
-
-    public function openingHours(): void
-    {
-        (new \App\Middleware\Staff())();
-        $this->render('admin/opening_hours', ['openingHours' => (new \App\Repository\OpeningHoursRepository())->findAll()]);
-    }
-
-    public function updateOpeningHours(): void
-    {
-        (new \App\Middleware\Staff())();
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { http_response_code(405); return; }
-        $repo = new \App\Repository\OpeningHoursRepository();
-        for ($day = 1; $day <= 7; $day++) {
-            $isOpen = isset($_POST['is_open'][$day]);
-            $opening = $isOpen ? trim((string)($_POST['opening_time'][$day] ?? '')) : null;
-            $closing = $isOpen ? trim((string)($_POST['closing_time'][$day] ?? '')) : null;
-            $repo->saveDay($day, $isOpen, $opening !== '' ? $opening : null, $closing !== '' ? $closing : null);
-        }
-        $_SESSION['admin_success'] = 'Horaires mis à jour.';
-        header('Location: /admin/hours'); exit;
-    }
-
     public function orders(): void
     {
         (new \App\Middleware\Staff())();
@@ -243,8 +201,8 @@ class AdminController extends BaseController
 
         // Password validation (ECF requirements)
         $password = $_POST['password'] ?? '';
-        if (strlen($password) < 12) {
-            $errors['password'] = 'Le mot de passe doit contenir au moins 12 caractères';
+        if (strlen($password) < 10) {
+            $errors['password'] = 'Le mot de passe doit contenir au moins 10 caractères';
         }
         if (!preg_match('/[A-Z]/', $password)) {
             $errors['password'] = 'Le mot de passe doit contenir au moins une majuscule';
@@ -276,7 +234,7 @@ class AdminController extends BaseController
             // Create employee
             $employeeId = $this->adminService->createEmployee([
                 'email' => $_POST['email'],
-                'password' => $hashedPassword,
+                'password' => $password,
                 'role' => 'employee',
                 'first_name' => $_POST['first_name'],
                 'last_name' => $_POST['last_name'],
