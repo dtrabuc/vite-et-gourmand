@@ -89,7 +89,7 @@ class UserRepository
 
     public function setActive(int $id, bool $active): void
     {
-        $stmt = Database::getPDO()->prepare('UPDATE users SET is_active = :active, updated_at = NOW() WHERE id = :id AND role = "employee"');
+        $stmt = Database::getPDO()->prepare("UPDATE users SET is_active = :active, updated_at = NOW() WHERE id = :id AND role = 'employee'");
         $stmt->execute(['id' => $id, 'active' => $active ? 1 : 0]);
     }
 
