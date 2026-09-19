@@ -19,85 +19,44 @@ class PublicController extends BaseController
 
     public function index(): void
     {
-        $reviews = [];
-        $allMenus = [];
-
         try {
             $reviews = $this->commentService->getHomepageReviews();
-            $allMenus = $this->menuService->getAllMenus();
+            $menus = array_slice($this->menuService->getAllMenus(), 0, 3);
         } catch (\Throwable $exception) {
-            error_log('Impossible de charger les données de l\'accueil : ' . $exception->getMessage());
+            error_log('Impossible de charger l’accueil : ' . $exception->getMessage());
+            $reviews = [];
+            $menus = [];
         }
-
-        $menus = array_slice($allMenus, 0, 3); // Take first 3 menus
-
         $this->render('home/index', ['reviews' => $reviews, 'menus' => $menus]);
     }
 
     public function menusPage(): void
     {
-        try {
-            $menus = $this->menuService->getAllMenus();
-        } catch (\Throwable $exception) {
-            error_log('Impossible de charger le catalogue : ' . $exception->getMessage());
-            $menus = [];
-        }
-
+        $menus = $this->menuService->getAllMenus();
         $this->render('home/menus', ['menus' => $menus]);
     }
 
     public function menuDetail(int $id): void
     {
-        try {
-            $menu = $this->menuService->getMenuById($id);
-        } catch (\Throwable $exception) {
-            error_log('Impossible de charger le menu : ' . $exception->getMessage());
-            $menu = null;
-        }
-
+        $menu = $id > 0 ? $this->menuService->getMenuById($id) : null;
         if ($menu === null) {
             http_response_code(404);
+            $this->render('home/menu_detail', ['menu' => null]);
+            return;
         }
-
         $this->render('home/menu_detail', ['menu' => $menu]);
     }
 
     public function getMenus(): void
     {
-        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-            http_response_code(405);
-            echo $this->jsonError('Method Not Allowed');
-            return;
-        }
-
-        $menus = array_map([$this, 'menuToArray'], $this->menuService->getAllMenus());
-
-        header('Content-Type: application/json');
-        echo $this->jsonSuccess($menus);
+        $this->jsonMenus($this->menuService->getAllMenus());
     }
 
     public function getMenuById(int $id): void
     {
-        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-            http_response_code(405);
-            echo $this->jsonError('Method Not Allowed');
-            return;
-        }
-
-        if ($id <= 0) {
-            http_response_code(400);
-            echo $this->jsonError('Invalid menu ID');
-            return;
-        }
-
+        if ($id <= 0) { http_response_code(400); echo $this->jsonError('Identifiant invalide'); return; }
         $menu = $this->menuService->getMenuById($id);
-
-        if ($menu === null) {
-            http_response_code(404);
-            echo $this->jsonError('Menu not found');
-            return;
-        }
-
+        if ($menu === null) { http_response_code(404); echo $this->jsonError('Menu introuvable'); return; }
         header('Content-Type: application/json');
         echo $this->jsonSuccess($this->menuToArray($menu));
     }
@@ -111,133 +70,20 @@ class PublicController extends BaseController
         }
 
         $filters = [];
-
-        // Price filter
-        if (!empty($_GET['max_price']) && is_numeric($_GET['max_price'])) {
-            $filters['max_price'] = (float)$_GET['max_price'];
-        }
-
-        // Theme filter
-        if (!empty($_GET['theme'])) {
-            $filters['theme'] = $_GET['theme'];
-        }
-
-        // Minimum people filter
-        if (!empty($_GET['min_people']) && is_numeric($_GET['min_people'])) {
-            $filters['min_people'] = (int)$_GET['min_people'];
-        }
-
-        // Add other filters as needed
-
-        $menus = array_map([$this, 'menuToArray'], $this->menuService->filterMenus($filters));
-
-        header('Content-Type: application/json');
-        echo $this->jsonSuccess($menus);
-    }
-
-    public function getHomepageReviews(): void
-    {
-        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-            http_response_code(405);
-            echo $this->jsonError('Method Not Allowed');
-            return;
-        }
-
-        $reviews = $this->commentService->getHomepageReviews();
-
-        header('Content-Type: application/json');
-        echo $this->jsonSuccess($reviews);
-    }
-
-    // NEW METHOD: Get catalog for frontend
-    public function getCatalog(): void
-    {
-        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-            http_response_code(405);
-            echo $this->jsonError('Method Not Allowed');
-            return;
-        }
-
-        // Get all menus
-        $allMenus = array_map([$this, 'menuToArray'], $this->menuService->getAllMenus());
-        
-        // Categorize menus
-        $menus = [];
-        $aLaCarte = [];
-        $boissonsSans = [];
-        $boissonsAvec = [];
-        $digestifs = [];
-
-        foreach ($allMenus as $menu) {
-            // Assuming menu has a 'category' or 'type' field
-            $category = strtolower($menu['category'] ?? $menu['type'] ?? '');
-            
-            switch ($category) {
-                case 'entree':
-                case 'plat':
-                case 'dessert':
-                    $menus[] = $menu;
-                    break;
-                case 'boisson':
-                    // Check if it's alcoholic or not
-                    if (isset($menu['alcool']) && $menu['alcool'] === true) {
-                        $boissonsAvec[] = $menu;
-                    } else {
-                        $boissonsSans[] = $menu;
-                    }
-                    break;
-                case 'digestif':
-                    $digestifs[] = $menu;
-                    break;
-                default:
-                    // Default to main menu if category not recognized
-                    $menus[] = $menu;
-                    break;
+        foreach (['max_price', 'min_price', 'theme', 'dietary_regime', 'min_people'] as $key) {
+            if (isset($_GET[$key]) && $_GET[$key] !== '') {
+                $filters[$key] = $_GET[$key];
             }
         }
 
-        $catalogData = [
-            'menus' => $menus,
-            'aLaCarte' => $aLaCarte, // Assuming this is for special menu items
-            'boissons' => [
-                'sans' => $boissonsSans,
-                'avec' => $boissonsAvec
-            ],
-            'digestifs' => $digestifs
-        ];
-
-        header('Content-Type: application/json');
-        echo $this->jsonSuccess($catalogData);
+        $menus = $this->menuService->filterMenus($filters);
+        $this->jsonMenus($menus);
     }
 
-    // NEW METHOD: Get reviews for frontend
-    public function getReviews(): void
+    private function jsonMenus(array $menus): void
     {
-        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-            http_response_code(405);
-            echo $this->jsonError('Method Not Allowed');
-            return;
-        }
-
-        // Get all approved reviews
-        $reviews = $this->commentService->getApprovedReviews();
-        
-        // Format reviews for frontend
-        $formattedReviews = [];
-        foreach ($reviews as $review) {
-            $formattedReviews[] = [
-                'auteur' => $review['user_name'] ?? $review['firstname'] . ' ' . $review['lastname'],
-                'note' => (int)$review['rating'],
-                'commentaire' => $review['comment'] ?? $review['content']
-            ];
-        }
-
-        $reviewsData = [
-            'avis' => $formattedReviews
-        ];
-
         header('Content-Type: application/json');
-        echo $this->jsonSuccess($reviewsData);
+        echo $this->jsonSuccess(array_map([$this, 'menuToArray'], $menus));
     }
 
     private function menuToArray(\App\Entity\Menu $menu): array
@@ -247,11 +93,11 @@ class PublicController extends BaseController
             'title' => $menu->getTitle(),
             'description' => $menu->getDescription(),
             'theme' => $menu->getTheme(),
+            'dietary_regime' => $menu->getDietaryRegime(),
             'min_people' => $menu->getMinPeople(),
             'base_price' => $menu->getBasePrice(),
             'conditions' => $menu->getConditions(),
             'available_stock' => $menu->getAvailableStock(),
         ];
     }
-
 }
