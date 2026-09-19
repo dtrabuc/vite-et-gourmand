@@ -73,7 +73,6 @@ class AdminService
 
     public function enableEmployee(int $id): void
     {
-        // Change role back to employee
         $this->userRepository->setActive($id, true);
     }
 
@@ -87,7 +86,7 @@ class AdminService
         $totalRevenue = (float) $pdo->query(
             "SELECT COALESCE(SUM(total_price), 0)
              FROM orders
-             WHERE status IN ('completed', 'delivered')"
+             WHERE status = 'completed'"
         )->fetchColumn();
 
         $menuStats = [];
@@ -126,7 +125,7 @@ class AdminService
     {
         $pdo = Database::getPDO();
         $sql = "SELECT m.id AS menu_id, m.title AS menu_title, COUNT(o.id) AS order_count, COALESCE(SUM(o.total_price), 0) AS revenue
-                FROM menus m LEFT JOIN orders o ON o.menu_id = m.id AND o.status IN ('delivered','completed')";
+                FROM menus m LEFT JOIN orders o ON o.menu_id = m.id AND o.status = 'completed'";
         $where = [];
         $params = [];
         if ($from !== null && $from !== '') { $where[] = 'o.delivery_date >= :from_date'; $params['from_date'] = $from; }
@@ -143,11 +142,6 @@ class AdminService
         ], $stmt->fetchAll());
     }
 
-    /**
-     * Validate password against ECF requirements (10 chars, upper, lower, digit, special)
-     * @param string $password
-     * @return array|null Returns null if valid, otherwise array of error messages
-     */
     private function validatePassword(string $password): ?array
     {
         $errors = [];
