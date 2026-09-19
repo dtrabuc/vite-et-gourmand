@@ -175,13 +175,15 @@ class AdminController extends BaseController
         $reason = trim((string)($_POST['cancellation_reason'] ?? ''));
         $contactMode = trim((string)($_POST['contact_mode'] ?? ''));
         $notes = trim((string)($_POST['notes'] ?? ''));
-        if ($status === 'cancelled') {
-            if ($contactMode === '' || $reason === '') {
-                $_SESSION['admin_error'] = 'Pour une annulation, le mode de contact et le motif sont obligatoires.';
-                header('Location: /admin/orders'); exit;
-            }
-            $notes = 'Contact client : ' . $contactMode . ($notes !== '' ? ' — ' . $notes : '');
+        if ($contactMode === '') {
+            $_SESSION['admin_error'] = 'Le mode de contact du client est obligatoire avant toute modification de commande.';
+            header('Location: /admin/orders'); exit;
         }
+        if ($status === 'cancelled' && $reason === '') {
+            $_SESSION['admin_error'] = 'Pour une annulation, le motif est obligatoire.';
+            header('Location: /admin/orders'); exit;
+        }
+        $notes = 'Contact client : ' . $contactMode . ($notes !== '' ? ' — ' . $notes : '');
         try {
             (new \App\Service\OrderService(new OrderRepository(), new UserRepository(), new MenuRepository(), new MailService()))
                 ->updateOrderStatus($orderId, $status, (int)$_SESSION['user_id'], $notes, $reason !== '' ? $reason : null);
