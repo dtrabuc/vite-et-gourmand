@@ -91,21 +91,10 @@ class AuthController extends BaseController
             $errors['email'] = 'Email invalide';
         }
 
-        $password = $_POST['password'] ?? '';
-        if (strlen($password) < 10) {
-            $errors['password'] = 'Le mot de passe doit contenir au moins 10 caractères';
-        }
-        if (!preg_match('/[A-Z]/', $password)) {
-            $errors['password'] = 'Le mot de passe doit contenir au moins une majuscule';
-        }
-        if (!preg_match('/[a-z]/', $password)) {
-            $errors['password'] = 'Le mot de passe doit contenir au moins une minuscule';
-        }
-        if (!preg_match('/[0-9]/', $password)) {
-            $errors['password'] = 'Le mot de passe doit contenir au moins un chiffre';
-        }
-        if (!preg_match('/[^A-Za-z0-9]/', $password)) {
-            $errors['password'] = 'Le mot de passe doit contenir au moins un caractère spécial';
+        $password = (string) ($_POST['password'] ?? '');
+        $passwordErrors = $this->authService->validatePassword($password);
+        if ($passwordErrors !== null) {
+            $errors['password'] = $passwordErrors[0];
         }
 
         if (!empty($errors)) {
@@ -419,21 +408,9 @@ class AuthController extends BaseController
         $confirmPassword = $_POST['confirm_password'] ?? '';
 
         $errors = [];
-
-        if (strlen($password) < 10) {
-            $errors['password'] = 'Le mot de passe doit contenir au moins 10 caractères';
-        }
-        if (!preg_match('/[A-Z]/', $password)) {
-            $errors['password'] = 'Le mot de passe doit contenir au moins une majuscule';
-        }
-        if (!preg_match('/[a-z]/', $password)) {
-            $errors['password'] = 'Le mot de passe doit contenir au moins une minuscule';
-        }
-        if (!preg_match('/[0-9]/', $password)) {
-            $errors['password'] = 'Le mot de passe doit contenir au moins un chiffre';
-        }
-        if (!preg_match('/[^A-Za-z0-9]/', $password)) {
-            $errors['password'] = 'Le mot de passe doit contenir au moins un caractère spécial';
+        $passwordErrors = $this->authService->validatePassword($password);
+        if ($passwordErrors !== null) {
+            $errors['password'] = $passwordErrors[0];
         }
         if ($password !== $confirmPassword) {
             $errors['confirm_password'] = 'Les mots de passe ne correspondent pas';
