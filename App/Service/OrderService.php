@@ -13,8 +13,13 @@ class OrderService
         private OrderRepository $orderRepository,
         private UserRepository $userRepository,
         private MenuRepository $menuRepository,
-        private MailService $mailService
-    ) {}
+        private MailService $mailService,
+        ?MenuStatisticsService $menuStatisticsService = null
+    ) {
+        $this->menuStatisticsService = $menuStatisticsService ?? new MenuStatisticsService($orderRepository, $menuRepository);
+    }
+
+    private MenuStatisticsService $menuStatisticsService;
 
     public function createOrder(
         int $userId,
@@ -47,7 +52,8 @@ class OrderService
         }
 
         $discountRate = $numberOfPeople >= ($menu->getMinPeople() + 5) ? 10.0 : 0.0;
-        $grossMenuPrice = $menu->getBasePrice() * $numberOfPeople;
+        $pricePerPerson = $menu->getBasePrice() / $menu->getMinPeople();
+        $grossMenuPrice = round($pricePerPerson * $numberOfPeople, 2);
         $menuPrice = round($grossMenuPrice * (1 - ($discountRate / 100)), 2);
 
         $deliveryCost = $this->calculateDeliveryCost($deliveryCity, $deliveryDistanceKm);
@@ -69,6 +75,7 @@ class OrderService
             'discount_rate' => $discountRate,
             'total_price' => $totalPrice,
             'status' => 'pending',
+            'equipment_loaned' => false,
         ];
 
         $pdo = Database::getPDO();
@@ -158,7 +165,9 @@ class OrderService
             throw new \InvalidArgumentException('L’adresse et la ville sont requises.');
         }
         $discountRate = $numberOfPeople >= $menu->getMinPeople() + 5 ? 10.0 : 0.0;
-        $menuPrice = round(($menu->getBasePrice() * $numberOfPeople) * (1 - $discountRate / 100), 2);
+        $pricePerPerson = $menu->getBasePrice() / $menu->getMinPeople();
+        $grossMenuPrice = round($pricePerPerson * $numberOfPeople, 2);
+        $menuPrice = round($grossMenuPrice * (1 - $discountRate / 100), 2);
         $deliveryCost = $this->calculateDeliveryCost($city, $distanceKm);
         $this->orderRepository->updateCustomerOrder(
             $orderId, $numberOfPeople, $deliveryDate, $deliveryTime, trim($address), trim($city),
@@ -167,7 +176,7 @@ class OrderService
         );
     }
 
-    public function updateOrderStatus(int $orderId, string $status, ?int $changedByUserId = null, string $notes = '', ?string $cancellationReason = null): void
+    public function updateOrderStatus(int $orderId, string $status, ?int $changedByUserId = null, string $notes = '', ?string $cancellationReason = null, ?bool $equipmentLoaned = null): void
     {
         $order = $this->orderRepository->findById($orderId);
         if ($order === null) {
@@ -183,12 +192,17 @@ class OrderService
             throw new \InvalidArgumentException('La commande possède déjà ce statut.');
         }
 
+        if ($equipmentLoaned !== null && $order->isEquipmentLoaned() !== $equipmentLoaned) {
+            $this->orderRepository->setEquipmentLoaned($orderId, $equipmentLoaned);
+            $order->setEquipmentLoaned($equipmentLoaned);
+        }
+
         $allowedTransitions = [
             'pending' => ['accepted', 'cancelled'],
             'accepted' => ['preparing', 'cancelled'],
             'preparing' => ['delivering', 'cancelled'],
             'delivering' => ['delivered', 'cancelled'],
-            'delivered' => ['awaiting_return'],
+            'delivered' => ['awaiting_return', 'completed'],
             'awaiting_return' => ['completed'],
             'completed' => [],
             'cancelled' => [],
@@ -196,6 +210,13 @@ class OrderService
 
         if (!in_array($status, $allowedTransitions[$order->getStatus()] ?? [], true)) {
             throw new \InvalidArgumentException('Transition de statut non autorisée.');
+        }
+
+        if ($order->getStatus() === 'delivered' && $status === 'awaiting_return' && !$order->isEquipmentLoaned()) {
+            throw new \InvalidArgumentException('Le statut « en attente du retour de matériel » nécessite un prêt de matériel.');
+        }
+        if ($order->getStatus() === 'delivered' && $status === 'completed' && $order->isEquipmentLoaned()) {
+            throw new \InvalidArgumentException('Cette commande doit passer par le retour du matériel avant d’être terminée.');
         }
 
         if ($status === 'cancelled' && trim((string) $cancellationReason) === '') {
@@ -215,6 +236,11 @@ class OrderService
                     $this->mailService->sendEquipmentReturnNoticeEmail($user->getEmail(), $user->getFirstName(), $orderId);
                 } elseif ($status === 'completed') {
                     $this->mailService->sendReviewInvitationEmail($user->getEmail(), $user->getFirstName(), $orderId);
+                    try {
+                        $this->menuStatisticsService->aggregateAndStore();
+                    } catch (\Throwable $statisticsError) {
+                        error_log('Mise à jour des statistiques MongoDB impossible : ' . $statisticsError->getMessage());
+                    }
                 }
             } catch (\Throwable $e) { error_log('Order status email error: ' . $e->getMessage()); }
         }

@@ -49,7 +49,6 @@ class Router
 
                 // Split controller@action
                 [$controllerName, $actionName] = explode('@', $controllerAction);
-                error_log("DEBUG: controllerName='$controllerName', actionName='$actionName'");
 
                 // Apply middlewares
                 foreach ($middlewares as $middleware) {
@@ -91,7 +90,6 @@ class Router
 
         // Build the controller class name
         $controllerClass = '\\App\\Controller\\' . $controllerName;
-        error_log("DEBUG: Trying to load controller class (App): $controllerClass");
 
         // Check if the controller class exists
         if (!class_exists($controllerClass)) {

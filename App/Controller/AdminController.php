@@ -175,6 +175,7 @@ class AdminController extends BaseController
         $reason = trim((string)($_POST['cancellation_reason'] ?? ''));
         $contactMode = trim((string)($_POST['contact_mode'] ?? ''));
         $notes = trim((string)($_POST['notes'] ?? ''));
+        $equipmentLoaned = array_key_exists('equipment_loaned', $_POST) ? ((string) $_POST['equipment_loaned'] === '1') : false;
         if ($contactMode === '') {
             $_SESSION['admin_error'] = 'Le mode de contact du client est obligatoire avant toute modification de commande.';
             header('Location: /admin/orders'); exit;
@@ -186,7 +187,7 @@ class AdminController extends BaseController
         $notes = 'Contact client : ' . $contactMode . ($notes !== '' ? ' — ' . $notes : '');
         try {
             (new \App\Service\OrderService(new OrderRepository(), new UserRepository(), new MenuRepository(), new MailService()))
-                ->updateOrderStatus($orderId, $status, (int)$_SESSION['user_id'], $notes, $reason !== '' ? $reason : null);
+                ->updateOrderStatus($orderId, $status, (int)$_SESSION['user_id'], $notes, $reason !== '' ? $reason : null, $equipmentLoaned);
             $_SESSION['admin_success'] = 'Statut de la commande mis à jour.';
         } catch (\Throwable $e) {
             $_SESSION['admin_error'] = $e->getMessage();
@@ -252,8 +253,6 @@ class AdminController extends BaseController
             if (strlen($password) < 10 || !preg_match('/[A-Z]/', $password) || !preg_match('/[a-z]/', $password) || !preg_match('/[0-9]/', $password) || !preg_match('/[^A-Za-z0-9]/', $password)) {
                 throw new \InvalidArgumentException('Le mot de passe doit contenir au moins 10 caractères avec majuscule, minuscule, chiffre et caractère spécial.');
             }
-            $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-
             // Create employee
             $employeeId = $this->adminService->createEmployee([
                 'email' => $_POST['email'],

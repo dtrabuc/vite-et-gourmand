@@ -1,7 +1,7 @@
 <?php
 namespace App\Middleware;
 
-class Auth
+class Guest
 {
     public function __invoke(): void
     {
@@ -9,8 +9,8 @@ class Auth
             session_start();
         }
 
-        if (empty($_SESSION['user_id'])) {
-            header('Location: /login');
+        if (!empty($_SESSION['user_id'])) {
+            header('Location: /');
             exit;
         }
     }

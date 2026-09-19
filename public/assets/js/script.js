@@ -42,3 +42,65 @@
     });
   });
 })();
+
+
+function updateOrderPrice() {
+    const menuSelect = document.getElementById('menu_id');
+    const peopleInput = document.getElementById('number_of_people');
+    const cityInput = document.getElementById('delivery_city');
+    const distanceInput = document.getElementById('delivery_distance_km');
+    const menuPriceElement = document.getElementById('orderMenuPrice');
+    const deliveryPriceElement = document.getElementById('orderDeliveryPrice');
+    const totalPriceElement = document.getElementById('orderTotalPrice');
+
+    if (!menuSelect || !peopleInput || !menuPriceElement || !deliveryPriceElement || !totalPriceElement) {
+        return;
+    }
+
+    const option = menuSelect.options[menuSelect.selectedIndex];
+    const basePrice = Number(option?.dataset.basePrice || 0);
+    const minimumPeople = Number(option?.dataset.minPeople || 0);
+    const people = Math.max(Number(peopleInput.value || 0), 0);
+
+    let menuPrice = 0;
+    if (basePrice > 0 && minimumPeople > 0 && people >= minimumPeople) {
+        menuPrice = (basePrice / minimumPeople) * people;
+        if (people >= minimumPeople + 5) {
+            menuPrice *= 0.90;
+        }
+    }
+
+    const city = (cityInput?.value || '').trim().toLowerCase();
+    let deliveryPrice = 0;
+    if (city !== '' && city !== 'bordeaux') {
+        const distance = Number(distanceInput?.value || 0);
+        deliveryPrice = distance >= 0 ? 5 + (0.59 * distance) : 0;
+    }
+
+    const formatPrice = (value) => new Intl.NumberFormat('fr-FR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }).format(value) + ' €';
+
+    menuPriceElement.textContent = formatPrice(menuPrice);
+    deliveryPriceElement.textContent = formatPrice(deliveryPrice);
+    totalPriceElement.textContent = formatPrice(menuPrice + deliveryPrice);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const orderFields = [
+        document.getElementById('menu_id'),
+        document.getElementById('number_of_people'),
+        document.getElementById('delivery_city'),
+        document.getElementById('delivery_distance_km')
+    ];
+
+    orderFields.forEach((field) => {
+        if (field) {
+            field.addEventListener('input', updateOrderPrice);
+            field.addEventListener('change', updateOrderPrice);
+        }
+    });
+
+    updateOrderPrice();
+});

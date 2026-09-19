@@ -1,7 +1,6 @@
 <?php
 namespace App\Service;
 
-use App\Entity\User;
 use App\Repository\UserRepository;
 use App\Repository\OrderRepository;
 use App\Repository\MenuRepository;
@@ -46,7 +45,7 @@ class AdminService
     public function getEmployees(): array
     {
         $pdo = Database::getPDO();
-        $stmt = $pdo->prepare('SELECT id, email, first_name, last_name, role, is_active, created_at FROM users WHERE role IN (\'employee\', \'admin\') ORDER BY created_at DESC');
+        $stmt = $pdo->prepare("SELECT id, email, first_name, last_name, role, is_active, created_at FROM users WHERE role = 'employee' ORDER BY created_at DESC");
         $stmt->execute();
 
         $rows = $stmt->fetchAll();
@@ -69,15 +68,6 @@ class AdminService
 
     public function disableEmployee(int $id): void
     {
-        // In a real implementation, we might set a disabled flag or delete
-        // For now, we'll just delete (but in production, we'd want to preserve data)
-        // Let's implement a soft delete approach by adding a status field
-        // Since we don't have a status field, we'll just update the role to something like 'disabled'
-        // But better to add an 'is_active' field to users table
-        // For simplicity in this implementation, we'll just delete
-
-        // Actually, let's not delete - we'll update to prevent login
-        // We'll add a method to update user status
         $this->userRepository->setActive($id, false);
     }
 
@@ -91,29 +81,35 @@ class AdminService
     {
         $pdo = Database::getPDO();
 
-        // Get total users
-        $stmt = $pdo->query('SELECT COUNT(*) as total FROM users');
-        $totalUsers = (int)$stmt->fetchColumn();
+        $totalUsers = (int) $pdo->query('SELECT COUNT(*) FROM users')->fetchColumn();
+        $totalOrders = (int) $pdo->query('SELECT COUNT(*) FROM orders')->fetchColumn();
+        $pendingOrders = (int) $pdo->query("SELECT COUNT(*) FROM orders WHERE status = 'pending'")->fetchColumn();
+        $totalRevenue = (float) $pdo->query(
+            "SELECT COALESCE(SUM(total_price), 0)
+             FROM orders
+             WHERE status IN ('completed', 'delivered')"
+        )->fetchColumn();
 
-        // Get total orders
-        $stmt = $pdo->query('SELECT COUNT(*) as total FROM orders');
-        $totalOrders = (int)$stmt->fetchColumn();
+        $menuStats = [];
+        $menuStatsError = null;
 
-        // Get pending orders
-        $stmt = $pdo->query('SELECT COUNT(*) as total FROM orders WHERE status = \'pending\'');
-        $pendingOrders = (int)$stmt->fetchColumn();
-
-        // Get total revenue (sum of total_price)
-        $stmt = $pdo->query('SELECT SUM(total_price) as total FROM orders WHERE status IN (\'completed\', \'delivered\')');
-        $totalRevenue = $stmt->fetchColumn();
-        $totalRevenue = $totalRevenue === false ? 0 : (float)$totalRevenue;
-
-        // Get menu stats from MongoDB
         try {
-            $menuStats = $this->getMenuStatsFromMongoDB();
+            $statistics = (new MenuStatisticsService(
+                $this->orderRepository,
+                $this->menuRepository
+            ))->getStatistics('all_time');
+
+            foreach ($statistics as $stat) {
+                $menuStats[] = [
+                    'menu_id' => (string) $stat['menuId'],
+                    'menu_title' => $stat['menuTitle'],
+                    'order_count' => (int) $stat['orderCount'],
+                    'revenue' => (float) $stat['revenue'],
+                ];
+            }
         } catch (\Throwable $e) {
-            error_log('MongoDB statistics unavailable: ' . $e->getMessage());
-            $menuStats = $this->getMenuStatsFromMariaDB();
+            error_log('Statistiques MongoDB indisponibles : ' . $e->getMessage());
+            $menuStatsError = 'Les statistiques de commandes par menu sont momentanément indisponibles.';
         }
 
         return [
@@ -122,56 +118,8 @@ class AdminService
             'pending_orders' => $pendingOrders,
             'total_revenue' => $totalRevenue,
             'menu_stats' => $menuStats,
+            'menu_stats_error' => $menuStatsError,
         ];
-    }
-
-    private function getMenuStatsFromMariaDB(): array
-    {
-        $pdo = Database::getPDO();
-        $stmt = $pdo->query('
-            SELECT m.id, m.title, COUNT(o.id) as order_count, SUM(o.total_price) as revenue
-            FROM menus m
-            LEFT JOIN orders o ON m.id = o.menu_id AND o.status IN (\'completed\', \'delivered\')
-            GROUP BY m.id, m.title
-            ORDER BY order_count DESC
-            LIMIT 10
-        ');
-
-        $rows = $stmt->fetchAll();
-
-        $stats = [];
-        foreach ($rows as $row) {
-            $stats[] = [
-                'menu_id' => (int)$row['id'],
-                'menu_title' => $row['title'],
-                'order_count' => (int)$row['order_count'],
-                'revenue' => $row['revenue'] === null ? 0 : (float)$row['revenue'],
-            ];
-        }
-
-        return $stats;
-    }
-
-    private function getMenuStatsFromMongoDB(): array
-    {
-        $mongo = Database::getMongo();
-        $database = $mongo->selectDatabase('viteetgourmand');
-        $collection = $database->selectCollection('menu_statistics');
-
-        // Fetch all statistics, sorted by order_count descending
-        $cursor = $collection->find()->sort(['order_count' => -1]);
-
-        $stats = [];
-        foreach ($cursor as $doc) {
-            $stats[] = [
-                'menu_id' => (string)$doc['menuId'],
-                'menu_title' => $doc['menuTitle'] ?? '', // we might store the title or just the ID
-                'order_count' => (int)$doc['orderCount'],
-                'revenue' => (float)$doc['revenue'],
-            ];
-        }
-
-        return $stats;
     }
 
     public function getRevenueByMenu(?string $from = null, ?string $to = null, ?int $menuId = null): array
@@ -203,7 +151,8 @@ class AdminService
     private function validatePassword(string $password): ?array
     {
         $errors = [];
-        if (strlen($password) < 12) {
+
+        if (strlen($password) < 10) {
             $errors[] = 'Le mot de passe doit contenir au moins 10 caractères';
         }
         if (!preg_match('/[A-Z]/', $password)) {
@@ -218,6 +167,7 @@ class AdminService
         if (!preg_match('/[^A-Za-z0-9]/', $password)) {
             $errors[] = 'Le mot de passe doit contenir au moins un caractère spécial';
         }
-        return empty($errors) ? null : $errors;
+
+        return $errors === [] ? null : $errors;
     }
 }

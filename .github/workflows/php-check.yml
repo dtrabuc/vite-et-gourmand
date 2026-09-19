@@ -2,33 +2,24 @@ name: PHP checks
 
 on:
   push:
-    branches: ["alpha"]
+    branches: ["dev", "main"]
   pull_request:
-    branches: ["alpha"]
-  workflow_dispatch:
+    branches: ["dev", "main"]
 
 jobs:
   syntax:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: shivammathur/setup-php@v2
-        with:
-          php-version: "8.3"
-      - name: Check PHP syntax
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+
+      - name: Vérifier la version PHP
+        run: php -v
+
+      - name: Vérifier la syntaxe PHP
         shell: bash
         run: |
-          set +e
-          : > syntax.log
-          find App config public -type f -name "*.php" -print0 | while IFS= read -r -d '' file; do
-            php -l "$file" >> syntax.log 2>&1
-          done
-          cat syntax.log
-          if grep -qE 'Parse error|Fatal error|Errors parsing' syntax.log; then exit 1; fi
-      - name: Upload syntax report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: php-syntax-report
-          path: syntax.log
-          if-no-files-found: error
+          set -e
+          while IFS= read -r -d '' file; do
+            php -l "$file"
+          done < <(find App config public -type f -name "*.php" -print0)

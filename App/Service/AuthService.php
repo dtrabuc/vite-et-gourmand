@@ -45,7 +45,6 @@ class AuthService
         $passwordErrors = $this->validatePassword($data['password']);
         if ($passwordErrors !== null) {
             // In a real application, we would throw an exception or return an error.
-            // For now, we'll just let the controller handle it via validation.
             // We'll still hash and create the user, but note that the controller should have validated.
             // To be safe, we'll throw an exception if validation fails.
             throw new \InvalidArgumentException(implode("\n", $passwordErrors));

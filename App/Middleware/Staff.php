@@ -1,7 +1,7 @@
 <?php
 namespace App\Middleware;
 
-class Auth
+class Staff
 {
     public function __invoke(): void
     {
@@ -9,7 +9,7 @@ class Auth
             session_start();
         }
 
-        if (empty($_SESSION['user_id'])) {
+        if (empty($_SESSION['user_id']) || !in_array($_SESSION['role'] ?? '', ['employee', 'admin'], true)) {
             header('Location: /login');
             exit;
         }
