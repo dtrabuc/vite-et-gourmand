@@ -16,6 +16,11 @@ class CommentService
         $this->cacheService = $cacheService ?? new \App\Service\RedisCacheService();
     }
 
+    public function getPendingComments(): array
+    {
+        return $this->commentRepository->findPending();
+    }
+
     public function getAllValidated(): array
     {
         // Try to get from cache first
