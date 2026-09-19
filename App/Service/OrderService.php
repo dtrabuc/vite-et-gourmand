@@ -2,74 +2,57 @@
 namespace App\Service;
 
 use App\Entity\Order;
-use App\Entity\User;
-use App\Entity\Menu;
 use App\Repository\OrderRepository;
 use App\Repository\UserRepository;
 use App\Repository\MenuRepository;
-use App\Service\MailService;
+use App\Core\Database;
 
 class OrderService
 {
-    private OrderRepository $orderRepository;
-    private UserRepository $userRepository;
-    private MenuRepository $menuRepository;
-    private MailService $mailService;
-
     public function __construct(
-        OrderRepository $orderRepository,
-        UserRepository $userRepository,
-        MenuRepository $menuRepository,
-        MailService $mailService
-    ) {
-        $this->orderRepository = $orderRepository;
-        $this->userRepository = $userRepository;
-        $this->menuRepository = $menuRepository;
-        $this->mailService = $mailService;
-    }
+        private OrderRepository $orderRepository,
+        private UserRepository $userRepository,
+        private MenuRepository $menuRepository,
+        private MailService $mailService
+    ) {}
 
-    public function createOrder(int $userId, int $menuId, int $numberOfPeople, string $deliveryDate, string $deliveryTime, string $deliveryAddress, string $deliveryCity = '', ?float $deliveryDistanceKm = null): array
-    {
-        // Get user and menu
+    public function createOrder(
+        int $userId,
+        int $menuId,
+        int $numberOfPeople,
+        string $deliveryDate,
+        string $deliveryTime,
+        string $deliveryAddress,
+        string $deliveryCity,
+        string $deliveryPostalCode,
+        ?float $deliveryDistanceKm = null
+    ): array {
         $user = $this->userRepository->findById($userId);
         $menu = $this->menuRepository->findById($menuId);
 
         if ($user === null) {
-            throw new \InvalidArgumentException('Utilisateur non trouvé');
+            throw new \InvalidArgumentException('Utilisateur non trouvé.');
         }
-
         if ($menu === null) {
-            throw new \InvalidArgumentException('Menu non trouvé');
+            throw new \InvalidArgumentException('Menu non trouvé ou indisponible.');
         }
-
-        // Validate number of people >= minimum required
         if ($numberOfPeople < $menu->getMinPeople()) {
             throw new \InvalidArgumentException(
                 'Le nombre de personnes doit être supérieur ou égal au minimum requis pour ce menu (' .
-                $menu->getMinPeople() . ' personnes)'
+                $menu->getMinPeople() . ' personnes).'
             );
         }
-
-        // Calculate menu price with potential discount
-        $menuPrice = $menu->getBasePrice() * $numberOfPeople;
-        $discountApplied = false;
-
-        // Apply 10% discount if number of people >= minimum + 5
-        if ($numberOfPeople >= ($menu->getMinPeople() + 5)) {
-            $menuPrice *= 0.9; // 10% discount
-            $discountApplied = true;
+        if (trim($deliveryAddress) === '' || trim($deliveryCity) === '') {
+            throw new \InvalidArgumentException('L’adresse et la ville de livraison sont requises.');
         }
 
-        // Bordeaux est la ville de référence indiquée par l’ECF.
-        // Le formulaire actuel ne fournit pas encore de distance GPS/code postal fiable :
-        // on conserve donc la distance comme donnée métier explicite et refusons
-        // de fabriquer une distance à partir d’une adresse texte.
-        $deliveryCost = $this->calculateDeliveryCost($deliveryAddress, $deliveryCity, $deliveryDistanceKm);
+        $discountRate = $numberOfPeople >= ($menu->getMinPeople() + 5) ? 10.0 : 0.0;
+        $grossMenuPrice = $menu->getBasePrice() * $numberOfPeople;
+        $menuPrice = round($grossMenuPrice * (1 - ($discountRate / 100)), 2);
 
-        // Calculate total price
-        $totalPrice = $menuPrice + $deliveryCost;
+        $deliveryCost = $this->calculateDeliveryCost($deliveryCity, $deliveryDistanceKm);
+        $totalPrice = round($menuPrice + $deliveryCost, 2);
 
-        // Create order
         $orderData = [
             'user_id' => $userId,
             'menu_id' => $menuId,
@@ -77,68 +60,70 @@ class OrderService
             'order_date' => date('Y-m-d H:i:s'),
             'delivery_date' => $deliveryDate,
             'delivery_time' => $deliveryTime,
-            'delivery_address' => $deliveryAddress,
-            'delivery_city' => $deliveryCity,
+            'delivery_address' => trim($deliveryAddress),
+            'delivery_city' => trim($deliveryCity),
+            'delivery_postal_code' => trim($deliveryPostalCode),
             'delivery_distance_km' => $deliveryDistanceKm,
             'delivery_cost' => $deliveryCost,
             'menu_price' => $menuPrice,
+            'discount_rate' => $discountRate,
             'total_price' => $totalPrice,
             'status' => 'pending',
         ];
 
-        $orderId = $this->orderRepository->create($orderData);
+        $pdo = Database::getPDO();
+        $pdo->beginTransaction();
 
-        // Decrease menu stock
-        $this->orderRepository->decreaseMenuStock($menuId);
+        try {
+            $orderId = $this->orderRepository->create($orderData);
+            $this->orderRepository->decreaseMenuStock($menuId);
+            $this->orderRepository->addToHistory($orderId, 'pending', $userId, 'Commande créée');
+            $pdo->commit();
+        } catch (\Throwable $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $e;
+        }
 
-        // Add to order status history
-        $this->orderRepository->addToHistory($orderId, 'pending', $userId, 'Commande créée');
-
-        // Send confirmation email
-        $this->mailService->sendOrderConfirmationEmail(
-            $user->getEmail(),
-            $user->getFirstName(),
-            [
-                'id' => $orderId,
-                'order_date' => $orderData['order_date'],
-                'menu_title' => $menu->getTitle(),
-                'number_of_people' => $numberOfPeople,
-                'menu_price' => $menuPrice,
-                'delivery_cost' => $deliveryCost,
-                'total_price' => $totalPrice,
-            ]
-        );
+        try {
+            $this->mailService->sendOrderConfirmationEmail(
+                $user->getEmail(),
+                $user->getFirstName(),
+                [
+                    'id' => $orderId,
+                    'order_date' => $orderData['order_date'],
+                    'menu_title' => $menu->getTitle(),
+                    'number_of_people' => $numberOfPeople,
+                    'menu_price' => $menuPrice,
+                    'delivery_cost' => $deliveryCost,
+                    'total_price' => $totalPrice,
+                ]
+            );
+        } catch (\Throwable $e) {
+            error_log('Order confirmation email error: ' . $e->getMessage());
+        }
 
         return [
             'success' => true,
             'order_id' => $orderId,
             'menu_price' => $menuPrice,
+            'discount_rate' => $discountRate,
             'delivery_cost' => $deliveryCost,
             'total_price' => $totalPrice,
-            'discount_applied' => $discountApplied,
         ];
     }
 
-    /**
-     * Règle ECF : livraison hors Bordeaux = 5 € + 0,59 €/km.
-     *
-     * Tant que le formulaire ne fournit pas une distance calculée de manière
-     * fiable, cette méthode ne tente pas de géocoder une adresse elle-même.
-     * Le calcul doit recevoir une distance issue d'un service de géocodage
-     * dans une étape dédiée.
-     */
-    private function calculateDeliveryCost(string $deliveryAddress, string $deliveryCity = '', ?float $deliveryDistanceKm = null): float
+    private function calculateDeliveryCost(string $deliveryCity, ?float $deliveryDistanceKm): float
     {
         $city = mb_strtolower(trim($deliveryCity));
 
         if ($city === '') {
             throw new \InvalidArgumentException('La ville de livraison est requise.');
         }
-
         if ($city === 'bordeaux') {
             return 0.00;
         }
-
         if ($deliveryDistanceKm === null || $deliveryDistanceKm < 0) {
             throw new \InvalidArgumentException('La distance de livraison est requise hors Bordeaux.');
         }
@@ -156,18 +141,42 @@ class OrderService
         return $this->orderRepository->findById($orderId);
     }
 
-    public function updateOrderStatus(int $orderId, string $status, int $changedByUserId = null, string $notes = ''): void
+    public function updateOrderStatus(int $orderId, string $status, ?int $changedByUserId = null, string $notes = '', ?string $cancellationReason = null): void
     {
-        // Get the order to verify it exists
         $order = $this->orderRepository->findById($orderId);
         if ($order === null) {
-            throw new \InvalidArgumentException('Commande non trouvée');
+            throw new \InvalidArgumentException('Commande non trouvée.');
         }
 
-        // Update status
-        $this->orderRepository->updateStatus($orderId, $status);
+        $validStatuses = ['pending', 'accepted', 'preparing', 'delivering', 'delivered', 'awaiting_return', 'completed', 'cancelled'];
+        if (!in_array($status, $validStatuses, true)) {
+            throw new \InvalidArgumentException('Statut de commande invalide.');
+        }
 
-        // Add to history
+        if ($order->getStatus() === $status) {
+            throw new \InvalidArgumentException('La commande possède déjà ce statut.');
+        }
+
+        $allowedTransitions = [
+            'pending' => ['accepted', 'cancelled'],
+            'accepted' => ['preparing', 'cancelled'],
+            'preparing' => ['delivering', 'cancelled'],
+            'delivering' => ['delivered', 'cancelled'],
+            'delivered' => ['awaiting_return'],
+            'awaiting_return' => ['completed'],
+            'completed' => [],
+            'cancelled' => [],
+        ];
+
+        if (!in_array($status, $allowedTransitions[$order->getStatus()] ?? [], true)) {
+            throw new \InvalidArgumentException('Transition de statut non autorisée.');
+        }
+
+        if ($status === 'cancelled' && trim((string) $cancellationReason) === '') {
+            throw new \InvalidArgumentException('Un motif est obligatoire pour annuler une commande.');
+        }
+
+        $this->orderRepository->updateStatus($orderId, $status, $status === 'cancelled' ? trim((string) $cancellationReason) : null);
         $this->orderRepository->addToHistory($orderId, $status, $changedByUserId, $notes);
     }
 
