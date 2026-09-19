@@ -26,7 +26,7 @@
                             <p class="lead text-muted"><?= $escape($menu->getDescription()) ?></p>
 
                             <dl class="row mt-4">
-                                <dt class="col-sm-5">Prix par personne</dt>
+                                <dt class="col-sm-5">Prix du menu (minimum <?= $menu->getMinPeople() ?> personnes)</dt>
                                 <dd class="col-sm-7"><?= number_format($menu->getBasePrice(), 2, ',', ' ') ?> €</dd>
                                 <dt class="col-sm-5">Régime alimentaire</dt>
                                 <dd class="col-sm-7"><?= $escape($menu->getDietaryRegime()) ?></dd>
