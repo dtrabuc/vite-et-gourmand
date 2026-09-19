@@ -13,11 +13,6 @@ class AuthService
         $this->userRepository = $userRepository;
     }
 
-    /**
-     * Validate password against ECF requirements (10 chars, upper, lower, digit, special)
-     * @param string $password
-     * @return array|null Returns null if valid, otherwise array of error messages
-     */
     private function validatePassword(string $password): ?array
     {
         $errors = [];
@@ -44,9 +39,6 @@ class AuthService
         $password = (string) ($data['password'] ?? '');
         $passwordErrors = $this->validatePassword($password);
         if ($passwordErrors !== null) {
-            // In a real application, we would throw an exception or return an error.
-            // We'll still hash and create the user, but note that the controller should have validated.
-            // To be safe, we'll throw an exception if validation fails.
             throw new \InvalidArgumentException(implode("\n", $passwordErrors));
         }
 
@@ -56,7 +48,6 @@ class AuthService
         $userData = [
             'email' => $data['email'],
             'password' => $hashedPassword,
-            // Le rôle est imposé côté serveur lors d'une inscription publique.
             'role' => 'user',
             'first_name' => $data['first_name'],
             'last_name' => $data['last_name'],
@@ -73,8 +64,6 @@ class AuthService
         $user = $this->userRepository->findByEmail($email);
 
         if ($user === null || !$this->userRepository->isActive($user->getId())) {
-            // Simulate user not found to prevent user enumeration
-            // We still return null, but we could also log the attempt.
             return null;
         }
 
@@ -84,12 +73,10 @@ class AuthService
         }
 
         if (password_verify($password, $user->getPasswordHash())) {
-            // Successful login: reset failed attempts and lock
             $this->userRepository->updateFailedAttempts($user->getId(), 0, null);
             return $user;
         }
 
-        // Failed login: increment failed attempts and lock if >=5
         $newFailedAttempts = $user->getFailedAttempts() + 1;
         $lockedUntil = null;
         if ($newFailedAttempts >= 5) {
@@ -112,7 +99,6 @@ class AuthService
             return false;
         }
 
-        // Validate new password
         $passwordErrors = $this->validatePassword($newPassword);
         if ($passwordErrors !== null) {
             throw new \InvalidArgumentException(implode("\n", $passwordErrors));
@@ -121,7 +107,6 @@ class AuthService
         $hashedNewPassword = password_hash($newPassword, PASSWORD_DEFAULT);
         $this->userRepository->updatePassword($userId, $hashedNewPassword);
 
-        // Reset failed attempts on password change (optional, but good practice)
         $this->userRepository->updateFailedAttempts($userId, 0, null);
 
         return true;
@@ -132,70 +117,46 @@ class AuthService
         $this->userRepository->update($userId, $data);
     }
 
-    /**
-     * Generate a password reset token for the given email.
-     * @param string $email
-     * @return string|null Returns the plain token if successful, null if user not found.
-     */
     public function createResetToken(string $email): ?string
     {
         $user = $this->userRepository->findByEmail($email);
 
         if ($user === null) {
-            // Do not reveal that the user does not exist
             return null;
         }
 
-        // Generate a cryptographically secure random token
         $token = bin2hex(random_bytes(32));
         $hashedToken = hash('sha256', $token);
 
-        // Set expiration to 1 hour from now
         $expiresAt = (new \DateTimeImmutable())->modify('+1 hour');
 
-        // Store the hashed token and expiration in the user record
         $this->userRepository->updateResetToken($user->getId(), $hashedToken, $expiresAt);
 
         return $token;
     }
 
-    /**
-     * Validate a password reset token and return the associated user if valid.
-     * @param string $token
-     * @return User|null
-     */
     public function validateResetToken(string $token): ?User
     {
         $hashedToken = hash('sha256', $token);
         $user = $this->userRepository->findByResetTokenHash($hashedToken);
 
-        return $user; // Will be null if not found or expired
+        return $user;
     }
 
-    /**
-     * Reset the password for the given token.
-     * @param string $token
-     * @param string $newPassword
-     * @return bool True if password was reset, false otherwise.
-     */
     public function resetPassword(string $token, string $newPassword): bool
     {
-        // Validate the token
         $user = $this->validateResetToken($token);
         if ($user === null) {
             return false;
         }
 
-        // Validate the new password
         $passwordErrors = $this->validatePassword($newPassword);
         if ($passwordErrors !== null) {
             return false;
         }
 
-        // Hash the new password
         $hashedNewPassword = password_hash($newPassword, PASSWORD_DEFAULT);
 
-        // Update the password and clear the reset token
         $this->userRepository->updatePassword($user->getId(), $hashedNewPassword);
         $this->userRepository->clearResetToken($user->getId());
 
