@@ -10,6 +10,20 @@
 <h3 class="h6 mt-4">Suivi</h3><ol class="small ps-3">
 <?php foreach (($history[$order->getId()] ?? []) as $entry): ?><li><?= $escape($statusLabels[$entry['status']] ?? $entry['status']) ?> — <?= $entry['changed_at'] instanceof \DateTimeInterface ? $escape($entry['changed_at']->format('d/m/Y H:i')) : '' ?></li><?php endforeach; ?>
 </ol>
+<?php if (in_array($order->getStatus(), ['pending','accepted'], true)): ?>
+<hr><details><summary class="fw-semibold">Modifier la commande</summary>
+<form method="post" action="/orders/<?= $order->getId() ?>" class="row g-2 mt-2">
+<input type="hidden" name="csrf_token" value="<?= $escape($csrfToken) ?>">
+<div class="col-md-3"><label class="form-label">Personnes</label><input class="form-control" type="number" min="1" name="number_of_people" value="<?= $order->getNumberOfPeople() ?>" required></div>
+<div class="col-md-3"><label class="form-label">Date</label><input class="form-control" type="date" name="delivery_date" value="<?= $escape($order->getDeliveryDate()) ?>" required></div>
+<div class="col-md-3"><label class="form-label">Heure</label><input class="form-control" type="time" name="delivery_time" value="<?= $escape($order->getDeliveryTime()) ?>" required></div>
+<div class="col-md-3"><label class="form-label">Code postal</label><input class="form-control" name="delivery_postal_code" value="<?= $escape($order->getDeliveryPostalCode()) ?>"></div>
+<div class="col-md-6"><label class="form-label">Adresse</label><input class="form-control" name="delivery_address" value="<?= $escape($order->getDeliveryAddress()) ?>" required></div>
+<div class="col-md-3"><label class="form-label">Ville</label><input class="form-control" name="delivery_city" value="<?= $escape($order->getDeliveryCity()) ?>" required></div>
+<div class="col-md-3"><label class="form-label">Distance (km)</label><input class="form-control" type="number" step="0.01" min="0" name="delivery_distance_km" value="<?= $order->getDeliveryDistanceKm() !== null ? $order->getDeliveryDistanceKm() : '' ?>"></div>
+<div class="col-12"><button class="btn btn-outline-primary btn-sm">Enregistrer les modifications</button></div>
+</form></details>
+<?php endif; ?>
 <?php if ($order->getStatus() === 'pending'): ?>
 <form method="post" action="/orders/<?= $order->getId() ?>/status" class="d-inline"><input type="hidden" name="csrf_token" value="<?= $escape($csrfToken) ?>"><input type="hidden" name="status" value="cancelled"><input type="hidden" name="cancellation_reason" value="Annulation demandée par le client"><button class="btn btn-outline-danger btn-sm" data-confirm="Annuler cette commande ?">Annuler la commande</button></form>
 <?php endif; ?>
