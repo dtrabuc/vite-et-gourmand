@@ -24,11 +24,12 @@ $escape = static fn (mixed $value): string => htmlspecialchars((string) $value, 
             <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-1">
                 <li class="nav-item"><a class="nav-link <?= $currentPath === '/' ? 'active' : '' ?>" href="/">Accueil</a></li>
                 <li class="nav-item"><a class="nav-link <?= str_starts_with($currentPath, '/menus') ? 'active' : '' ?>" href="/menus">Menus</a></li>
+                <li class="nav-item"><a class="nav-link <?= $currentPath === '/contact' ? 'active' : '' ?>" href="/contact">Contact</a></li>
                 <?php if ($isAuthenticated): ?>
                     <li class="nav-item"><a class="nav-link" href="/orders/new">Commander</a></li>
                     <li class="nav-item"><a class="nav-link" href="/orders">Mes commandes</a></li>
                     <li class="nav-item"><a class="nav-link" href="/profile">Mon profil</a></li>
-                    <?php if ($role === 'admin'): ?>
+                    <?php if (in_array($role, ['employee', 'admin'], true)): ?>
                         <li class="nav-item"><a class="nav-link" href="/admin/dashboard">Administration</a></li>
                     <?php endif; ?>
                     <li class="nav-item">
