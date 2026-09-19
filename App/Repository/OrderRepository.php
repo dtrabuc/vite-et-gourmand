@@ -69,6 +69,12 @@ class OrderRepository
         return $row === false ? null : $this->hydrate($row);
     }
 
+    public function increaseMenuStock(int $menuId): void
+    {
+        $stmt = Database::getPDO()->prepare('UPDATE menus SET available_stock = available_stock + 1 WHERE id = :id');
+        $stmt->execute(['id' => $menuId]);
+    }
+
     public function updateCustomerOrder(int $id, int $numberOfPeople, string $deliveryDate, string $deliveryTime, string $address, string $city, string $postalCode, ?float $distanceKm, float $menuPrice, float $deliveryCost, float $discountRate, float $totalPrice): void
     {
         $stmt = Database::getPDO()->prepare(
