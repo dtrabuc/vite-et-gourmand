@@ -498,7 +498,7 @@ class AdminController extends BaseController
         // Validate input
         $errors = [];
 
-        $requiredFields = ['title', 'description', 'theme', 'min_people', 'base_price', 'conditions', 'available_stock'];
+        $requiredFields = ['title', 'description', 'theme', 'dietary_regime', 'min_people', 'base_price', 'conditions', 'available_stock'];
         foreach ($requiredFields as $field) {
             if (empty($_POST[$field] ?? '')) {
                 $errors[$field] = 'Ce champ est requis';
@@ -528,6 +528,7 @@ class AdminController extends BaseController
                 'title' => $_POST['title'],
                 'description' => $_POST['description'],
                 'theme' => $_POST['theme'],
+                'dietary_regime' => $_POST['dietary_regime'],
                 'min_people' => (int)$_POST['min_people'],
                 'base_price' => (float)$_POST['base_price'],
                 'conditions' => $_POST['conditions'],
