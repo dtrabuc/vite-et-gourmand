@@ -88,9 +88,15 @@ class OrderController extends BaseController
         }
         if ($deliveryDate === '') {
             $errors['delivery_date'] = 'Date de livraison requise.';
+        } elseif (!preg_match('/^\\d{4}-\\d{2}-\\d{2}$/', $deliveryDate)) {
+            $errors['delivery_date'] = 'Date de livraison invalide.';
+        } elseif ($deliveryDate < date('Y-m-d')) {
+            $errors['delivery_date'] = 'La date de livraison ne peut pas être passée.';
         }
         if ($deliveryTime === '') {
             $errors['delivery_time'] = 'Heure de livraison requise.';
+        } elseif (!preg_match('/^\\d{2}:\\d{2}$/', $deliveryTime)) {
+            $errors['delivery_time'] = 'Heure de livraison invalide.';
         }
         if ($deliveryAddress === '') {
             $errors['delivery_address'] = 'Adresse de livraison requise.';
