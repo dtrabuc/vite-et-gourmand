@@ -25,19 +25,13 @@ class AdminService
 
     public function createEmployee(array $data): int
     {
-        // Validate password
-        $passwordErrors = $this->validatePassword($data['password']);
-        if ($passwordErrors !== null) {
-            throw new \InvalidArgumentException(implode("\n", $passwordErrors));
-        }
-
-        // Hash password
-        $hashedPassword = password_hash($data['password'], PASSWORD_DEFAULT);
+        // The controller creates a random password and immediately sends a reset link.
+        $hashedPassword = $data['password'];
 
         $userData = [
             'email' => $data['email'],
             'password' => $hashedPassword,
-            'role' => $data['role'] ?? 'employee',
+            'role' => 'employee',
             'first_name' => $data['first_name'],
             'last_name' => $data['last_name'],
             'phone' => $data['phone'],
@@ -82,13 +76,13 @@ class AdminService
 
         // Actually, let's not delete - we'll update to prevent login
         // We'll add a method to update user status
-        $this->userRepository->update($id, ['role' => 'disabled']);
+        $this->userRepository->setActive($id, false);
     }
 
     public function enableEmployee(int $id): void
     {
         // Change role back to employee
-        $this->userRepository->update($id, ['role' => 'employee']);
+        $this->userRepository->setActive($id, true);
     }
 
     public function getDashboardStats(): array
@@ -180,7 +174,7 @@ class AdminService
     }
 
     /**
-     * Validate password against ECF requirements (12 chars, upper, lower, digit, special)
+     * Validate password against ECF requirements (10 chars, upper, lower, digit, special)
      * @param string $password
      * @return array|null Returns null if valid, otherwise array of error messages
      */
@@ -188,7 +182,7 @@ class AdminService
     {
         $errors = [];
         if (strlen($password) < 12) {
-            $errors[] = 'Le mot de passe doit contenir au moins 12 caractères';
+            $errors[] = 'Le mot de passe doit contenir au moins 10 caractères';
         }
         if (!preg_match('/[A-Z]/', $password)) {
             $errors[] = 'Le mot de passe doit contenir au moins une majuscule';
