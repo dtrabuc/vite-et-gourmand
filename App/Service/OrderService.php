@@ -147,7 +147,7 @@ class OrderService
         if ($order === null || $order->getUserId() !== $userId) {
             throw new \InvalidArgumentException('Commande introuvable.');
         }
-        if (!in_array($order->getStatus(), ['pending', 'accepted'], true)) {
+        if ($order->getStatus() !== 'pending') {
             throw new \InvalidArgumentException('Cette commande ne peut plus être modifiée.');
         }
         $menu = $this->menuRepository->findById($order->getMenuId());
