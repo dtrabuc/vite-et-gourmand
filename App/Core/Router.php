@@ -49,7 +49,6 @@ class Router
 
                 // Split controller@action
                 [$controllerName, $actionName] = explode('@', $controllerAction);
-                error_log("DEBUG: controllerName='$controllerName', actionName='$actionName'");
 
                 // Apply middlewares
                 foreach ($middlewares as $middleware) {
