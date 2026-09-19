@@ -87,6 +87,20 @@ class UserRepository
         return (int)$pdo->lastInsertId();
     }
 
+    public function setActive(int $id, bool $active): void
+    {
+        $stmt = Database::getPDO()->prepare('UPDATE users SET is_active = :active, updated_at = NOW() WHERE id = :id AND role = "employee"');
+        $stmt->execute(['id' => $id, 'active' => $active ? 1 : 0]);
+    }
+
+    public function isActive(int $id): bool
+    {
+        $stmt = Database::getPDO()->prepare('SELECT is_active FROM users WHERE id = :id');
+        $stmt->execute(['id' => $id]);
+        $value = $stmt->fetchColumn();
+        return $value !== false && (int)$value === 1;
+    }
+
     public function update(int $id, array $data): void
     {
         $pdo = Database::getPDO();
