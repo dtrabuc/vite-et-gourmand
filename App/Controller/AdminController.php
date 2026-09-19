@@ -175,7 +175,7 @@ class AdminController extends BaseController
         $reason = trim((string)($_POST['cancellation_reason'] ?? ''));
         $contactMode = trim((string)($_POST['contact_mode'] ?? ''));
         $notes = trim((string)($_POST['notes'] ?? ''));
-        $equipmentLoaned = array_key_exists('equipment_loaned', $_POST) ? (bool)$_POST['equipment_loaned'] : false;
+        $equipmentLoaned = array_key_exists('equipment_loaned', $_POST) ? ((string) $_POST['equipment_loaned'] === '1') : false;
         if ($contactMode === '') {
             $_SESSION['admin_error'] = 'Le mode de contact du client est obligatoire avant toute modification de commande.';
             header('Location: /admin/orders'); exit;
