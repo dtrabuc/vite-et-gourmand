@@ -45,7 +45,7 @@ class AdminService
     public function getEmployees(): array
     {
         $pdo = Database::getPDO();
-        $stmt = $pdo->prepare('SELECT id, email, first_name, last_name, role, created_at FROM users WHERE role IN (\'employee\', \'admin\') ORDER BY created_at DESC');
+        $stmt = $pdo->prepare('SELECT id, email, first_name, last_name, role, is_active, created_at FROM users WHERE role IN (\'employee\', \'admin\') ORDER BY created_at DESC');
         $stmt->execute();
 
         $rows = $stmt->fetchAll();
@@ -58,6 +58,7 @@ class AdminService
                 'first_name' => $row['first_name'],
                 'last_name' => $row['last_name'],
                 'role' => $row['role'],
+                'is_active' => (bool)$row['is_active'],
                 'created_at' => $row['created_at'] ? new \DateTimeImmutable($row['created_at']) : null,
             ];
         }
