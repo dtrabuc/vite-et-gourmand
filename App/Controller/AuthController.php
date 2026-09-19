@@ -35,7 +35,7 @@ class AuthController extends BaseController
         $user = $this->authService->login($email, $password);
 
         if ($user === null) {
-                $_SESSION['login_error'] = 'Identifiants invalides';
+            $_SESSION['login_error'] = 'Identifiants invalides';
             header('Location: /login');
             exit;
         }
@@ -187,7 +187,7 @@ class AuthController extends BaseController
                 return;
             }
 
-                $_SESSION['profile_errors'] = $errors;
+            $_SESSION['profile_errors'] = $errors;
             $_SESSION['profile_old_input'] = $_POST;
             header('Location: /profile');
             exit;
@@ -264,7 +264,7 @@ class AuthController extends BaseController
         }
 
         if (!empty($errors)) {
-                if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+            if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
                 header('Content-Type: application/json');
                 echo json_encode(['success' => false, 'errors' => $errors]);
                 return;
@@ -385,7 +385,7 @@ class AuthController extends BaseController
         $user = $authService->validateResetToken($token);
 
         if ($user === null) {
-                $_SESSION['reset_error'] = 'Le token de réinitialisation est invalide ou expiré';
+            $_SESSION['reset_error'] = 'Le token de réinitialisation est invalide ou expiré';
             header('Location: /forgot-password');
             exit;
         }
