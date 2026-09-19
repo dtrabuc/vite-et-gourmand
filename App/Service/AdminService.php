@@ -173,10 +173,25 @@ class AdminService
         return $stats;
     }
 
-    public function getRevenueByMenu(): array
+    public function getRevenueByMenu(?string $from = null, ?string $to = null, ?int $menuId = null): array
     {
-        try { return $this->getMenuStatsFromMongoDB(); }
-        catch (\Throwable $e) { return $this->getMenuStatsFromMariaDB(); }
+        $pdo = Database::getPDO();
+        $sql = "SELECT m.id AS menu_id, m.title AS menu_title, COUNT(o.id) AS order_count, COALESCE(SUM(o.total_price), 0) AS revenue
+                FROM menus m LEFT JOIN orders o ON o.menu_id = m.id AND o.status IN ('delivered','completed')";
+        $where = [];
+        $params = [];
+        if ($from !== null && $from !== '') { $where[] = 'o.delivery_date >= :from_date'; $params['from_date'] = $from; }
+        if ($to !== null && $to !== '') { $where[] = 'o.delivery_date <= :to_date'; $params['to_date'] = $to; }
+        if ($menuId !== null && $menuId > 0) { $where[] = 'm.id = :menu_id'; $params['menu_id'] = $menuId; }
+        if ($where !== []) { $sql .= ' WHERE ' . implode(' AND ', $where); }
+        $sql .= ' GROUP BY m.id, m.title ORDER BY revenue DESC';
+        $stmt = $pdo->prepare($sql); $stmt->execute($params);
+        return array_map(static fn(array $row): array => [
+            'menu_id' => (int)$row['menu_id'],
+            'menu_title' => $row['menu_title'],
+            'order_count' => (int)$row['order_count'],
+            'revenue' => (float)$row['revenue'],
+        ], $stmt->fetchAll());
     }
 
     /**
