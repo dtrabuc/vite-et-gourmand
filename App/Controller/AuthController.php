@@ -16,13 +16,11 @@ class AuthController extends BaseController
     public function showLogin(): void
     {
 
-        // Render login template
         $this->render('auth/login');
     }
 
     public function login(): void
     {
-        // Apply guest middleware
         (new \App\Middleware\Guest())();
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -37,13 +35,11 @@ class AuthController extends BaseController
         $user = $this->authService->login($email, $password);
 
         if ($user === null) {
-            // Redirect back with error
-            $_SESSION['login_error'] = 'Identifiants invalides';
+                $_SESSION['login_error'] = 'Identifiants invalides';
             header('Location: /login');
             exit;
         }
 
-        // Set session
         session_regenerate_id(true);
         $_SESSION['user_id'] = $user->getId();
         $_SESSION['email'] = $user->getEmail();
@@ -51,16 +47,15 @@ class AuthController extends BaseController
         $_SESSION['first_name'] = $user->getFirstName();
         $_SESSION['last_name'] = $user->getLastName();
 
-        // Redirect based on role
         switch ($user->getRole()) {
             case 'admin':
                 header('Location: /admin/dashboard');
                 break;
             case 'employee':
-                header('Location: /'); // Employee dashboard would be here
+                header('Location: /admin/orders');
                 break;
             default:
-                header('Location: /'); // User dashboard
+                header('Location: /');
                 break;
         }
         exit;
@@ -68,16 +63,13 @@ class AuthController extends BaseController
 
     public function showRegister(): void
     {
-        // Apply guest middleware
         (new \App\Middleware\Guest())();
 
-        // Render register template
         $this->render('auth/register');
     }
 
     public function register(): void
     {
-        // Apply guest middleware
         (new \App\Middleware\Guest())();
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -86,10 +78,8 @@ class AuthController extends BaseController
             return;
         }
 
-        // Validate input
         $errors = [];
 
-        // Required fields
         $requiredFields = ['email', 'password', 'first_name', 'last_name', 'phone', 'gsm', 'address'];
         foreach ($requiredFields as $field) {
             if (empty($_POST[$field] ?? '')) {
@@ -97,12 +87,10 @@ class AuthController extends BaseController
             }
         }
 
-        // Email format
         if (!empty($_POST['email'] ?? '') && !filter_var($_POST['email'], FILTER_VALIDATE_EMAIL)) {
             $errors['email'] = 'Email invalide';
         }
 
-        // Password validation according to the ECF requirements
         $password = $_POST['password'] ?? '';
         if (strlen($password) < 10) {
             $errors['password'] = 'Le mot de passe doit contenir au moins 10 caractères';
@@ -127,7 +115,6 @@ class AuthController extends BaseController
             exit;
         }
 
-        // Create user
         try {
             $userId = $this->authService->register([
                 'email' => $_POST['email'],
@@ -140,19 +127,16 @@ class AuthController extends BaseController
                 'address' => $_POST['address'],
             ]);
 
-            // Send welcome email
             $mailService = new \App\Service\MailService(
                 $_ENV['MAIL_FROM_ADDRESS'] ?? 'noreply@viteetgourmand.com',
                 $_ENV['MAIL_FROM_NAME'] ?? 'Vite & Gourmand'
             );
             $mailService->sendWelcomeEmail($_POST['email'], $_POST['first_name']);
 
-            // Redirect to login with success message
             $_SESSION['register_success'] = 'Inscription réussie. Vous pouvez maintenant vous connecter.';
             header('Location: /login');
             exit;
         } catch (\Exception $e) {
-            // Handle duplicate email or other database errors
             $_SESSION['register_error'] = 'Une erreur est survenue lors de l\'inscription';
             header('Location: /register');
             exit;
@@ -161,7 +145,6 @@ class AuthController extends BaseController
 
     public function profile(): void
     {
-        // Apply auth middleware
         (new \App\Middleware\Auth())();
 
         $userId = $_SESSION['user_id'] ?? 0;
@@ -180,7 +163,6 @@ class AuthController extends BaseController
 
     public function updateProfile(): void
     {
-        // Apply auth middleware
         (new \App\Middleware\Auth())();
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -195,7 +177,6 @@ class AuthController extends BaseController
             exit;
         }
 
-        // Validate input (similar to registration but without password)
         $errors = [];
 
         $requiredFields = ['email', 'first_name', 'last_name', 'phone', 'gsm', 'address'];
@@ -205,7 +186,6 @@ class AuthController extends BaseController
             }
         }
 
-        // Email format
         if (!empty($_POST['email'] ?? '') && !filter_var($_POST['email'], FILTER_VALIDATE_EMAIL)) {
             $errors['email'] = 'Email invalide';
         }
@@ -218,8 +198,7 @@ class AuthController extends BaseController
                 return;
             }
 
-            // For form redirects
-            $_SESSION['profile_errors'] = $errors;
+                $_SESSION['profile_errors'] = $errors;
             $_SESSION['profile_old_input'] = $_POST;
             header('Location: /profile');
             exit;
@@ -242,7 +221,6 @@ class AuthController extends BaseController
         $_SESSION['gsm'] = trim($_POST['gsm']);
         $_SESSION['address'] = trim($_POST['address']);
 
-        // For AJAX requests
         if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
             header('Content-Type: application/json');
             echo json_encode(['success' => true, 'message' => 'Profil mis à jour avec succès']);
@@ -256,7 +234,6 @@ class AuthController extends BaseController
 
     public function changePassword(): void
     {
-        // Apply auth middleware
         (new \App\Middleware\Auth())();
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -298,8 +275,7 @@ class AuthController extends BaseController
         }
 
         if (!empty($errors)) {
-            // For AJAX requests
-            if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+                if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
                 header('Content-Type: application/json');
                 echo json_encode(['success' => false, 'errors' => $errors]);
                 return;
@@ -307,39 +283,35 @@ class AuthController extends BaseController
 
             $_SESSION['password_errors'] = $errors;
             $_SESSION['password_old_input'] = $_POST;
-            header('Location: /password');
+            header('Location: /profile');
             exit;
         }
 
-        // Change password
         if ($this->authService->changePassword($userId, $currentPassword, $newPassword)) {
-            // For AJAX requests
-            if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+                if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
                 header('Content-Type: application/json');
                 echo json_encode(['success' => true, 'message' => 'Mot de passe modifié avec succès']);
                 return;
             }
 
             $_SESSION['password_success'] = 'Mot de passe modifié avec succès';
-            header('Location: /password');
+            header('Location: /profile');
             exit;
         } else {
-            // For AJAX requests
-            if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+                if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
                 header('Content-Type: application/json');
                 echo json_encode(['success' => false, 'errors' => ['current_password' => 'Mot de passe actuel incorrect']]);
                 return;
             }
 
             $_SESSION['password_errors'] = ['current_password' => 'Mot de passe actuel incorrect'];
-            header('Location: /password');
+            header('Location: /profile');
             exit;
         }
     }
 
     public function logout(): void
     {
-        // Apply auth middleware
         (new \App\Middleware\Auth())();
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -348,7 +320,6 @@ class AuthController extends BaseController
             return;
         }
 
-        // Destroy session
         $_SESSION = [];
         if (ini_get("session.use_cookies")) {
             $params = session_get_cookie_params();
@@ -365,7 +336,6 @@ class AuthController extends BaseController
 
     public function showForgotPassword(): void
     {
-        // Apply guest middleware
         (new \App\Middleware\Guest())();
 
         $this->render('auth/forgot_password');
@@ -373,7 +343,6 @@ class AuthController extends BaseController
 
     public function forgotPassword(): void
     {
-        // Apply guest middleware
         (new \App\Middleware\Guest())();
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -419,29 +388,24 @@ class AuthController extends BaseController
 
     public function showResetPassword(string $token): void
     {
-        // Apply guest middleware
         (new \App\Middleware\Guest())();
 
-        // Validate the token
         $authService = new \App\Service\AuthService(
             new \App\Repository\UserRepository()
         );
         $user = $authService->validateResetToken($token);
 
         if ($user === null) {
-            // Token invalid or expired
-            $_SESSION['reset_error'] = 'Le token de réinitialisation est invalide ou expiré';
+                $_SESSION['reset_error'] = 'Le token de réinitialisation est invalide ou expiré';
             header('Location: /forgot-password');
             exit;
         }
 
-        // Render the form with the token
         $this->render('auth/reset_password', ['token' => $token]);
     }
 
     public function resetPassword(): void
     {
-        // Apply guest middleware
         (new \App\Middleware\Guest())();
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -454,8 +418,6 @@ class AuthController extends BaseController
         $password = $_POST['password'] ?? '';
         $confirmPassword = $_POST['confirm_password'] ?? '';
 
-        // Validate token (in real implementation)
-        // Validate password (same rules as registration)
         $errors = [];
 
         if (strlen($password) < 10) {
