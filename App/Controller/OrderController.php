@@ -7,11 +7,14 @@ use App\Service\MailService;
 use App\Repository\OrderRepository;
 use App\Repository\UserRepository;
 use App\Repository\MenuRepository;
+use App\Service\CommentService;
+use App\Repository\CommentRepository;
 
 class OrderController extends BaseController
 {
     private OrderService $orderService;
     private AuthService $authService;
+    private CommentService $commentService;
 
     public function __construct()
     {
@@ -22,6 +25,7 @@ class OrderController extends BaseController
             new MailService()
         );
         $this->authService = new AuthService(new UserRepository());
+        $this->commentService = new CommentService(new CommentRepository());
     }
 
     public function index(): void
@@ -33,8 +37,17 @@ class OrderController extends BaseController
             exit;
         }
 
+        $orders = $this->orderService->getUserOrders($userId);
+        $history = [];
+        $reviews = [];
+        foreach ($orders as $order) {
+            $history[$order->getId()] = $this->orderService->getOrderHistory($order->getId());
+            $reviews[$order->getId()] = $this->commentService->getByOrderId($order->getId());
+        }
         $this->render('order/index', [
-            'orders' => $this->orderService->getUserOrders($userId),
+            'orders' => $orders,
+            'history' => $history,
+            'reviews' => $reviews,
         ]);
     }
 
@@ -163,6 +176,36 @@ class OrderController extends BaseController
             'order' => $order,
             'menu' => $menu,
         ]);
+    }
+
+    public function review(array $params): void
+    {
+        (new \App\Middleware\Auth())();
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { http_response_code(405); return; }
+
+        $orderId = (int)($params[0] ?? 0);
+        $userId = (int)($_SESSION['user_id'] ?? 0);
+        $order = $this->orderService->getOrderById($orderId);
+        if ($order === null || $order->getUserId() !== $userId) { http_response_code(403); return; }
+        if ($order->getStatus() !== 'completed') {
+            $_SESSION['order_error'] = 'Un avis est possible après la fin de la prestation.';
+            header('Location: /orders'); exit;
+        }
+
+        try {
+            $this->commentService->create([
+                'user_id' => $userId,
+                'order_id' => $orderId,
+                'menu_id' => $order->getMenuId(),
+                'rating' => (int)($_POST['rating'] ?? 0),
+                'comment' => trim((string)($_POST['comment'] ?? '')),
+            ]);
+            $_SESSION['order_success'] = 'Votre avis a été transmis pour validation.';
+        } catch (\Throwable $e) {
+            $_SESSION['order_error'] = $e->getMessage();
+        }
+        header('Location: /orders');
+        exit;
     }
 
     public function updateStatus(array $params): void
