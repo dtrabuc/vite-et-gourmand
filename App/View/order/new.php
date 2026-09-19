@@ -60,7 +60,7 @@ $selectedId = (int) ($oldInput['menu_id'] ?? $selectedMenuId);
                                 <select class="form-select <?= isset($errors['menu_id']) ? 'is-invalid' : '' ?>" id="menu_id" name="menu_id" required>
                                     <option value="">Sélectionnez un menu</option>
                                     <?php foreach ($menus as $menu): ?>
-                                        <option value="<?= $menu->getId() ?>" <?= $selectedId === $menu->getId() ? 'selected' : '' ?>>
+                                        <option value="<?= $menu->getId() ?>" data-base-price="<?= $menu->getBasePrice() ?>" data-min-people="<?= $menu->getMinPeople() ?>" <?= $selectedId === $menu->getId() ? 'selected' : '' ?>>
                                             <?= $escape($menu->getTitle()) ?> — <?= number_format($menu->getBasePrice(), 2, ',', ' ') ?> € / personne (minimum <?= $menu->getMinPeople() ?>)
                                         </option>
                                     <?php endforeach; ?>
@@ -104,6 +104,23 @@ $selectedId = (int) ($oldInput['menu_id'] ?? $selectedMenuId);
                                 <input class="form-control <?= isset($errors['delivery_distance_km']) ? 'is-invalid' : '' ?>" id="delivery_distance_km" name="delivery_distance_km" type="number" min="0" step="0.01" value="<?= $old('delivery_distance_km') ?>">
                                 <div class="form-text">Requise uniquement si la ville est hors Bordeaux. Le tarif appliqué est 5 € + 0,59 €/km.</div>
                                 <?php if (isset($errors['delivery_distance_km'])): ?><div class="invalid-feedback"><?= $escape($errors['delivery_distance_km']) ?></div><?php endif; ?>
+                            </div>
+
+                            <div class="col-12">
+                                <section class="card bg-light border-0">
+                                    <div class="card-body">
+                                        <h2 class="h5 text-primary">Récapitulatif du prix</h2>
+                                        <dl class="row mb-0">
+                                            <dt class="col-8">Prix du menu</dt>
+                                            <dd class="col-4 text-end" id="orderMenuPrice">0,00 €</dd>
+                                            <dt class="col-8">Livraison</dt>
+                                            <dd class="col-4 text-end" id="orderDeliveryPrice">0,00 €</dd>
+                                            <dt class="col-8 fw-bold">Total</dt>
+                                            <dd class="col-4 text-end fw-bold" id="orderTotalPrice">0,00 €</dd>
+                                        </dl>
+                                        <p class="small text-muted mb-0">Le montant affiché ici est indicatif et est recalculé et contrôlé côté serveur lors de la validation.</p>
+                                    </div>
+                                </section>
                             </div>
 
                             <div class="col-12">
