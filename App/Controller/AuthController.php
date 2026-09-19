@@ -107,7 +107,7 @@ class AuthController extends BaseController
         // Password validation (ECF requirements: 12 characters, uppercase, lowercase, digit, special)
         $password = $_POST['password'] ?? '';
         if (strlen($password) < 12) {
-            $errors['password'] = 'Le mot de passe doit contenir au moins 12 caractères';
+            $errors['password'] = 'Le mot de passe doit contenir au moins 10 caractères';
         }
         if (!preg_match('/[A-Z]/', $password)) {
             $errors['password'] = 'Le mot de passe doit contenir au moins une majuscule';
@@ -406,15 +406,18 @@ class AuthController extends BaseController
 
         $token = $this->authService->createResetToken($email);
 
-        // Always show the same message to prevent user enumeration
+        // Toujours utiliser le même message afin de ne pas révéler l'existence d'un compte.
         if ($token !== null) {
-            // In a real implementation, we would send the email here
-            // For now, we'll just log it or simulate sending
-            error_log('Password reset token for ' . $email . ': ' . $token);
-
-            // Simulate sending email (in production, use MailService)
-            // $mailService = new \App\Service\MailService();
-            // $mailService->sendPasswordResetEmail($email, 'User', 'http://example.com/reset-password/' . $token);
+            $user = (new UserRepository())->findByEmail($email);
+            $baseUrl = rtrim($_ENV['APP_URL'] ?? 'http://127.0.0.1:8080', '/');
+            $resetUrl = $baseUrl . '/reset-password/' . rawurlencode($token);
+            $mailService = new \App\Service\MailService(
+                $_ENV['MAIL_FROM_ADDRESS'] ?? 'noreply@viteetgourmand.com',
+                $_ENV['MAIL_FROM_NAME'] ?? 'Vite & Gourmand'
+            );
+            if ($user !== null && !$mailService->sendPasswordResetEmail($email, $user->getFirstName(), $resetUrl)) {
+                error_log('Impossible d\'envoyer le mail de réinitialisation à ' . $email);
+            }
         }
 
         $_SESSION['forgot_success'] = 'Si cet email existe dans notre système, vous recevrez un lien de réinitialisation';
