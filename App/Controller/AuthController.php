@@ -2,8 +2,6 @@
 namespace App\Controller;
 
 use App\Service\AuthService;
-use App\Middleware\Auth as GuestMiddleware;
-use App\Middleware\Auth as AuthMiddleware;
 use App\Repository\UserRepository;
 
 class AuthController extends BaseController
@@ -104,7 +102,7 @@ class AuthController extends BaseController
             $errors['email'] = 'Email invalide';
         }
 
-        // Password validation (ECF requirements: 12 characters, uppercase, lowercase, digit, special)
+        // Password validation according to the ECF requirements
         $password = $_POST['password'] ?? '';
         if (strlen($password) < 12) {
             $errors['password'] = 'Le mot de passe doit contenir au moins 10 caractères';
@@ -185,13 +183,10 @@ class AuthController extends BaseController
         // Apply auth middleware
         (new \App\Middleware\Auth())();
 
-        if ($_SERVER['REQUEST_METHOD'] !== 'PUT' && $_SERVER['REQUEST_METHOD'] !== 'POST') {
-            // Handle form submission via POST with _method=PUT
-            if ($_SERVER['REQUEST_METHOD'] !== 'POST' || empty($_POST['_method']) || strtoupper($_POST['_method']) !== 'PUT') {
-                http_response_code(405);
-                echo 'Method Not Allowed';
-                return;
-            }
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo 'Method Not Allowed';
+            return;
         }
 
         $userId = $_SESSION['user_id'] ?? 0;
