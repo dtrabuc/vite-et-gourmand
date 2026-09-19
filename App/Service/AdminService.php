@@ -25,8 +25,9 @@ class AdminService
 
     public function createEmployee(array $data): int
     {
-        // The controller creates a random password and immediately sends a reset link.
-        $hashedPassword = $data['password'];
+        $passwordErrors = $this->validatePassword($data['password']);
+        if ($passwordErrors !== null) { throw new \InvalidArgumentException(implode("\n", $passwordErrors)); }
+        $hashedPassword = password_hash($data['password'], PASSWORD_DEFAULT);
 
         $userData = [
             'email' => $data['email'],
