@@ -2,9 +2,9 @@ name: PHP checks
 
 on:
   push:
-    branches: ["alpha"]
+    branches: ["dev", "main"]
   pull_request:
-    branches: ["alpha"]
+    branches: ["dev", "main"]
   workflow_dispatch:
 
 jobs:
