@@ -85,6 +85,41 @@ class AdminController extends BaseController
         $this->render('admin/dashboard', ['stats' => $stats]);
     }
 
+    public function orders(): void
+    {
+        (new \App\Middleware\Staff())();
+        $status = trim((string)($_GET['status'] ?? ''));
+        $customer = trim((string)($_GET['customer'] ?? ''));
+        $orders = (new OrderRepository())->findForStaff($status !== '' ? $status : null, $customer !== '' ? $customer : null);
+        $this->render('admin/orders', ['orders' => $orders, 'selectedStatus' => $status, 'customer' => $customer]);
+    }
+
+    public function updateOrderStatus(array $params): void
+    {
+        (new \App\Middleware\Staff())();
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { http_response_code(405); return; }
+        $orderId = (int)($params[0] ?? 0);
+        $status = trim((string)($_POST['status'] ?? ''));
+        $reason = trim((string)($_POST['cancellation_reason'] ?? ''));
+        $contactMode = trim((string)($_POST['contact_mode'] ?? ''));
+        $notes = trim((string)($_POST['notes'] ?? ''));
+        if ($status === 'cancelled') {
+            if ($contactMode === '' || $reason === '') {
+                $_SESSION['admin_error'] = 'Pour une annulation, le mode de contact et le motif sont obligatoires.';
+                header('Location: /admin/orders'); exit;
+            }
+            $notes = 'Contact client : ' . $contactMode . ($notes !== '' ? ' — ' . $notes : '');
+        }
+        try {
+            (new \App\Service\OrderService(new OrderRepository(), new UserRepository(), new MenuRepository(), new MailService()))
+                ->updateOrderStatus($orderId, $status, (int)$_SESSION['user_id'], $notes, $reason !== '' ? $reason : null);
+            $_SESSION['admin_success'] = 'Statut de la commande mis à jour.';
+        } catch (\Throwable $e) {
+            $_SESSION['admin_error'] = $e->getMessage();
+        }
+        header('Location: /admin/orders'); exit;
+    }
+
     public function createEmployee(): void
     {
         // Apply auth middleware
