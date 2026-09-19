@@ -135,17 +135,21 @@ class CommentRepository
 
     public function updateValidation(string $id, bool $isValidated): void
     {
-        $database = Database::getMongoDatabase();
-        $collection = $database->selectCollection('comments');
+        $collection = Database::getMongoDatabase()->selectCollection('comments');
 
-        $filter = ['_id' => new \MongoDB\BSON\ObjectId((string)$id)];
-        $update = [
-            '$set' => [
+        $collection->updateOne(
+            ['_id' => new \\MongoDB\\BSON\\ObjectId($id)],
+            ['$set' => [
                 'isValidated' => $isValidated,
-                'updatedAt' => new \MongoDB\BSON\UTCDateTime(new \DateTimeImmutable())
-            ]
-        ];
+                'updatedAt' => new \\MongoDB\\BSON\\UTCDateTime(new \\DateTimeImmutable()),
+            ]]
+        );
+    }
 
-        $collection->updateOne($filter, $update);
+    public function delete(string $id): void
+    {
+        Database::getMongoDatabase()
+            ->selectCollection('comments')
+            ->deleteOne(['_id' => new \\MongoDB\\BSON\\ObjectId($id)]);
     }
 }
