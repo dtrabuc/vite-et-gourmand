@@ -12,10 +12,10 @@ class OrderRepository
         $stmt = $pdo->prepare('INSERT INTO orders
             (user_id, menu_id, number_of_people, order_date, delivery_date, delivery_time,
              delivery_address, delivery_city, delivery_postal_code, delivery_distance_km,
-             delivery_cost, menu_price, discount_rate, total_price, status)
+             delivery_cost, menu_price, discount_rate, total_price, status, equipment_loaned)
             VALUES (:user_id, :menu_id, :number_of_people, :order_date, :delivery_date, :delivery_time,
                     :delivery_address, :delivery_city, :delivery_postal_code, :delivery_distance_km,
-                    :delivery_cost, :menu_price, :discount_rate, :total_price, :status)');
+                    :delivery_cost, :menu_price, :discount_rate, :total_price, :status, :equipment_loaned)');
         $stmt->execute([
             'user_id' => $data['user_id'],
             'menu_id' => $data['menu_id'],
@@ -32,6 +32,7 @@ class OrderRepository
             'discount_rate' => $data['discount_rate'] ?? 0,
             'total_price' => $data['total_price'],
             'status' => $data['status'],
+            'equipment_loaned' => !empty($data['equipment_loaned']) ? 1 : 0,
         ]);
         $id = (int) $pdo->lastInsertId();
         $number = 'VG-' . date('Ymd') . '-' . str_pad((string)$id, 6, '0', STR_PAD_LEFT);
@@ -93,6 +94,17 @@ class OrderRepository
             'delivery_time' => $deliveryTime, 'address' => $address, 'city' => $city,
             'postal_code' => $postalCode, 'distance' => $distanceKm, 'menu_price' => $menuPrice,
             'delivery_cost' => $deliveryCost, 'discount_rate' => $discountRate, 'total_price' => $totalPrice,
+        ]);
+    }
+
+    public function setEquipmentLoaned(int $id, bool $equipmentLoaned): void
+    {
+        $stmt = Database::getPDO()->prepare(
+            'UPDATE orders SET equipment_loaned = :equipment_loaned, updated_at = NOW() WHERE id = :id'
+        );
+        $stmt->execute([
+            'id' => $id,
+            'equipment_loaned' => $equipmentLoaned ? 1 : 0,
         ]);
     }
 
@@ -170,6 +182,7 @@ class OrderRepository
         $order->setDiscountRate((float) ($row['discount_rate'] ?? 0));
         $order->setTotalPrice((float) $row['total_price']);
         $order->setStatus($row['status']);
+        $order->setEquipmentLoaned(!empty($row['equipment_loaned']));
         $order->setCancellationReason($row['cancellation_reason'] ?? null);
         $order->setCreatedAt(!empty($row['created_at']) ? new \DateTimeImmutable($row['created_at']) : null);
         $order->setUpdatedAt(!empty($row['updated_at']) ? new \DateTimeImmutable($row['updated_at']) : null);
