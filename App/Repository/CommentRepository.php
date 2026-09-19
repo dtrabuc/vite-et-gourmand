@@ -75,6 +75,25 @@ class CommentRepository
         return $reviews;
     }
 
+    public function findByOrderId(int $orderId): ?array
+    {
+        $database = Database::getMongoDatabase();
+        $document = $database->selectCollection('comments')->findOne(['orderId' => $orderId]);
+        if ($document === null) {
+            return null;
+        }
+        return [
+            'id' => (string)$document['_id'],
+            'order_id' => (int)($document['orderId'] ?? 0),
+            'user_id' => (int)$document['userId'],
+            'rating' => (int)$document['rating'],
+            'comment' => (string)$document['comment'],
+            'created_at' => $document['createdAt'] instanceof \MongoDB\BSON\UTCDateTime
+                ? $document['createdAt']->toDateTime() : null,
+            'is_validated' => (bool)$document['isValidated'],
+        ];
+    }
+
     public function create(array $data): int
     {
         $database = Database::getMongoDatabase();
@@ -83,6 +102,7 @@ class CommentRepository
         $document = [
             'userId' => (int)$data['user_id'],
             'menuId' => $data['menu_id'] ?? null,
+            'orderId' => (int)$data['order_id'],
             'rating' => (int)$data['rating'],
             'comment' => $data['comment'],
             'isValidated' => (bool)($data['is_validated'] ?? false),
