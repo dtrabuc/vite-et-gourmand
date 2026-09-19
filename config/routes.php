@@ -7,7 +7,10 @@ return [
     ['GET', '/public/menus', 'PublicController@getMenus', ['Security']],
     ['GET', '/public/menus/{id}', 'PublicController@getMenuById', ['Security']],
     ['GET', '/menus/filter', 'PublicController@filterMenus', ['Security']],
-    ['GET', '/reviews/homepage', 'PublicController@getHomepageReviews', ['Security']],
+    ['GET', '/contact', 'ContactController@index', ['Security']],
+    ['POST', '/contact', 'ContactController@send', ['Security']],
+    ['GET', '/legal', 'PublicController@legal', ['Security']],
+    ['GET', '/cgv', 'PublicController@cgv', ['Security']],
     // NEW ENDPOINTS for frontend alignment
     ['GET', '/public/catalog', 'PublicController@getCatalog', ['Security']],
     ['GET', '/public/reviews', 'PublicController@getReviews', ['Security']],
