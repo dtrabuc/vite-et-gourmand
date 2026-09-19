@@ -16,20 +16,10 @@ jobs:
       - name: Installer PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: "8.5"
+          php-version: "8.4"
 
       - name: Vérifier la syntaxe PHP
         shell: bash
         run: |
-          set -uo pipefail
-          failures=0
-          while IFS= read -r -d '' file; do
-            if ! php -l "$file"; then
-              failures=$((failures + 1))
-            fi
-          done < <(find App config public -type f -name "*.php" -print0)
-
-          if [ "$failures" -gt 0 ]; then
-            echo "Le contrôle de syntaxe a détecté $failures fichier(s) PHP en erreur."
-            exit 1
-          fi
+          set -e
+          find App config public -type f -name "*.php" -print0 | xargs -0 -n1 php -l
