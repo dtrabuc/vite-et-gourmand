@@ -6,6 +6,25 @@ use App\Core\Database;
 
 class CommentRepository
 {
+    public function findPending(): array
+    {
+        $database = Database::getMongoDatabase();
+        $cursor = $database->selectCollection('comments')->find(['isValidated' => false])->sort(['createdAt' => -1]);
+        $reviews=[];
+        foreach($cursor as $doc){
+            $user=(new UserRepository())->findById((int)$doc['userId']);
+            $reviews[]=[
+                'id'=>(string)$doc['_id'],
+                'rating'=>(int)$doc['rating'],
+                'comment'=>(string)$doc['comment'],
+                'first_name'=>$user?->getFirstName() ?? '',
+                'last_name'=>$user?->getLastName() ?? '',
+                'created_at'=>$doc['createdAt'] instanceof \MongoDB\BSON\UTCDateTime ? $doc['createdAt']->toDateTime() : null,
+            ];
+        }
+        return $reviews;
+    }
+
     public function findAllValidated(): array
     {
         $database = Database::getMongoDatabase();
