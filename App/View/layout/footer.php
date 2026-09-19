@@ -32,6 +32,7 @@
     </div>
 </footer>
 <script src="/assets/js/api.js" defer></script>
+<script src="/assets/js/OrderPriceCalculator.js" defer></script>
 <script src="/assets/js/script.js" defer></script>
 </body>
 </html>
