@@ -221,9 +221,7 @@ class AdminController extends BaseController
         (new \App\Middleware\Admin())();
 
         $employees = $this->adminService->getEmployees();
-
-        header('Content-Type: application/json');
-        echo json_encode($employees);
+        $this->render('admin/employees', ['employees' => $employees]);
     }
 
     public function disableEmployee(array $params): void
