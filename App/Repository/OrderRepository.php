@@ -33,7 +33,11 @@ class OrderRepository
             'total_price' => $data['total_price'],
             'status' => $data['status'],
         ]);
-        return (int) $pdo->lastInsertId();
+        $id = (int) $pdo->lastInsertId();
+        $number = 'VG-' . date('Ymd') . '-' . str_pad((string)$id, 6, '0', STR_PAD_LEFT);
+        $numberStmt = $pdo->prepare('UPDATE orders SET order_number = :number WHERE id = :id');
+        $numberStmt->execute(['number' => $number, 'id' => $id]);
+        return $id;
     }
 
     public function findForStaff(?string $status = null, ?string $customer = null): array
