@@ -54,6 +54,7 @@ class BaseController
             'last_name' => $_SESSION['last_name'] ?? '',
             'role' => $_SESSION['role'] ?? '',
             'csrfToken' => $_SESSION['csrf_token'],
+            'openingHours' => (new \App\Repository\OpeningHoursRepository())->findAll(),
         ]);
     }
 
