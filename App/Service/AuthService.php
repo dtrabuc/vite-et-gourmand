@@ -73,7 +73,7 @@ class AuthService
     {
         $user = $this->userRepository->findByEmail($email);
 
-        if ($user === null) {
+        if ($user === null || !$this->userRepository->isActive($user->getId())) {
             // Simulate user not found to prevent user enumeration
             // We still return null, but we could also log the attempt.
             return null;
