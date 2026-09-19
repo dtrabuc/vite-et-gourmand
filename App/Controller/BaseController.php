@@ -48,6 +48,7 @@ class BaseController
         $content = ob_get_clean();
 
         // Render layout
+        try { $openingHours = (new \App\Repository\OpeningHoursRepository())->findAll(); } catch (\Throwable $e) { $openingHours = []; }
         $this->renderLayout($content, [
             'title' => ucfirst(str_replace('/', ' ', $template)) . ' - Vite & Gourmand',
             'user' => $_SESSION['user_id'] ?? null,
@@ -55,7 +56,7 @@ class BaseController
             'last_name' => $_SESSION['last_name'] ?? '',
             'role' => $_SESSION['role'] ?? '',
             'csrfToken' => $_SESSION['csrf_token'],
-            'openingHours' => (new \App\Repository\OpeningHoursRepository())->findAll(),
+            'openingHours' => $openingHours,
         ]);
     }
 
