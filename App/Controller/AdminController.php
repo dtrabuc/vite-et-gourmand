@@ -86,6 +86,56 @@ class AdminController extends BaseController
         $this->render('admin/dashboard', ['stats' => $stats]);
     }
 
+    public function dishes(): void
+    {
+        (new \App\Middleware\Staff())();
+        $this->render('admin/dishes', [
+            'dishes' => (new \App\Repository\DishRepository())->findAll(),
+            'menus' => (new MenuRepository())->findAll(),
+        ]);
+    }
+
+    public function createDish(): void
+    {
+        (new \App\Middleware\Staff())();
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { http_response_code(405); return; }
+        try {
+            $name=trim((string)$_POST['name']); $description=trim((string)$_POST['description']);
+            if($name==='') throw new \InvalidArgumentException('Le nom du plat est requis.');
+            (new \App\Repository\DishRepository())->create(
+                $name,$description,
+                isset($_POST['menu_id']) && is_numeric($_POST['menu_id']) ? (int)$_POST['menu_id'] : null,
+                $_POST['category'] ?? null
+            );
+            $_SESSION['admin_success']='Plat créé.';
+        } catch(\Throwable $e) { $_SESSION['admin_error']=$e->getMessage(); }
+        header('Location: /admin/dishes'); exit;
+    }
+
+    public function updateDish(array $params): void
+    {
+        (new \App\Middleware\Staff())();
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { http_response_code(405); return; }
+        try {
+            (new \App\Repository\DishRepository())->update(
+                (int)($params[0]??0), trim((string)$_POST['name']), trim((string)$_POST['description']),
+                isset($_POST['menu_id']) && is_numeric($_POST['menu_id']) ? (int)$_POST['menu_id'] : null,
+                $_POST['category'] ?? null
+            );
+            $_SESSION['admin_success']='Plat modifié.';
+        } catch(\Throwable $e) { $_SESSION['admin_error']=$e->getMessage(); }
+        header('Location: /admin/dishes'); exit;
+    }
+
+    public function deleteDish(array $params): void
+    {
+        (new \App\Middleware\Staff())();
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { http_response_code(405); return; }
+        try { (new \App\Repository\DishRepository())->delete((int)($params[0]??0)); $_SESSION['admin_success']='Plat supprimé.'; }
+        catch(\Throwable $e) { $_SESSION['admin_error']='Impossible de supprimer ce plat : il est peut-être encore associé à un menu.'; }
+        header('Location: /admin/dishes'); exit;
+    }
+
     public function openingHours(): void
     {
         (new \App\Middleware\Staff())();
