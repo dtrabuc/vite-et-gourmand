@@ -41,8 +41,8 @@ class AuthService
 
     public function register(array $data): int
     {
-        // Validate password
-        $passwordErrors = $this->validatePassword($data['password']);
+        $password = (string) ($data['password'] ?? '');
+        $passwordErrors = $this->validatePassword($password);
         if ($passwordErrors !== null) {
             // In a real application, we would throw an exception or return an error.
             // We'll still hash and create the user, but note that the controller should have validated.
@@ -50,8 +50,8 @@ class AuthService
             throw new \InvalidArgumentException(implode("\n", $passwordErrors));
         }
 
-        // Validate and hash the password
-        $hashedPassword = password_hash($data['password'], PASSWORD_DEFAULT);
+        // Valider puis hacher le mot de passe
+        $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
         $userData = [
             'email' => $data['email'],
