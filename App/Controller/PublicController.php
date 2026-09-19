@@ -21,10 +21,14 @@ class PublicController extends BaseController
     {
         try {
             $reviews = $this->commentService->getHomepageReviews();
+        } catch (\Throwable $exception) {
+            error_log('Impossible de charger les avis : ' . $exception->getMessage());
+            $reviews = [];
+        }
+        try {
             $menus = array_slice($this->menuService->getAllMenus(), 0, 3);
         } catch (\Throwable $exception) {
-            error_log('Impossible de charger l’accueil : ' . $exception->getMessage());
-            $reviews = [];
+            error_log('Impossible de charger les menus : ' . $exception->getMessage());
             $menus = [];
         }
         $this->render('home/index', ['reviews' => $reviews, 'menus' => $menus]);
