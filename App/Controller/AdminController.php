@@ -673,6 +673,4 @@ class AdminController extends BaseController
             echo 'Internal Server Error';
         }
     }
-
-    
-    }
+}
