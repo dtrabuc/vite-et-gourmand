@@ -61,15 +61,20 @@ class CommentService
         if (empty($data['user_id']) || !is_numeric($data['user_id'])) {
             throw new \InvalidArgumentException('User ID is required and must be numeric');
         }
-        if (empty($data['rating']) || !is_numeric($data['rating']) || $data['rating'] < 1 || $data['rating'] > 5) {
+        if (!isset($data['rating']) || !is_numeric($data['rating']) || (int)$data['rating'] < 1 || (int)$data['rating'] > 5) {
             throw new \InvalidArgumentException('Rating must be an integer between 1 and 5');
         }
-        if (empty($data['comment'])) {
+        if (trim((string)($data['comment'] ?? '')) === '') {
             throw new \InvalidArgumentException('Comment is required');
+        }
+
+        if (empty($data['order_id']) || $this->commentRepository->findByOrderId((int)$data['order_id']) !== null) {
+            throw new \InvalidArgumentException('Un avis existe déjà pour cette commande ou la commande est invalide.');
         }
 
         $id = $this->commentRepository->create([
             'user_id' => (int)$data['user_id'],
+            'order_id' => (int)$data['order_id'],
             'menu_id' => $data['menu_id'] ?? null,
             'rating' => (int)$data['rating'],
             'comment' => $data['comment'],
