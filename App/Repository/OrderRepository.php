@@ -36,6 +36,22 @@ class OrderRepository
         return (int) $pdo->lastInsertId();
     }
 
+    public function findForStaff(?string $status = null, ?string $customer = null): array
+    {
+        $sql = 'SELECT o.*, CONCAT(u.first_name, ' ', u.last_name) AS customer_name, u.email AS customer_email
+                FROM orders o JOIN users u ON u.id = o.user_id WHERE 1=1';
+        $params = [];
+        if ($status !== null && $status !== '') { $sql .= ' AND o.status = :status'; $params['status'] = $status; }
+        if ($customer !== null && $customer !== '') {
+            $sql .= ' AND (u.email LIKE :customer OR u.first_name LIKE :customer OR u.last_name LIKE :customer)';
+            $params['customer'] = '%' . $customer . '%';
+        }
+        $sql .= ' ORDER BY o.delivery_date ASC, o.delivery_time ASC';
+        $stmt = Database::getPDO()->prepare($sql);
+        $stmt->execute($params);
+        return $this->hydrateMany($stmt->fetchAll());
+    }
+
     public function findByUserId(int $userId): array
     {
         $pdo = Database::getPDO();
