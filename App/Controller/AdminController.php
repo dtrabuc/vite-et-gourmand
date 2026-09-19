@@ -231,7 +231,7 @@ class AdminController extends BaseController
         // Apply admin middleware
         (new \App\Middleware\Admin())();
 
-        if ($_SERVER['REQUEST_METHOD'] !== 'DELETE') {
+        if ($_SERVER['REQUEST_METHOD'] !== 'DELETE' && $_SERVER['REQUEST_METHOD'] !== 'POST') {
             http_response_code(405);
             echo 'Method Not Allowed';
             return;
@@ -262,7 +262,7 @@ class AdminController extends BaseController
         // Apply admin middleware
         (new \App\Middleware\Admin())();
 
-        if ($_SERVER['REQUEST_METHOD'] !== 'PATCH') {
+        if ($_SERVER['REQUEST_METHOD'] !== 'PATCH' && $_SERVER['REQUEST_METHOD'] !== 'POST') {
             http_response_code(405);
             echo 'Method Not Allowed';
             return;
