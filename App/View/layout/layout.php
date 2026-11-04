@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="/assets/css/components/navbar.css">
     <link rel="stylesheet" href="/assets/css/components/buttons.css">
     <link rel="stylesheet" href="/assets/css/components/cards.css">
+    <link rel="stylesheet" href="/assets/css/components/menu-card.css">
     <link rel="stylesheet" href="/assets/css/components/forms.css">
     <link rel="stylesheet" href="/assets/css/components/staff-nav.css">
     <link rel="stylesheet" href="/assets/css/components/tables.css">
@@ -22,6 +23,7 @@
     <link rel="stylesheet" href="/assets/css/components/accessibility.css">
     <link rel="stylesheet" href="/assets/css/pages/home.css">
     <link rel="stylesheet" href="/assets/css/pages/menus.css">
+    <link rel="stylesheet" href="/assets/css/pages/menu-detail.css">
     <link rel="stylesheet" href="/assets/css/pages/orders.css">
     <link rel="stylesheet" href="/assets/css/pages/admin.css">
     <link rel="stylesheet" href="/assets/css/pages/auth.css">

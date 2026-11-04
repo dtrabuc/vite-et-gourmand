@@ -1,0 +1,38 @@
+/* Détail d'un menu : galerie, composition et informations de commande. */
+.menu-detail-hero {
+    background: linear-gradient(110deg, rgba(74, 22, 31, .91), rgba(74, 22, 31, .5)),
+        url("https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=1900&h=700&q=82") center 48% / cover;
+}
+
+.menu-detail-image {
+    display: block;
+    width: 100%;
+    height: clamp(16rem, 42vw, 33rem);
+    object-fit: cover;
+    background: var(--vg-soft);
+}
+
+.menu-detail-card {
+    overflow: hidden;
+    border: 1px solid rgba(44, 62, 80, .07) !important;
+    border-radius: 1.2rem;
+    box-shadow: var(--vg-shadow-lg) !important;
+}
+
+.menu-detail-card dl {
+    padding: 1rem 1.1rem;
+    border-radius: .85rem;
+    background: var(--vg-soft);
+}
+
+.menu-detail-card dt,
+.menu-detail-card dd { padding-top: .5rem; padding-bottom: .5rem; }
+.menu-detail-card dd { font-weight: 650; }
+
+.menu-detail-dish {
+    height: 100%;
+    padding: 1rem;
+    border: 1px solid var(--vg-border);
+    border-radius: .85rem;
+    background: #fff;
+}

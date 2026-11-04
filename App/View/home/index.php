@@ -126,14 +126,10 @@
             </div>
             <div class="row g-4">
                 <?php foreach ($menus as $menu): ?>
-                    <?php $cover = $menuCovers[$menu->getId()] ?? null; ?>
+                    <?php $cover = menu_cover_image($menuCovers ?? [], $menu->getId(), $menu->getTitle()); ?>
 <div class="col-md-6 col-lg-4">
-                        <article class="card h-100 border-0 shadow-sm overflow-hidden">
-                            <?php if ($cover && !empty($cover['url'])): ?>
-                                <img src="<?= $escape($cover['url']) ?>" class="card-img-top home-menu-image" alt="<?= $escape($cover['alt_text'] ?? $menu->getTitle()) ?>">
-                            <?php else: ?>
-                                <div class="bg-light d-flex align-items-center justify-content-center text-muted home-menu-placeholder">Aucune image disponible</div>
-                            <?php endif; ?>
+                        <article class="card menu-card h-100 border-0 shadow-sm overflow-hidden">
+                            <img src="<?= $escape($cover['url']) ?>" class="card-img-top menu-card__image" alt="<?= $escape($cover['alt_text'] ?? $menu->getTitle()) ?>" width="1200" height="800" loading="lazy" decoding="async">
                             <div class="card-body d-flex flex-column">
                                 <span class="badge bg-primary-subtle text-primary align-self-start mb-2"><?= $escape($menu->getTheme()) ?></span>
                                 <h3 class="h4 text-primary"><?= $escape($menu->getTitle()) ?></h3>

@@ -12,6 +12,8 @@
   };
 
   const imageUrl = (image) => String(image?.url || '').trim();
+  let fallbackImages = {};
+  try { fallbackImages = JSON.parse(form.dataset.fallbackImages || '{}'); } catch (_) { fallbackImages = {}; }
 
   const formatPrice = (value) => Number(value || 0).toLocaleString('fr-FR', {
     minimumFractionDigits: 2,
@@ -22,14 +24,13 @@
   // Couverture du menu (première image de la galerie), fournie par l'API.
   const renderGallery = (menu) => {
     const images = Array.isArray(menu.images) ? menu.images : [];
-    const primary = imageUrl(images[0]);
+    const image = images.find((item) => imageUrl(item)) || fallbackImages[String(menu.id)] || fallbackImages['1'];
+    const primary = imageUrl(image);
 
-    if (!primary) {
-      return '<div class="bg-light d-flex align-items-center justify-content-center text-muted home-menu-placeholder">Aucune image disponible</div>';
-    }
+    if (!primary) return '';
 
-    return '<img src="' + escapeHtml(primary) + '" class="card-img-top home-menu-image" alt="' +
-      escapeHtml(images[0]?.alt_text || menu.title) + '">';
+    return '<img src="' + escapeHtml(primary) + '" class="card-img-top menu-card__image" alt="' +
+      escapeHtml(image?.alt_text || menu.title) + '" width="1200" height="800" loading="lazy" decoding="async">';
   };
 
   const renderDishes = (menu) => {
@@ -59,8 +60,8 @@
     }
 
     grid.innerHTML = menus.map((menu) => {
-      return '<div class="col-md-6 col-lg-4">' +
-        '<article class="card h-100 border-0 shadow-sm overflow-hidden">' +
+      return '<div class="col-md-6 col-lg-4" data-menu-card>' +
+        '<article class="card menu-card h-100 border-0 shadow-sm overflow-hidden">' +
         renderGallery(menu) +
         '<div class="card-body d-flex flex-column">' +
         '<div class="d-flex flex-wrap gap-2 align-items-center">' +

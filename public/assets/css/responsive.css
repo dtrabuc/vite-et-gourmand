@@ -178,3 +178,11 @@ main,
         transform: none !important;
     }
 }
+
+
+/* Cartes illustrées des menus */
+@media (max-width: 575.98px) {
+    .menu-card .card-body { padding: 1rem; }
+    .menu-card__image { height: 13.5rem; }
+    .menu-detail-image { height: 15rem; }
+}

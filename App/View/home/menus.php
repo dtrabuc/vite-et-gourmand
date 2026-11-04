@@ -12,7 +12,7 @@
             <h2 class="section-title d-inline-block mt-3">Choisir une formule</h2>
         </div>
 
-        <form id="menuFilters" class="card border-0 shadow-sm p-3 mb-4" data-filter-endpoint="/menus/filter">
+        <form id="menuFilters" class="card border-0 shadow-sm p-3 mb-4" data-filter-endpoint="/menus/filter" data-fallback-images="<?= $escape(json_encode(menu_image_fallbacks(), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)) ?>">
             <div class="row g-3 align-items-end">
                 <div class="col-md-3">
                     <label class="form-label" for="filterTheme">Thème</label>
@@ -55,15 +55,11 @@
 
         <div id="menuGrid" class="row g-4 mb-5">
             <?php foreach ($menus as $menu): ?>
-                <?php $cover = $menuCovers[$menu->getId()] ?? null; ?>
+                <?php $cover = menu_cover_image($menuCovers ?? [], $menu->getId(), $menu->getTitle()); ?>
                 <?php $details = $menuDetails[$menu->getId()] ?? ['dishes' => []]; ?>
 <div class="col-md-6 col-lg-4" data-menu-card>
-                    <article class="card h-100 border-0 shadow-sm overflow-hidden">
-                        <?php if ($cover && !empty($cover['url'])): ?>
-                            <img src="<?= $escape($cover['url']) ?>" class="card-img-top home-menu-image" alt="<?= $escape($cover['alt_text'] ?? $menu->getTitle()) ?>">
-                        <?php else: ?>
-                            <div class="bg-light d-flex align-items-center justify-content-center text-muted home-menu-placeholder">Aucune image disponible</div>
-                        <?php endif; ?>
+                    <article class="card menu-card h-100 border-0 shadow-sm overflow-hidden">
+                        <img src="<?= $escape($cover['url']) ?>" class="card-img-top menu-card__image" alt="<?= $escape($cover['alt_text'] ?? $menu->getTitle()) ?>" width="1200" height="800" loading="lazy" decoding="async">
                         <div class="card-body d-flex flex-column">
                             <div class="d-flex justify-content-between gap-2">
                                 <span class="badge bg-primary-subtle text-primary"><?= $escape($menu->getTheme()) ?></span>

@@ -1,7 +1,7 @@
 <main class="py-5">
     <div class="menu-detail-hero hero py-5 text-center text-white mb-5">
         <div class="container py-4">
-            <h1 class="display-5 fw-bold">Détails des menus</h1>
+            <h1 class="display-5 fw-bold"><?= $escape($menu->getTitle()) ?></h1>
             <p class="lead mb-0">Entrées, plats, desserts, conditions de réservation et minimum de convives.</p>
         </div>
     </div>
@@ -11,14 +11,17 @@
             <?php
             $details ??= ['dishes' => [], 'allergens' => []];
             $images = array_values(array_filter($images ?? [], static fn (array $image): bool => $image['url'] !== ''));
+            if ($images === []) {
+                $images[] = menu_cover_image([], $menu->getId(), $menu->getTitle());
+            }
             ?>
             <div class="row justify-content-center">
                 <div class="col-xl-10">
-                    <article class="card border-0 shadow-sm overflow-hidden">
+                    <article class="card menu-detail-card border-0 shadow-sm overflow-hidden">
                         <?php if (count($images) === 1): ?>
                             <img
                                 src="<?= $escape($images[0]['url']) ?>"
-                                class="card-img-top menu-detail-image"
+                                class="card-img-top menu-detail-image" loading="lazy" decoding="async"
                                 alt="<?= $escape($images[0]['alt_text']) ?>"
                             >
                         <?php elseif (count($images) > 1): ?>
@@ -33,7 +36,7 @@
                                 <div class="carousel-inner">
                                     <?php foreach ($images as $index => $image): ?>
                                         <div class="carousel-item <?= $index === 0 ? 'active' : '' ?>">
-                                            <img src="<?= $escape($image['url']) ?>" class="d-block w-100 menu-detail-image"
+                                            <img src="<?= $escape($image['url']) ?>" class="d-block w-100 menu-detail-image" decoding="async"
                                                  alt="<?= $escape($image['alt_text']) ?>" <?= $index > 0 ? 'loading="lazy"' : '' ?>>
                                         </div>
                                     <?php endforeach; ?>
@@ -74,7 +77,7 @@
                                                 <h4 class="h6 fw-bold"><?= $label ?></h4>
                                                 <?php foreach ($details['dishes'] as $dish): ?>
                                                     <?php if ($dish['category'] === $category): ?>
-                                                        <div class="border rounded p-3 mb-2">
+                                                        <div class="menu-detail-dish mb-2">
                                                             <strong><?= $escape($dish['name']) ?></strong>
                                                             <?php if (!empty($dish['description'])): ?>
                                                                 <p class="small text-muted mb-0 mt-1"><?= $escape($dish['description']) ?></p>
