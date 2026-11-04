@@ -92,15 +92,17 @@ final class AuthController extends BaseController
         }
 
         try {
-            $this->authService->register($data);
-
-            try {
-                $this->mailService->sendWelcomeEmail($data['email'], $data['first_name']);
-            } catch (Throwable $mailException) {
-                error_log('Email de bienvenue : ' . $mailException->getMessage());
+            $token = $this->authService->register($data);
+            $baseUrl = rtrim((string) config('app.url', 'http://127.0.0.1:8000'), '/');
+            $sent = $this->mailService->sendRegistrationConfirmationEmail(
+                $data['email'], $data['first_name'],
+                $baseUrl . '/register/confirm?token=' . rawurlencode($token)
+            );
+            if (!$sent) {
+                Session::flash('register_errors', ['general' => 'Votre compte est créé mais le mail de confirmation n’a pas pu être envoyé. Contactez-nous pour débloquer la validation.']);
+                $this->redirect('/register');
             }
-
-            Session::flash('register_success', 'Inscription réussie. Vous pouvez maintenant vous connecter.');
+            Session::flash('register_success', 'Inscription enregistrée. Consultez votre boîte mail et validez le lien sécurisé pour activer votre compte.');
             $this->redirect('/login');
         } catch (Throwable $exception) {
             error_log('Inscription : ' . $exception->getMessage());
@@ -108,6 +110,18 @@ final class AuthController extends BaseController
             Session::flash('register_old_input', $keptInput);
             $this->redirect('/register');
         }
+    }
+
+    public function confirmRegistration(string $token = ''): void
+    {
+        $token = trim($token !== '' ? $token : (string) ($_GET['token'] ?? ''));
+
+        if (!$this->authService->confirmRegistration($token)) {
+            Session::flash('register_error', 'Ce lien de validation est invalide, expiré ou déjà utilisé.');
+            $this->redirect('/login');
+        }
+        Session::flash('register_success', 'Votre adresse e-mail est validée. Vous pouvez maintenant vous connecter.');
+        $this->redirect('/login');
     }
 
     public function profile(): void
@@ -292,7 +306,6 @@ final class AuthController extends BaseController
             'first_name' => trim((string) ($_POST['first_name'] ?? '')),
             'last_name' => trim((string) ($_POST['last_name'] ?? '')),
             'phone' => trim((string) ($_POST['phone'] ?? '')),
-            'gsm' => trim((string) ($_POST['gsm'] ?? '')),
             'address' => trim((string) ($_POST['address'] ?? '')),
         ];
     }
@@ -301,7 +314,7 @@ final class AuthController extends BaseController
     {
         $errors = [];
 
-        foreach (['email', 'first_name', 'last_name', 'phone', 'gsm', 'address'] as $field) {
+        foreach (['email', 'first_name', 'last_name', 'phone', 'address'] as $field) {
             if ($data[$field] === '') {
                 $errors[$field] = 'Ce champ est requis.';
             }
@@ -311,7 +324,7 @@ final class AuthController extends BaseController
             $errors['email'] = 'Adresse email invalide.';
         }
 
-        foreach (['phone', 'gsm'] as $field) {
+        foreach (['phone'] as $field) {
             $phoneError = $data[$field] !== '' && !isset($errors[$field])
                 ? $this->phoneValidator->validate($data[$field])
                 : null;

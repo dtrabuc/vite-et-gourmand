@@ -52,11 +52,13 @@ Renseigner ensuite `.env` :
 | `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` | Connexion MariaDB | `127.0.0.1`, `3306`, `viteetgourmand`, `root`, vide |
 | `MONGO_CONNECTION_STRING` | URI MongoDB complète (prioritaire sur les variables suivantes) | voir la section 4 |
 | `MONGO_DATABASE`, `MONGO_HOST`, `MONGO_PORT`, `MONGO_USERNAME`, `MONGO_PASSWORD`, `MONGO_AUTH_SOURCE` | Connexion MongoDB, utilisée si l'URI est vide | `viteetgourmand`, `127.0.0.1`, `27017`… |
-| `SESSION_NAME`, `SESSION_LIFETIME`, `SESSION_SECURE` | Cookie de session (durée en minutes ; `SESSION_SECURE=true` seulement en HTTPS) | `viteetgourmand_session`, `120`, `false` |
+| `SESSION_NAME`, `SESSION_LIFETIME`, `SESSION_SECURE` | Cookie de session ; durée glissante et expiration après inactivité, en minutes. `Secure` est aussi activé automatiquement si `APP_URL` est en HTTPS. | `viteetgourmand_session`, `30`, `false` |
 | `PASSWORD_HASH_COST` | Coût bcrypt des mots de passe | `12` |
 | `MAIL_DRIVER`, `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_ENCRYPTION` | Serveur SMTP (PHPMailer). Sans `MAIL_HOST`, aucun e-mail ne part (l'erreur est écrite dans le journal PHP). `MAIL_ENCRYPTION` : `tls`, `ssl` ou `none`. | Mailpit : `smtp`, `127.0.0.1`, `1025`, vide, vide, `none` |
 | `MAIL_FROM_ADDRESS`, `MAIL_FROM_NAME` | Expéditeur des e-mails | `noreply@viteetgourmand.local` |
 | `MAIL_TO_ADDRESS` | Adresse de l'entreprise (contact, nouvelles commandes, devis) | `contact@viteetgourmand.local` |
+
+Les nouveaux comptes clients sont inactifs jusqu'à la confirmation de leur adresse e-mail. Le lien sécurisé expire après 24 heures. Sur une base déjà installée, exécutez une fois `database/migrations/2026-11-04-registration-confirmation.sql` avant de déployer cette version.
 
 Pour voir les e-mails en local sans vrai serveur, on peut utiliser Mailpit (SMTP sur le port 1025, interface sur http://localhost:8025). En ligne, renseignez le serveur SMTP de l'hébergeur. Les messages du formulaire de contact partent à `MAIL_TO_ADDRESS`, avec l'adresse du visiteur en « Répondre à » : l'équipe y répond depuis sa messagerie (webmail de l'hébergeur).
 
@@ -204,7 +206,7 @@ public/uploads/    créé à l'exécution : images ajoutées aux galeries (ignor
 - **Mots de passe** : bcrypt (coût `PASSWORD_HASH_COST`), politique de robustesse unique, blocage 15 minutes après 5 échecs, limitation des tentatives par adresse IP ; lien de réinitialisation à usage unique valable 1 heure, stocké haché.
 - **Validation côté serveur** de toutes les saisies (le JavaScript ne fait qu'aider) ; prix, remises et frais de livraison recalculés par le serveur.
 - **Téléphones** : validés avec libphonenumber (France, Espagne, Belgique, Royaume-Uni, Italie) et stockés au format international **E.164** (`+33612345678`).
-- **Session** : cookie `HttpOnly` et `SameSite=Lax`, identifiant régénéré à la connexion ; `APP_DEBUG=false` par défaut (pas de trace d'erreur affichée).
+- **Session** : cookie persistant renouvelé à l'activité, `HttpOnly`, `SameSite=Lax` et `Secure` en HTTPS ; expiration après 30 minutes d'inactivité par défaut ; identifiant régénéré à la connexion. `APP_DEBUG=false` par défaut (pas de trace d'erreur affichée).
 - **Fichiers envoyés** (galerie) : type vérifié sur le contenu (JPEG, PNG, WebP), 5 Mo maximum, nom aléatoire ; le cache n'accepte aucun objet désérialisé.
 
 ## 11. Secrets et fichiers non versionnés

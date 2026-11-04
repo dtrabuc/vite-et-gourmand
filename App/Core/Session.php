@@ -5,6 +5,34 @@ namespace App\Core;
 
 final class Session
 {
+    /** Expire la session après une période d'inactivité et renouvelle son cookie. */
+    public static function expireAfterInactivity(int $lifetimeSeconds): void
+    {
+        $now = time();
+        $lastActivity = $_SESSION['_last_activity_at'] ?? null;
+
+        if (is_numeric($lastActivity) && $now - (int) $lastActivity >= $lifetimeSeconds) {
+            $_SESSION = [];
+            session_regenerate_id(true);
+        }
+
+        $_SESSION['_last_activity_at'] = $now;
+
+        if (headers_sent()) {
+            return;
+        }
+
+        $params = session_get_cookie_params();
+        setcookie(session_name(), session_id(), [
+            'expires' => $now + $lifetimeSeconds,
+            'path' => $params['path'] ?: '/',
+            'domain' => $params['domain'],
+            'secure' => $params['secure'],
+            'httponly' => $params['httponly'],
+            'samesite' => $params['samesite'] ?? 'Lax',
+        ]);
+    }
+
     public static function id(): ?int
     {
         $id = $_SESSION['user_id'] ?? null;

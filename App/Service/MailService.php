@@ -118,6 +118,23 @@ TEXT;
         return $this->send($to, $subject, $body);
     }
 
+    public function sendRegistrationConfirmationEmail(string $to, string $firstName, string $confirmationUrl): bool
+    {
+        $body = <<<TEXT
+Bonjour {$firstName},
+
+Votre inscription chez Vite & Gourmand a bien été enregistrée. Pour activer votre compte et pouvoir vous connecter, veuillez confirmer votre adresse e-mail en utilisant ce lien sécurisé :
+
+{$confirmationUrl}
+
+Ce lien expire dans 24 heures et ne peut être utilisé qu'une seule fois. Si vous n'êtes pas à l'origine de cette inscription, ignorez cet e-mail.
+
+À bientôt,
+L'équipe Vite & Gourmand
+TEXT;
+        return $this->send($to, 'Confirmez votre inscription chez Vite & Gourmand', $body);
+    }
+
     /**
      * Informe un employé de la création de son compte. Le mot de passe n'est
      * jamais transmis par e-mail : l'employé doit le demander à l'administrateur.

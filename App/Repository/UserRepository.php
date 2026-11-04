@@ -42,9 +42,11 @@ final class UserRepository
     {
         $stmt = Database::pdo()->prepare(
             'INSERT INTO users (
-                email, password, role, first_name, last_name, phone, gsm, address
+                email, password, role, first_name, last_name, phone, gsm, address,
+                is_active, registration_token_hash, registration_token_expires_at
             ) VALUES (
-                :email, :password, :role, :first_name, :last_name, :phone, :gsm, :address
+                :email, :password, :role, :first_name, :last_name, :phone, :gsm, :address,
+                :is_active, :registration_token_hash, :registration_token_expires_at
             )'
         );
 
@@ -55,11 +57,27 @@ final class UserRepository
             'first_name' => trim((string) $data['first_name']),
             'last_name' => trim((string) $data['last_name']),
             'phone' => trim((string) $data['phone']),
-            'gsm' => trim((string) $data['gsm']),
+            'gsm' => trim((string) ($data['gsm'] ?? '')),
             'address' => trim((string) $data['address']),
+            'is_active' => (bool) ($data['is_active'] ?? true) ? 1 : 0,
+            'registration_token_hash' => $data['registration_token_hash'] ?? null,
+            'registration_token_expires_at' => $data['registration_token_expires_at'] ?? null,
         ]);
 
         return (int) Database::pdo()->lastInsertId();
+    }
+
+    public function activateByRegistrationToken(string $hash): bool
+    {
+        $stmt = Database::pdo()->prepare(
+            'UPDATE users SET is_active = 1, registration_token_hash = NULL,
+                registration_token_expires_at = NULL, updated_at = CURRENT_TIMESTAMP
+             WHERE registration_token_hash = :hash
+               AND registration_token_expires_at > CURRENT_TIMESTAMP
+               AND is_active = 0'
+        );
+        $stmt->execute(['hash' => $hash]);
+        return $stmt->rowCount() === 1;
     }
 
     public function isActive(int $id): bool

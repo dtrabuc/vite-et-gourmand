@@ -17,12 +17,12 @@ final readonly class AuthService
     ) {
     }
 
-    public function register(array $data): int
+    public function register(array $data): string
     {
         $email = $this->normalizeEmail((string) ($data['email'] ?? ''));
         $password = (string) ($data['password'] ?? '');
 
-        foreach (['phone', 'gsm'] as $field) {
+        foreach (['phone'] as $field) {
             $value = trim((string) ($data[$field] ?? ''));
             if ($value !== '') {
                 $data[$field] = $this->normalizedPhone($value);
@@ -39,16 +39,29 @@ final readonly class AuthService
 
         $this->assertStrongPassword($password);
 
-        return $this->userRepository->create([
+        $token = bin2hex(random_bytes(32));
+        $this->userRepository->create([
             'email' => $email,
             'password' => $this->passwordPolicy->hash($password),
             'role' => 'user',
             'first_name' => trim((string) ($data['first_name'] ?? '')),
             'last_name' => trim((string) ($data['last_name'] ?? '')),
             'phone' => trim((string) ($data['phone'] ?? '')),
-            'gsm' => trim((string) ($data['gsm'] ?? '')),
+            'gsm' => '',
             'address' => trim((string) ($data['address'] ?? '')),
+            'is_active' => false,
+            'registration_token_hash' => hash('sha256', $token),
+            'registration_token_expires_at' => (new DateTimeImmutable('+24 hours'))->format('Y-m-d H:i:s'),
         ]);
+        return $token;
+    }
+
+    public function confirmRegistration(string $token): bool
+    {
+        if (!preg_match('/^[a-f0-9]{64}$/', $token)) {
+            return false;
+        }
+        return $this->userRepository->activateByRegistrationToken(hash('sha256', $token));
     }
 
     public function login(string $email, string $password): ?User
@@ -156,7 +169,7 @@ final readonly class AuthService
 
         $data['email'] = $email;
 
-        foreach (['phone', 'gsm'] as $field) {
+        foreach (['phone'] as $field) {
             $value = trim((string) ($data[$field] ?? ''));
 
             if ($value !== '') {

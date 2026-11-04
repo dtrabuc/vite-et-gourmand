@@ -29,10 +29,10 @@ $errors = is_array($errors ?? null) ? $errors : [];
                                 </div>
                             <?php endforeach; ?>
 
-                            <?php /* téléphone et GSM : le pays se choisit dans la liste d'intl-tel-input (phone-input.js) */ ?>
-                            <?php foreach (['phone' => 'Téléphone', 'gsm' => 'GSM'] as $field => $label): ?>
+                            <?php /* Le numéro français se choisit dans intl-tel-input. */ ?>
+                            <?php foreach (['phone' => 'Téléphone'] as $field => $label): ?>
                                 <div class="col-md-6">
-                                    <label class="form-label" for="<?= $escape($field) ?>"><?= $escape($label) ?></label><?= $field === 'gsm' ? info_tip('Numéro de portable : il sert à vous joindre pour vos commandes.') : '' ?>
+                                    <label class="form-label" for="<?= $escape($field) ?>"><?= $escape($label) ?></label>
                                     <input class="form-control <?= isset($errors[$field]) ? 'is-invalid' : '' ?>"
                                            id="<?= $escape($field) ?>" name="<?= $escape($field) ?>" type="tel"
                                            autocomplete="tel" inputmode="tel" data-phone-input

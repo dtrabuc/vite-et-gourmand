@@ -135,26 +135,39 @@ final readonly class Application
         }
 
         $session = is_array(config('session', [])) ? config('session', []) : [];
+        $lifetimeSeconds = max(60, (int) ($session['lifetime'] ?? 30) * 60);
+        $appUrlScheme = strtolower((string) parse_url((string) config('app.url', ''), PHP_URL_SCHEME));
+        $forwardedProto = strtolower(trim(explode(',', (string) ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? ''))[0]));
+        $requestIsSecure = $appUrlScheme === 'https'
+            || (!empty($_SERVER['HTTPS']) && strtolower((string) $_SERVER['HTTPS']) !== 'off')
+            || strtolower((string) ($_SERVER['REQUEST_SCHEME'] ?? '')) === 'https'
+            || $forwardedProto === 'https';
+        $secureCookie = (bool) ($session['secure'] ?? false) || $requestIsSecure;
 
         session_name(
             (string) ($session['name'] ?? 'viteetgourmand_session')
         );
 
         session_set_cookie_params([
-            'lifetime' => (int) ($session['lifetime'] ?? 120) * 60,
+            'lifetime' => $lifetimeSeconds,
             'path' => '/',
             'domain' => (string) ($session['domain'] ?? ''),
-            'secure' => (bool) ($session['secure'] ?? false),
+            'secure' => $secureCookie,
             'httponly' => true,
             'samesite' => isset($session['samesite']) && is_string($session['samesite'])
                 ? $session['samesite']
                 : 'Lax',
         ]);
 
+        ini_set('session.gc_maxlifetime', (string) $lifetimeSeconds);
+        ini_set('session.cookie_lifetime', (string) $lifetimeSeconds);
         ini_set('session.use_strict_mode', '1');
+        ini_set('session.use_only_cookies', '1');
 
         if (!session_start()) {
             throw new RuntimeException('Impossible de démarrer la session.');
         }
+
+        Session::expireAfterInactivity($lifetimeSeconds);
     }
 }

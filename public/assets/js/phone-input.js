@@ -13,7 +13,7 @@ import fr from '/assets/vendor/intl-tel-input/29.5.3/js/locale/fr.js';
 const UTILS_URL = '/assets/vendor/intl-tel-input/29.5.3/js/utils.js';
 
 // mêmes pays que PhoneValidator::ALLOWED_REGIONS côté PHP
-const COUNTRIES = ['fr', 'es', 'be', 'gb', 'it'];
+const COUNTRIES = ['fr'];
 
 // un message en français pour chaque code renvoyé par getValidationError()
 const MESSAGES = {
@@ -24,7 +24,7 @@ const MESSAGES = {
   IS_POSSIBLE_LOCAL_ONLY: 'Ce numéro est incomplet : ajoutez l’indicatif régional.',
   INVALID_LENGTH: 'La longueur du numéro ne correspond pas au pays.'
 };
-const COUNTRY_NOT_ALLOWED = 'Seuls les numéros de France, Espagne, Belgique, Royaume-Uni et Italie sont acceptés.';
+const COUNTRY_NOT_ALLOWED = 'Seuls les numéros français sont acceptés.';
 const INVALID_NUMBER = 'Numéro de téléphone invalide.';
 
 // la zone d'erreur est la div indiquée par aria-describedby (créée dans la vue)

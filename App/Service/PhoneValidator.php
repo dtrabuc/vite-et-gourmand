@@ -18,7 +18,7 @@ use libphonenumber\ValidationResult;
 final class PhoneValidator
 {
     /** Pays acceptés (codes ISO à 2 lettres). */
-    public const ALLOWED_REGIONS = ['FR', 'ES', 'BE', 'GB', 'IT'];
+    public const ALLOWED_REGIONS = ['FR'];
 
     /** Un numéro saisi sans "+" est lu comme un numéro français. */
     private const DEFAULT_REGION = 'FR';
@@ -35,7 +35,7 @@ final class PhoneValidator
         'INVALID_LENGTH' => 'La longueur du numéro ne correspond pas au pays.',
         'IS_POSSIBLE_LOCAL_ONLY' => 'Ce numéro est incomplet : ajoutez l’indicatif régional.',
         'INVALID_NUMBER' => 'Ce numéro de téléphone n’existe pas.',
-        'COUNTRY_NOT_ALLOWED' => 'Seuls les numéros de France, Espagne, Belgique, Royaume-Uni et Italie sont acceptés.',
+        'COUNTRY_NOT_ALLOWED' => 'Seuls les numéros français sont acceptés.',
     ];
 
     /**
