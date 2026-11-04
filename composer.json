@@ -4,10 +4,10 @@
     "type": "project",
     "require": {
         "php": "^8.2",
-        "ext-mongodb": "^2.1",
+        "ext-mongodb": "^1.21",
         "ext-pdo": "*",
         "giggsey/libphonenumber-for-php": "^9.0",
-        "mongodb/mongodb": "^2.1",
+        "mongodb/mongodb": "^1.21.5",
         "phpmailer/phpmailer": "^6.9"
     },
     "autoload": {

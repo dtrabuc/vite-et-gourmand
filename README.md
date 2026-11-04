@@ -19,7 +19,7 @@ Les visiteurs consultent et filtrent les menus. Les clients commandent (livraiso
 ## 2. Prérequis
 
 - **PHP 8.2 ou plus récent** (le projet est testé en local avec PHP 8.5.0 de WAMP).
-- **Extensions PHP** : `pdo_mysql`, `mongodb` (2.1 ou plus), `mbstring`, `openssl` (SMTP en TLS et appels HTTPS à Google), `ctype`, `filter`, `hash` et `iconv` (demandées par les dépendances). Vérifier avec `php -m`.
+- **Extensions PHP** : `pdo_mysql`, `mongodb` (1.21 ou plus), `mbstring`, `openssl` (SMTP en TLS et appels HTTPS à Google), `ctype`, `filter`, `hash` et `iconv` (demandées par les dépendances). Vérifier avec `php -m`.
 - `allow_url_fopen = On` dans `php.ini` : les appels à l'API Google passent par `file_get_contents`.
 - **Composer 2**.
 - **MariaDB** (10.x ou 11.x) et **MongoDB** (6 ou plus) avec `mongosh`.
