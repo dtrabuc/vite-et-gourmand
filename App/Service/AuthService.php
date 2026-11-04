@@ -17,10 +17,10 @@ final readonly class AuthService
     ) {
     }
 
-    public function register(array $data): string
+    /** @return array{user_id:int, temporary_password:string} */
+    public function register(array $data): array
     {
         $email = $this->normalizeEmail((string) ($data['email'] ?? ''));
-        $password = (string) ($data['password'] ?? '');
 
         foreach (['phone'] as $field) {
             $value = trim((string) ($data[$field] ?? ''));
@@ -37,31 +37,20 @@ final readonly class AuthService
             throw new InvalidArgumentException('Cette adresse email est déjà utilisée.');
         }
 
-        $this->assertStrongPassword($password);
-
-        $token = bin2hex(random_bytes(32));
-        $this->userRepository->create([
+        $temporaryPassword = $this->generateTemporaryPassword();
+        $userId = $this->userRepository->create([
             'email' => $email,
-            'password' => $this->passwordPolicy->hash($password),
+            'password' => $this->passwordPolicy->hash($temporaryPassword),
             'role' => 'user',
             'first_name' => trim((string) ($data['first_name'] ?? '')),
             'last_name' => trim((string) ($data['last_name'] ?? '')),
             'phone' => trim((string) ($data['phone'] ?? '')),
             'gsm' => '',
             'address' => trim((string) ($data['address'] ?? '')),
-            'is_active' => false,
-            'registration_token_hash' => hash('sha256', $token),
-            'registration_token_expires_at' => (new DateTimeImmutable('+24 hours'))->format('Y-m-d H:i:s'),
+            'is_active' => true,
+            'must_change_password' => true,
         ]);
-        return $token;
-    }
-
-    public function confirmRegistration(string $token): bool
-    {
-        if (!preg_match('/^[a-f0-9]{64}$/', $token)) {
-            return false;
-        }
-        return $this->userRepository->activateByRegistrationToken(hash('sha256', $token));
+        return ['user_id' => $userId, 'temporary_password' => $temporaryPassword];
     }
 
     public function login(string $email, string $password): ?User
@@ -103,7 +92,8 @@ final readonly class AuthService
         if ($this->passwordPolicy->needsRehash($storedPassword)) {
             $this->userRepository->updatePassword(
                 $user->getId(),
-                $this->passwordPolicy->hash($password)
+                $this->passwordPolicy->hash($password),
+                $user->mustChangePassword()
             );
         }
 
@@ -243,6 +233,33 @@ final readonly class AuthService
         if ($errors !== []) {
             throw new InvalidArgumentException(implode(' ', $errors));
         }
+    }
+
+    private function generateTemporaryPassword(): string
+    {
+        $groups = [
+            'ABCDEFGHJKLMNPQRSTUVWXYZ',
+            'abcdefghijkmnopqrstuvwxyz',
+            '23456789',
+            '!@#$%*-_+',
+        ];
+        $characters = [];
+
+        foreach ($groups as $group) {
+            $characters[] = $group[random_int(0, strlen($group) - 1)];
+        }
+
+        $allCharacters = implode('', $groups);
+        while (count($characters) < 18) {
+            $characters[] = $allCharacters[random_int(0, strlen($allCharacters) - 1)];
+        }
+
+        for ($index = count($characters) - 1; $index > 0; $index--) {
+            $swapIndex = random_int(0, $index);
+            [$characters[$index], $characters[$swapIndex]] = [$characters[$swapIndex], $characters[$index]];
+        }
+
+        return implode('', $characters);
     }
 
     /**

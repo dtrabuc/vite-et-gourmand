@@ -58,7 +58,7 @@ Renseigner ensuite `.env` :
 | `MAIL_FROM_ADDRESS`, `MAIL_FROM_NAME` | Expéditeur des e-mails | `noreply@viteetgourmand.local` |
 | `MAIL_TO_ADDRESS` | Adresse de l'entreprise (contact, nouvelles commandes, devis) | `contact@viteetgourmand.local` |
 
-Les nouveaux comptes clients sont inactifs jusqu'à la confirmation de leur adresse e-mail. Le lien sécurisé expire après 24 heures. Sur une base déjà installée, exécutez une fois `database/migrations/2026-11-04-registration-confirmation.sql` avant de déployer cette version.
+Les nouveaux comptes clients reçoivent par e-mail un mot de passe provisoire unique, qu'ils doivent changer à la première connexion. Sur une base déjà installée, exécutez une fois `database/migrations/2026-11-04-temporary-password.sql` avant de déployer cette version.
 
 Pour voir les e-mails en local sans vrai serveur, on peut utiliser Mailpit (SMTP sur le port 1025, interface sur http://localhost:8025). En ligne, renseignez le serveur SMTP de l'hébergeur. Les messages du formulaire de contact partent à `MAIL_TO_ADDRESS`, avec l'adresse du visiteur en « Répondre à » : l'équipe y répond depuis sa messagerie (webmail de l'hébergeur).
 

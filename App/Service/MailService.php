@@ -101,38 +101,23 @@ class MailService
         }
     }
 
-    public function sendWelcomeEmail(string $to, string $firstName): bool
-    {
-        $subject = 'Bienvenue chez Vite & Gourmand !';
-        $body = <<<TEXT
-Bonjour {$firstName},
-
-Bienvenue chez Vite & Gourmand ! Nous sommes ravis de vous compter parmi nos utilisateurs.
-
-Vous pouvez dès maintenant vous connecter à votre espace personnel et commencer à passer des commandes.
-
-À très bientôt,
-L'équipe Vite & Gourmand
-TEXT;
-
-        return $this->send($to, $subject, $body);
-    }
-
-    public function sendRegistrationConfirmationEmail(string $to, string $firstName, string $confirmationUrl): bool
+    public function sendTemporaryPasswordEmail(string $to, string $firstName, string $temporaryPassword): bool
     {
         $body = <<<TEXT
 Bonjour {$firstName},
 
-Votre inscription chez Vite & Gourmand a bien été enregistrée. Pour activer votre compte et pouvoir vous connecter, veuillez confirmer votre adresse e-mail en utilisant ce lien sécurisé :
+Votre compte Vite & Gourmand est créé. Utilisez les identifiants ci-dessous pour votre première connexion :
 
-{$confirmationUrl}
+Adresse e-mail : {$to}
+Mot de passe provisoire : {$temporaryPassword}
 
-Ce lien expire dans 24 heures et ne peut être utilisé qu'une seule fois. Si vous n'êtes pas à l'origine de cette inscription, ignorez cet e-mail.
+Vous devrez choisir un nouveau mot de passe dès votre première connexion. Ne communiquez ce mot de passe provisoire à personne.
+Si vous n'êtes pas à l'origine de cette inscription, contactez Vite & Gourmand.
 
 À bientôt,
 L'équipe Vite & Gourmand
 TEXT;
-        return $this->send($to, 'Confirmez votre inscription chez Vite & Gourmand', $body);
+        return $this->send($to, 'Votre accès à Vite & Gourmand', $body);
     }
 
     /**

@@ -57,16 +57,14 @@ CREATE TABLE `users` (
   `locked_until` DATETIME NULL,
   `reset_token_hash` CHAR(64) NULL,
   `reset_token_expires_at` DATETIME NULL,
-  `registration_token_hash` CHAR(64) NULL,
-  `registration_token_expires_at` DATETIME NULL,
+  `must_change_password` TINYINT(1) NOT NULL DEFAULT 0,
   `is_active` TINYINT(1) NOT NULL DEFAULT 1,
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_users_email` (`email`),
   KEY `idx_users_role_active` (`role`,`is_active`),
-  KEY `idx_users_reset_token` (`reset_token_hash`),
-  KEY `idx_users_registration_token` (`registration_token_hash`)
+  KEY `idx_users_reset_token` (`reset_token_hash`)
 ) ENGINE=InnoDB;
 
 CREATE TABLE `menus` (

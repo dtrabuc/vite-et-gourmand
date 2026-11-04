@@ -12,6 +12,12 @@ $value = static fn (string $key): string => (string) ($oldInput[$key] ?? $user[$
                     <div class="card-body p-4 p-md-5">
                         <h1 class="h2 text-primary">Mon profil</h1>
 
+                        <?php if (!empty($mustChangePassword)): ?>
+                            <div class="alert alert-warning" role="alert">
+                                Votre mot de passe provisoire est actif. Choisissez un nouveau mot de passe ci-dessous pour continuer.
+                            </div>
+                        <?php endif; ?>
+
                         <form method="post" action="/profile" class="row g-3">
                             <input type="hidden" name="csrf_token" value="<?= $escape($csrfToken) ?>">
 

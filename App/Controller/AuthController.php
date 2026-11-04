@@ -63,7 +63,12 @@ final class AuthController extends BaseController
             'email' => $user->getEmail(),
             'first_name' => $user->getFirstName(),
             'last_name' => $user->getLastName(),
+            'must_change_password' => $user->mustChangePassword(),
         ]);
+
+        if ($user->mustChangePassword()) {
+            $this->redirect('/profile');
+        }
 
         // retour à la page demandée avant la connexion (une seule fois), sinon l'accueil
         $this->redirect(Session::pullReturnUrl('/'));
@@ -92,17 +97,23 @@ final class AuthController extends BaseController
         }
 
         try {
-            $token = $this->authService->register($data);
-            $baseUrl = rtrim((string) config('app.url', 'http://127.0.0.1:8000'), '/');
-            $sent = $this->mailService->sendRegistrationConfirmationEmail(
-                $data['email'], $data['first_name'],
-                $baseUrl . '/register/confirm?token=' . rawurlencode($token)
-            );
+            $registration = $this->authService->register($data);
+            try {
+                $sent = $this->mailService->sendTemporaryPasswordEmail(
+                    $data['email'],
+                    $data['first_name'],
+                    $registration['temporary_password']
+                );
+            } catch (Throwable $mailException) {
+                $this->userRepository->deleteNewCustomer($registration['user_id']);
+                throw $mailException;
+            }
             if (!$sent) {
-                Session::flash('register_errors', ['general' => 'Votre compte est créé mais le mail de confirmation n’a pas pu être envoyé. Contactez-nous pour débloquer la validation.']);
+                $this->userRepository->deleteNewCustomer($registration['user_id']);
+                Session::flash('register_errors', ['general' => 'Le mail contenant votre mot de passe provisoire n’a pas pu être envoyé. Vérifiez votre adresse e-mail puis réessayez.']);
                 $this->redirect('/register');
             }
-            Session::flash('register_success', 'Inscription enregistrée. Consultez votre boîte mail et validez le lien sécurisé pour activer votre compte.');
+            Session::flash('register_success', 'Compte créé. Votre mot de passe provisoire vous a été envoyé par e-mail. Vous devrez le changer lors de votre première connexion.');
             $this->redirect('/login');
         } catch (Throwable $exception) {
             error_log('Inscription : ' . $exception->getMessage());
@@ -110,18 +121,6 @@ final class AuthController extends BaseController
             Session::flash('register_old_input', $keptInput);
             $this->redirect('/register');
         }
-    }
-
-    public function confirmRegistration(string $token = ''): void
-    {
-        $token = trim($token !== '' ? $token : (string) ($_GET['token'] ?? ''));
-
-        if (!$this->authService->confirmRegistration($token)) {
-            Session::flash('register_error', 'Ce lien de validation est invalide, expiré ou déjà utilisé.');
-            $this->redirect('/login');
-        }
-        Session::flash('register_success', 'Votre adresse e-mail est validée. Vous pouvez maintenant vous connecter.');
-        $this->redirect('/login');
     }
 
     public function profile(): void
@@ -143,6 +142,7 @@ final class AuthController extends BaseController
                 'gsm' => $user->getGsm(),
                 'address' => $user->getAddress(),
             ],
+            'mustChangePassword' => $user->mustChangePassword(),
             'errors' => (array) Session::pullFlash('profile_errors', []),
             'oldInput' => (array) Session::pullFlash('profile_old_input', []),
             'passwordErrors' => (array) Session::pullFlash('password_errors', []),
@@ -213,6 +213,7 @@ final class AuthController extends BaseController
 
         try {
             $this->authService->changePassword((int) Session::id(), $current, $new);
+            $_SESSION['must_change_password'] = false;
             Session::flash('password_success', 'Mot de passe modifié avec succès.');
         } catch (Throwable $exception) {
             Session::flash('password_errors', ['new_password' => $exception->getMessage()]);
@@ -302,7 +303,6 @@ final class AuthController extends BaseController
     {
         return [
             'email' => mb_strtolower(trim((string) ($_POST['email'] ?? ''))),
-            'password' => (string) ($_POST['password'] ?? ''),
             'first_name' => trim((string) ($_POST['first_name'] ?? '')),
             'last_name' => trim((string) ($_POST['last_name'] ?? '')),
             'phone' => trim((string) ($_POST['phone'] ?? '')),
@@ -332,12 +332,6 @@ final class AuthController extends BaseController
             if ($phoneError !== null) {
                 $errors[$field] = $phoneError;
             }
-        }
-
-        $passwordErrors = $this->passwordPolicy->validate($data['password']);
-
-        if ($passwordErrors !== []) {
-            $errors['password'] = implode(' ', $passwordErrors);
         }
 
         if (($_POST['privacy_consent'] ?? '') !== '1') {

@@ -10,6 +10,7 @@ $errors = is_array($errors ?? null) ? $errors : [];
                     <div class="card-body p-4 p-md-5">
                         <h1 class="h2 text-primary">Créer votre compte</h1>
                         <p class="text-muted">Les champs sont nécessaires à la préparation de votre prestation.</p>
+                        <p class="alert alert-info">Un mot de passe provisoire vous sera envoyé par e-mail. Vous devrez le changer lors de votre première connexion.</p>
 
                         <form method="post" action="/register" class="row g-3">
                             <input type="hidden" name="csrf_token" value="<?= $escape($csrfToken) ?>">
@@ -49,19 +50,6 @@ $errors = is_array($errors ?? null) ? $errors : [];
                                        value="<?= $escape($oldInput['email'] ?? '') ?>" required>
                                 <?php if (isset($errors['email'])): ?>
                                     <div class="invalid-feedback"><?= $escape($errors['email']) ?></div>
-                                <?php endif; ?>
-                            </div>
-
-                            <div class="col-md-6">
-                                <label class="form-label" for="register_password">Mot de passe</label><?= info_tip('Au moins 10 caractères, avec une majuscule, une minuscule, un chiffre et un caractère spécial.') ?>
-                                <input class="form-control <?= isset($errors['password']) ? 'is-invalid' : '' ?>"
-                                       id="register_password" name="password" type="password"
-                                       autocomplete="new-password" required>
-                                <div class="form-text">
-                                    10 caractères minimum avec majuscule, minuscule, chiffre et caractère spécial.
-                                </div>
-                                <?php if (isset($errors['password'])): ?>
-                                    <div class="invalid-feedback"><?= $escape($errors['password']) ?></div>
                                 <?php endif; ?>
                             </div>
 

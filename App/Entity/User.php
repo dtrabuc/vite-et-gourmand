@@ -9,6 +9,7 @@ class User
     private string $email;
     private string $passwordHash; // hashed password
     private string $role; // 'user', 'employee', 'admin'
+    private bool $mustChangePassword = false;
     private string $firstName;
     private string $lastName;
     private string $phone;
@@ -61,6 +62,16 @@ class User
     public function setRole(string $role): void
     {
         $this->role = $role;
+    }
+
+    public function mustChangePassword(): bool
+    {
+        return $this->mustChangePassword;
+    }
+
+    public function setMustChangePassword(bool $mustChangePassword): void
+    {
+        $this->mustChangePassword = $mustChangePassword;
     }
 
     public function getFirstName(): string

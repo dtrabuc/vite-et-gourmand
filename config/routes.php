@@ -21,9 +21,6 @@ return [
     ['POST', '/login', 'AuthController@login', ['Security', 'Guest']],
     ['GET', '/register', 'AuthController@showRegister', ['Security', 'Guest']],
     ['POST', '/register', 'AuthController@register', ['Security', 'Guest']],
-    ['GET', '/register/confirm', 'AuthController@confirmRegistration', ['Security']],
-    // Compatibilité avec les liens de confirmation déjà envoyés par l'ancienne URL.
-    ['GET', '/register/confirm/{token}', 'AuthController@confirmRegistration', ['Security']],
     ['GET', '/profile', 'AuthController@profile', ['Security', 'Auth']],
     ['POST', '/profile', 'AuthController@updateProfile', ['Security', 'Auth']],
     ['POST', '/password', 'AuthController@changePassword', ['Security', 'Auth']],

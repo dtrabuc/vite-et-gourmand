@@ -43,10 +43,10 @@ final class UserRepository
         $stmt = Database::pdo()->prepare(
             'INSERT INTO users (
                 email, password, role, first_name, last_name, phone, gsm, address,
-                is_active, registration_token_hash, registration_token_expires_at
+                is_active, must_change_password
             ) VALUES (
                 :email, :password, :role, :first_name, :last_name, :phone, :gsm, :address,
-                :is_active, :registration_token_hash, :registration_token_expires_at
+                :is_active, :must_change_password
             )'
         );
 
@@ -60,24 +60,18 @@ final class UserRepository
             'gsm' => trim((string) ($data['gsm'] ?? '')),
             'address' => trim((string) $data['address']),
             'is_active' => (bool) ($data['is_active'] ?? true) ? 1 : 0,
-            'registration_token_hash' => $data['registration_token_hash'] ?? null,
-            'registration_token_expires_at' => $data['registration_token_expires_at'] ?? null,
+            'must_change_password' => (bool) ($data['must_change_password'] ?? false) ? 1 : 0,
         ]);
 
         return (int) Database::pdo()->lastInsertId();
     }
 
-    public function activateByRegistrationToken(string $hash): bool
+    public function deleteNewCustomer(int $id): void
     {
         $stmt = Database::pdo()->prepare(
-            'UPDATE users SET is_active = 1, registration_token_hash = NULL,
-                registration_token_expires_at = NULL, updated_at = CURRENT_TIMESTAMP
-             WHERE registration_token_hash = :hash
-               AND registration_token_expires_at > CURRENT_TIMESTAMP
-               AND is_active = 0'
+            'DELETE FROM users WHERE id = :id AND role = :role AND must_change_password = 1'
         );
-        $stmt->execute(['hash' => $hash]);
-        return $stmt->rowCount() === 1;
+        $stmt->execute(['id' => $id, 'role' => 'user']);
     }
 
     public function isActive(int $id): bool
@@ -115,16 +109,18 @@ final class UserRepository
         ]);
     }
 
-    public function updatePassword(int $id, string $hash): void
+    public function updatePassword(int $id, string $hash, bool $mustChangePassword = false): void
     {
         $stmt = Database::pdo()->prepare(
             'UPDATE users
-             SET password = :password, updated_at = CURRENT_TIMESTAMP
+             SET password = :password, must_change_password = :must_change_password,
+                 updated_at = CURRENT_TIMESTAMP
              WHERE id = :id'
         );
         $stmt->execute([
             'id' => $id,
             'password' => $hash,
+            'must_change_password' => $mustChangePassword ? 1 : 0,
         ]);
     }
 
@@ -296,6 +292,7 @@ final class UserRepository
         $user->setEmail((string) $row['email']);
         $user->setPasswordHash((string) $row['password']);
         $user->setRole((string) $row['role']);
+        $user->setMustChangePassword((bool) ($row['must_change_password'] ?? false));
         $user->setFirstName((string) $row['first_name']);
         $user->setLastName((string) $row['last_name']);
         $user->setPhone((string) ($row['phone'] ?? ''));

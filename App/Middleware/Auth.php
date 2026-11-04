@@ -43,8 +43,20 @@ final readonly class Auth
                     'email' => $user->getEmail(),
                     'first_name' => $user->getFirstName(),
                     'last_name' => $user->getLastName(),
+                    'must_change_password' => $user->mustChangePassword(),
                 ]
             );
+        }
+
+        if ($user->mustChangePassword()) {
+            $method = strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? 'GET'));
+            $path = parse_url((string) ($_SERVER['REQUEST_URI'] ?? '/'), PHP_URL_PATH) ?: '/';
+            $allowed = ($method === 'GET' && $path === '/profile')
+                || ($method === 'POST' && in_array($path, ['/password', '/logout'], true));
+
+            if (!$allowed) {
+                Response::redirect('/profile');
+            }
         }
     }
 }
