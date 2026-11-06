@@ -1,0 +1,21 @@
+/*
+ * cards.css : cartes (menus, commandes, formulaires) et encadrés de résumé.
+ */
+.card {
+    border: 0;
+    border-radius: var(--vg-radius-md);
+    box-shadow: var(--vg-shadow);
+    overflow: hidden;
+}
+
+.card h3 {
+    color: var(--vg-primary);
+    font-weight: 700;
+}
+
+/* encadré beige (récap de prix, infos d'une commande...) */
+.summary-box {
+    background: var(--vg-soft);
+    border: 1px solid rgba(var(--vg-primary-rgb), .1);
+    border-radius: .55rem;
+}

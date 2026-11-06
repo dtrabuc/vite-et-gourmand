@@ -1,0 +1,63 @@
+/* Carte partagée des menus : grille Bootstrap, image lisible et détails hiérarchisés. */
+.menu-card {
+    --menu-card-radius: 1.15rem;
+    border: 1px solid rgba(44, 62, 80, .07) !important;
+    border-radius: var(--menu-card-radius);
+    background: var(--vg-surface);
+    box-shadow: 0 .45rem 1.4rem rgba(44, 62, 80, .08) !important;
+    transition: transform .22s ease, box-shadow .22s ease;
+}
+
+.menu-card:hover,
+.menu-card:focus-within {
+    transform: translateY(-5px);
+    box-shadow: 0 .9rem 2rem rgba(44, 62, 80, .15) !important;
+}
+
+.menu-card__image {
+    display: block;
+    width: 100%;
+    height: clamp(13rem, 23vw, 17rem);
+    object-fit: cover;
+    background: var(--vg-soft);
+}
+
+.menu-card .card-body {
+    gap: .15rem;
+    padding: 1.35rem;
+}
+
+.menu-card .badge {
+    border-radius: 999px;
+    font-weight: 650;
+    letter-spacing: .015em;
+}
+
+.menu-card h2,
+.menu-card h3 {
+    line-height: 1.2;
+    text-wrap: balance;
+}
+
+.menu-card .card-body > p.text-muted {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+}
+
+.menu-card .bg-light {
+    border: 1px solid rgba(139, 38, 53, .08);
+    background: #faf7f4 !important;
+    line-height: 1.55;
+}
+
+.menu-card .btn {
+    border-radius: .7rem;
+    font-weight: 650;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .menu-card { transition: none; }
+    .menu-card:hover, .menu-card:focus-within { transform: none; }
+}

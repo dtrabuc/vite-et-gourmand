@@ -1,1 +1,21 @@
-<main class="flex-grow-1 d-flex align-items-center py-5"><div class="container"><div class="row justify-content-center"><div class="col-md-7 col-lg-5"><section class="card border-0 shadow-sm"><div class="card-body p-4 p-md-5"><h1 class="h2 text-primary">Mot de passe oublié</h1><p class="text-muted">Saisissez votre adresse email. Si elle est connue, un lien de réinitialisation vous sera envoyé.</p><form method="post" action="/forgot-password"><input type="hidden" name="csrf_token" value="<?= $escape($csrfToken) ?>"><label class="form-label" for="email">Adresse email</label><input class="form-control mb-3" id="email" name="email" type="email" required><button class="btn btn-primary w-100">Envoyer le lien</button></form><p class="mt-3 mb-0"><a href="/login">Retour à la connexion</a></p></div></section></div></div></div></main>
+<main class="flex-grow-1 d-flex align-items-center py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-7 col-lg-5">
+                <section class="card border-0 shadow-sm">
+                    <div class="card-body p-4 p-md-5">
+                        <h1 class="h2 text-primary">Mot de passe oublié</h1>
+                        <p class="text-muted">Saisissez votre adresse email. Si elle est connue, un lien de réinitialisation vous sera envoyé.</p>
+                        <form method="post" action="/forgot-password">
+                            <input type="hidden" name="csrf_token" value="<?= $escape($csrfToken) ?>">
+                            <label class="form-label" for="forgot_email">Adresse email</label>
+                            <input class="form-control mb-3" id="forgot_email" name="email" type="email" required>
+                            <button class="btn btn-primary w-100" type="submit">Envoyer le lien</button>
+                        </form>
+                        <p class="mt-3 mb-0"><a href="/login">Retour à la connexion</a></p>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+</main>

@@ -1,17 +1,24 @@
 <?php
+declare(strict_types=1);
+
 namespace App\Middleware;
 
-class Staff
+use App\Core\Response;
+use App\Core\Session;
+
+final readonly class Staff
 {
+    public function __construct(
+        private Auth $auth
+    ) {
+    }
+
     public function __invoke(): void
     {
-        if (session_status() !== PHP_SESSION_ACTIVE) {
-            session_start();
-        }
+        ($this->auth)();
 
-        if (empty($_SESSION['user_id']) || !in_array($_SESSION['role'] ?? '', ['employee', 'admin'], true)) {
-            header('Location: /login');
-            exit;
+        if (!in_array(Session::role(), ['employee', 'admin'], true)) {
+            Response::redirect('/admin/login');
         }
     }
 }

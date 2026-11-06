@@ -1,86 +1,98 @@
 <?php
+declare(strict_types=1);
+
 namespace App\Core;
 
 use App\Core\Exception\FileException;
-use Exception;
 
-class UploadFile
+/**
+ * Enregistrement sécurisé d'une image envoyée par formulaire dans public/uploads/.
+ */
+final class UploadFile
 {
+    private const MAX_SIZE = 5 * 1024 * 1024;
 
+    private const ALLOWED = [
+        'image/jpeg' => 'jpg',
+        'image/png' => 'png',
+        'image/webp' => 'webp',
+    ];
 
-  // @return name of file when uploaded
-  public static function upload(): string|null
-  {
-    $fileName = $_FILES['file']['name'];
-    $file_tmp_name = $_FILES['file']['tmp_name'];
-    $fileMimeType = mime_content_type($file_tmp_name);
-    $fileSize = $_FILES['file']['size'];
-    $extension = explode('.', $fileName);
-    $extension = end($extension);
-    $extension = strtolower($extension);
-
-    $fileName = rtrim($fileName, ". .$extension");
-    $image_error = $_FILES['file']['error'];
-    debugPrint($_FILES['file']);
-    if ($image_error === 0) {
-      // Enregistrer l'image dans notre dossier uploads
-      if ($fileSize > MAX_FILE_SIZE) {
-        throw new FileException("File exceeds upload_max_filesize");
-      } elseif (
-        !in_array($extension, ALLOWED_EXTENSIONS_FILE)
-        && !in_array($fileMimeType, ALLOWED_EXTENSIONS_FILE)
-      ) {
-        throw new FileException("Invalid format file");
-      }
-      $fileName = $fileName . '-' . bin2hex(random_bytes(6)) . '.' . $extension;
-      $destination = "uploads/" . $fileName;
-      if (!file_exists($destination)) {
-        move_uploaded_file($file_tmp_name, $destination);
-
-        echo " L'image a bien été enregistrée";
-
-        return $fileName;
-
-      } else {
-        throw new FileException("File already exist");
-      }
-
-
-    } else {
-      if ($_FILES["file"]["error"] !== UPLOAD_ERR_OK) {
-        switch ($_FILES["file"]["error"]) {
-          case UPLOAD_ERR_PARTIAL:
-            throw new FileException("File only partially uploaded");
-
-          case UPLOAD_ERR_NO_FILE:
-            throw new FileException("No file was uploaded");
-          case UPLOAD_ERR_EXTENSION:
-            throw new FileException("File upload stopped by a PHP extension");
-          case UPLOAD_ERR_FORM_SIZE:
-            throw new FileException("File exceeds MAX_FILE_SIZE in the HTML form");
-          case UPLOAD_ERR_INI_SIZE:
-            throw new FileException("File exceeds upload_max_filesize");
-          case UPLOAD_ERR_NO_TMP_DIR:
-            throw new FileException("Temporary folder not found");
-          case UPLOAD_ERR_CANT_WRITE:
-            throw new FileException("Failed to write file");
-          default:
-            throw new FileException('Unknown upload error');
-
+    /**
+     * @return string Chemin public de l'image, par exemple /uploads/menus/abc.jpg
+     */
+    public static function upload(string $field = 'file', string $subDirectory = ''): string
+    {
+        if (!isset($_FILES[$field]) || !is_array($_FILES[$field])) {
+            throw new FileException('Aucun fichier n’a été envoyé.');
         }
-      }
+
+        $file = $_FILES[$field];
+        $error = (int) ($file['error'] ?? UPLOAD_ERR_NO_FILE);
+
+        if ($error !== UPLOAD_ERR_OK) {
+            throw new FileException(match ($error) {
+                UPLOAD_ERR_PARTIAL => 'Le fichier n’a été envoyé que partiellement.',
+                UPLOAD_ERR_NO_FILE => 'Aucun fichier n’a été envoyé.',
+                UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE => 'Le fichier dépasse la taille autorisée (5 Mo).',
+                default => 'L’envoi du fichier a échoué.',
+            });
+        }
+
+        $tmpName = (string) ($file['tmp_name'] ?? '');
+
+        if ($tmpName === '' || !is_uploaded_file($tmpName)) {
+            throw new FileException('Fichier envoyé invalide.');
+        }
+
+        if ((int) ($file['size'] ?? 0) > self::MAX_SIZE) {
+            throw new FileException('Le fichier dépasse la taille autorisée (5 Mo).');
+        }
+
+        // Le type est déterminé par le contenu du fichier, jamais par son nom.
+        $info = @getimagesize($tmpName);
+        $mime = is_array($info) ? (string) ($info['mime'] ?? '') : '';
+
+        if (!isset(self::ALLOWED[$mime])) {
+            throw new FileException('Format d’image non accepté (JPEG, PNG ou WebP).');
+        }
+
+        $subDirectory = trim(preg_replace('/[^a-z0-9_-]/i', '', $subDirectory) ?? '');
+        $directory = self::baseDirectory() . ($subDirectory !== '' ? DIRECTORY_SEPARATOR . $subDirectory : '');
+
+        if (!is_dir($directory) && !mkdir($directory, 0755, true) && !is_dir($directory)) {
+            throw new FileException('Impossible de créer le dossier d’envoi.');
+        }
+
+        $fileName = bin2hex(random_bytes(16)) . '.' . self::ALLOWED[$mime];
+
+        if (!move_uploaded_file($tmpName, $directory . DIRECTORY_SEPARATOR . $fileName)) {
+            throw new FileException('Impossible d’enregistrer le fichier.');
+        }
+
+        return '/uploads/' . ($subDirectory !== '' ? $subDirectory . '/' : '') . $fileName;
     }
 
-    return null;
-  }
+    /**
+     * Supprime un fichier précédemment envoyé. Les URL externes sont ignorées.
+     */
+    public static function remove(string $publicPath): void
+    {
+        if (!preg_match('#^/uploads/(?:([a-z0-9_-]+)/)?([a-f0-9]{32}\.(?:jpg|png|webp))$#i', $publicPath, $matches)) {
+            return;
+        }
 
-  public static function remove(string $fileName)
-  {
-    try {
-      unlink("uploads/" . $fileName);
-    } catch (Exception $e) {
-      throw new FileException("Unable to delete image : " . $e->getMessage());
+        $path = self::baseDirectory()
+            . ($matches[1] !== '' ? DIRECTORY_SEPARATOR . $matches[1] : '')
+            . DIRECTORY_SEPARATOR . $matches[2];
 
+        if (is_file($path) && !unlink($path)) {
+            throw new FileException('Impossible de supprimer l’image.');
+        }
     }
-  }
+
+    private static function baseDirectory(): string
+    {
+        return dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR . 'uploads';
+    }
 }

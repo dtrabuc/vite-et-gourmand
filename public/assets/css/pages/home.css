@@ -1,0 +1,27 @@
+/* Accueil : hero photographique et cartes de menus partagées avec le catalogue. */
+.home-hero {
+    min-height: 34rem;
+    display: flex;
+    align-items: center;
+    background: linear-gradient(90deg, rgba(63, 18, 25, .92) 0%, rgba(91, 27, 37, .78) 54%, rgba(63, 18, 25, .35) 100%),
+        url("https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=2000&h=1200&q=85") center 52% / cover;
+}
+
+.home-hero .card {
+    border-radius: 1.1rem;
+    background: rgba(255, 255, 255, .96);
+}
+
+.home-menu-image {
+    width: 100%;
+    height: clamp(13rem, 23vw, 17rem);
+    object-fit: cover;
+}
+
+.home-menu-placeholder {
+    min-height: 14rem;
+}
+
+@media (max-width: 767.98px) {
+    .home-hero { min-height: 0; background-position: 58% center; }
+}

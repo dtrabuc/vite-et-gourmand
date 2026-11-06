@@ -1,0 +1,13 @@
+# Fins de ligne normalisées en LF dans le dépôt (le checkout Windows peut rester en CRLF)
+* text=auto
+*.sh text eol=lf
+
+# Fichiers binaires
+*.webp binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary

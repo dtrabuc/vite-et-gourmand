@@ -1,118 +1,221 @@
 <?php
+declare(strict_types=1);
+
 namespace App\Controller;
 
-use App\Service\MenuService;
+use App\Core\Exception\NotFoundException;
+use App\Core\Labels;
+use App\Core\Session;
+use App\Entity\Menu;
 use App\Service\CommentService;
-use App\Repository\MenuRepository;
-use App\Repository\CommentRepository;
+use App\Service\DeliveryDistanceService;
+use App\Service\MailService;
+use App\Service\MenuService;
 
-class PublicController extends BaseController
+final class PublicController extends BaseController
 {
-    private MenuService $menuService;
-    private CommentService $commentService;
-
-    public function __construct()
-    {
-        $this->menuService = new MenuService(new MenuRepository());
-        $this->commentService = new CommentService(new CommentRepository());
+    public function __construct(
+        private readonly MenuService $menuService,
+        private readonly CommentService $commentService,
+        private readonly MailService $mailService
+    ) {
     }
 
     public function index(): void
     {
         try {
+            $menus = array_slice($this->menuService->getAllMenus(), 0, 3);
             $reviews = $this->commentService->getHomepageReviews();
         } catch (\Throwable $exception) {
-            error_log('Impossible de charger les avis : ' . $exception->getMessage());
-            $reviews = [];
+            error_log($exception->__toString());
+            $menus ??= [];
+            $reviews ??= [];
         }
-        try {
-            $menus = array_slice($this->menuService->getAllMenus(), 0, 3);
-        } catch (\Throwable $exception) {
-            error_log('Impossible de charger les menus : ' . $exception->getMessage());
-            $menus = [];
-        }
-        $this->render('home/index', ['reviews' => $reviews, 'menus' => $menus]);
+
+        $menus ??= [];
+        $reviews ??= [];
+
+        $this->render('home/index', [
+            'reviews' => $reviews,
+            'menus' => $menus,
+            'menuCovers' => $this->menuService->getCovers($menus),
+            'user' => Session::id(),
+        ]);
     }
 
     public function menusPage(): void
     {
-        $menus = $this->menuService->getAllMenus();
-        $this->render('home/menus', ['menus' => $menus]);
+        try {
+            $menus = $this->menuService->getAllMenus();
+        } catch (\Throwable $exception) {
+            error_log('Impossible de charger le catalogue : ' . $exception->getMessage());
+            $menus = [];
+        }
+
+        // Plats et couvertures de tous les menus : une requête chacun (pas de N+1).
+        $menuDetails = array_map(
+            static fn (array $dishes): array => ['dishes' => $dishes],
+            $this->menuService->getDishesForMenus($menus)
+        );
+
+        $this->render('home/menus', [
+            'menus' => $menus,
+            'menuDetails' => $menuDetails,
+            'menuCovers' => $this->menuService->getCovers($menus),
+            'themes' => MenuService::THEMES,
+            'user' => Session::id(),
+        ]);
     }
 
     public function menuDetail(int $id): void
     {
-        $menu = $id > 0 ? $this->menuService->getMenuById($id) : null;
-        if ($menu === null) {
-            http_response_code(404);
-            $this->render('home/menu_detail', ['menu' => null]);
-            return;
-        }
-        $details = (new MenuRepository())->findDetails($id);
-        $this->render('home/menu_detail', ['menu' => $menu, 'details' => $details]);
-    }
-
-    public function getMenus(): void
-    {
-        $this->jsonMenus($this->menuService->getAllMenus());
-    }
-
-    public function getMenuById(int $id): void
-    {
-        if ($id <= 0) { http_response_code(400); echo $this->jsonError('Identifiant invalide'); return; }
+        // menu absent ou désactivé : même page 404 que le reste du site
         $menu = $this->menuService->getMenuById($id);
-        if ($menu === null) { http_response_code(404); echo $this->jsonError('Menu introuvable'); return; }
-        header('Content-Type: application/json');
-        echo $this->jsonSuccess($this->menuToArray($menu));
+
+        if ($menu === null) {
+            throw new NotFoundException('Menu introuvable.');
+        }
+
+        $details = $this->menuService->getMenuDetails($id);
+        $this->render('home/menu_detail', [
+            'menu' => $menu,
+            'details' => $details,
+            'images' => $this->menuService->getImages($id),
+            'user' => Session::id(),
+        ]);
+    }
+
+    public function getMenus(): never
+    {
+        $this->json([
+            'success' => true,
+            'data' => $this->serializeMenus($this->menuService->getAllMenus()),
+        ]);
+    }
+
+    public function getMenuById(int $id): never
+    {
+        if ($id < 1) {
+            $this->json(['success' => false, 'error' => 'Menu introuvable.'], 404);
+        }
+
+        $menu = $this->menuService->getMenuById($id);
+
+        if ($menu === null) {
+            $this->json(['success' => false, 'error' => 'Menu introuvable.'], 404);
+        }
+
+        $details = $this->menuService->getMenuDetails($id);
+
+        $this->json([
+            'success' => true,
+            'data' => $this->serializeMenu(
+                $menu,
+                $details['dishes'] ?? [],
+                $this->menuService->getImages($id),
+                $details['allergens'] ?? []
+            ),
+        ]);
     }
 
     public function filterMenus(): void
     {
-        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-            http_response_code(405);
-            echo $this->jsonError('Method Not Allowed');
-            return;
-        }
-
         $filters = [];
+
         foreach (['max_price', 'min_price', 'theme', 'dietary_regime', 'min_people'] as $key) {
             if (isset($_GET[$key]) && $_GET[$key] !== '') {
                 $filters[$key] = $_GET[$key];
             }
         }
 
-        $menus = $this->menuService->filterMenus($filters);
-        $this->jsonMenus($menus);
-    }
+        try {
+            $menus = $this->menuService->filterMenus($filters);
+        } catch (\InvalidArgumentException $exception) {
+            // Saisie de filtre invalide : message lisible, pas d'erreur 500.
+            $this->json(['success' => false, 'error' => $exception->getMessage()], 422);
+        }
 
-    private function jsonMenus(array $menus): void
-    {
-        header('Content-Type: application/json');
-        echo $this->jsonSuccess(array_map([$this, 'menuToArray'], $menus));
+        $this->json([
+            'success' => true,
+            'data' => $this->serializeMenus($menus),
+        ]);
     }
 
     public function legal(): void
     {
-        $this->render('home/legal');
+        $this->render('home/legal', $this->legalData() + [
+            'hosting' => is_array(config('hosting')) ? config('hosting') : [],
+        ]);
     }
 
     public function cgv(): void
     {
-        $this->render('home/cgv');
+        $this->render('home/cgv', $this->legalData());
     }
 
-    private function menuToArray(\App\Entity\Menu $menu): array
+    public function privacy(): void
     {
+        $this->render('home/privacy', $this->legalData() + [
+            'sessionLifetime' => (int) config('session.lifetime', 120),
+        ]);
+    }
+
+    /**
+     * Coordonnées de l'entreprise communes aux pages légales.
+     */
+    private function legalData(): array
+    {
+        [$street, $city, $postalCode] = DeliveryDistanceService::COMPANY_ADDRESS;
+
         return [
+            'companyAddress' => $street . ', ' . $postalCode . ' ' . $city,
+            'contactEmail' => $this->mailService->companyAddress(),
+        ];
+    }
+
+    /**
+     * Liste de menus pour le filtrage dynamique : plats et couvertures chargés
+     * en une requête chacun pour l'ensemble des menus.
+     */
+    private function serializeMenus(array $menus): array
+    {
+        $dishes = $this->menuService->getDishesForMenus($menus);
+        $covers = $this->menuService->getCovers($menus);
+
+        return array_map(
+            fn (Menu $menu): array => $this->serializeMenu(
+                $menu,
+                $dishes[$menu->getId()] ?? [],
+                isset($covers[$menu->getId()]) ? [$covers[$menu->getId()]] : []
+            ),
+            $menus
+        );
+    }
+
+    private function serializeMenu(Menu $menu, array $dishes, array $images, ?array $allergens = null): array
+    {
+        $data = [
             'id' => $menu->getId(),
             'title' => $menu->getTitle(),
             'description' => $menu->getDescription(),
             'theme' => $menu->getTheme(),
             'dietary_regime' => $menu->getDietaryRegime(),
+            'dietary_regime_label' => Labels::dietaryRegime($menu->getDietaryRegime()),
             'min_people' => $menu->getMinPeople(),
             'base_price' => $menu->getBasePrice(),
             'conditions' => $menu->getConditions(),
             'available_stock' => $menu->getAvailableStock(),
+            'dishes' => $dishes,
+            'images' => array_map(
+                static fn (array $image): array => ['url' => $image['url'], 'alt_text' => $image['alt_text']],
+                $images
+            ),
         ];
+
+        if ($allergens !== null) {
+            $data['allergens'] = $allergens;
+        }
+
+        return $data;
     }
 }

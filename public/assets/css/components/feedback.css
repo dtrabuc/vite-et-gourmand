@@ -1,0 +1,48 @@
+/*
+ * feedback.css : badges, alertes et barres de progression (graphique admin).
+ */
+.badge {
+    font-weight: 600;
+}
+
+.alert {
+    border-radius: var(--vg-radius-sm);
+}
+
+/* le thème met du texte blanc sur fond jaune ou bleu clair : illisible.
+   On passe aux fonds pâles avec texte foncé (contraste >= 4,5:1) */
+.alert.alert-warning {
+    color: #5c4200;
+    background-color: #fff4d6;
+    border: 1px solid #f2d27a;
+}
+
+.alert.alert-info {
+    color: #0b4a63;
+    background-color: #e3f4fa;
+    border: 1px solid #9fd6ea;
+}
+
+.alert.alert-success {
+    color: #0f5132;
+    background-color: #e3f3ea;
+    border: 1px solid #a3cfb8;
+}
+
+.alert.alert-danger {
+    color: #842029;
+    background-color: #fbe7e9;
+    border: 1px solid #f1aeb5;
+}
+
+.alert a,
+.alert strong,
+.alert .alert-heading {
+    color: inherit;
+}
+
+/* barres du graphique « commandes par menu » aux couleurs de la charte */
+.progress {
+    --bs-progress-bar-bg: var(--vg-primary);
+    --bs-progress-bg: var(--bs-primary-bg-subtle);
+}

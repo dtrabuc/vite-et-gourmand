@@ -1,0 +1,60 @@
+/*
+ * buttons.css : boutons aux couleurs de la charte.
+ */
+.btn {
+    border-radius: .6rem;
+    font-weight: 650;
+    white-space: nowrap; /* un bouton ne se coupe jamais en plein mot */
+    transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.btn-primary {
+    --bs-btn-bg: var(--vg-primary);
+    --bs-btn-border-color: var(--vg-primary);
+    --bs-btn-hover-bg: var(--vg-primary-dark);
+    --bs-btn-hover-border-color: var(--vg-primary-dark);
+    --bs-btn-active-bg: var(--vg-primary-dark);
+    --bs-btn-active-border-color: var(--vg-primary-dark);
+    --bs-btn-disabled-bg: var(--vg-primary);
+    --bs-btn-disabled-border-color: var(--vg-primary);
+}
+
+.btn-primary:hover {
+    box-shadow: var(--vg-shadow);
+    transform: translateY(-1px);
+}
+
+.btn-outline-secondary {
+    --bs-btn-color: #4a545d;
+    --bs-btn-border-color: #5f6b76;
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: #4a545d;
+    --bs-btn-hover-border-color: #4a545d;
+    --bs-btn-disabled-color: #4a545d;
+    --bs-btn-disabled-border-color: #5f6b76;
+}
+
+.btn-outline-danger {
+    --bs-btn-color: #b02a37;
+    --bs-btn-border-color: #b02a37;
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: #b02a37;
+    --bs-btn-hover-border-color: #b02a37;
+}
+
+.btn-outline-success {
+    --bs-btn-color: #146c43;
+    --bs-btn-border-color: #146c43;
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: #146c43;
+    --bs-btn-hover-border-color: #146c43;
+}
+
+.btn-outline-primary {
+    --bs-btn-color: var(--vg-primary);
+    --bs-btn-border-color: var(--vg-primary);
+    --bs-btn-hover-bg: var(--vg-primary);
+    --bs-btn-hover-border-color: var(--vg-primary);
+    --bs-btn-active-bg: var(--vg-primary-dark);
+    --bs-btn-active-border-color: var(--vg-primary-dark);
+}

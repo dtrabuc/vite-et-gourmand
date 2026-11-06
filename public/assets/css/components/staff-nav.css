@@ -1,0 +1,35 @@
+/*
+ * staff-nav.css : sous-navigation de l'espace équipe (employé et admin).
+ * Sur mobile les onglets restent sur une ligne et défilent sur le côté
+ * au lieu de s'empiler.
+ */
+.staff-nav {
+    background: var(--vg-surface);
+    border-bottom: 1px solid var(--vg-border);
+}
+
+.staff-nav .nav {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: .25rem;
+    padding: .6rem 0;
+    scrollbar-width: thin;
+}
+
+.staff-nav .nav-link {
+    color: var(--vg-ink);
+    font-weight: 600;
+    white-space: nowrap;
+    border-radius: 999px;
+    padding: .4rem .9rem;
+}
+
+.staff-nav .nav-link:hover {
+    background: var(--bs-primary-bg-subtle);
+    color: var(--vg-primary);
+}
+
+.staff-nav .nav-link.active {
+    background: var(--vg-primary);
+    color: #fff;
+}

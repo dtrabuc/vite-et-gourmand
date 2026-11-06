@@ -1,0 +1,188 @@
+/*
+ * responsive.css : ajustements par taille d'écran, chargé en dernier.
+ * Paliers de Bootstrap : < 576 px (téléphone), < 768 px, < 992 px (tablette), >= 1200 px.
+ */
+
+/* rien ne doit dépasser de l'écran */
+img,
+svg,
+video,
+canvas {
+    max-width: 100%;
+    height: auto;
+}
+
+main,
+.container,
+.card,
+.card-body,
+.row,
+[class*="col-"] {
+    min-width: 0;
+}
+
+/* un mot très long (e-mail, référence) peut passer à la ligne,
+   mais on ne coupe plus les mots normaux lettre par lettre */
+.card-body,
+.form-text,
+.alert {
+    overflow-wrap: break-word;
+}
+
+/* ----- grand écran ----- */
+@media (min-width: 1200px) {
+    .hero .container,
+    .menu-detail-hero .container,
+    .menu-hero .container,
+    #orderFinalForm {
+        max-width: 1140px;
+    }
+
+    #orderFinalForm {
+        margin-right: auto;
+        margin-left: auto;
+    }
+}
+
+/* ----- tablette et moins : menu replié ----- */
+@media (max-width: 991.98px) {
+    /* le logo peut passer sur 2 lignes (gros texte) : le bouton
+       accessibilité et le burger restent sur la même ligne que lui */
+    .navbar-brand {
+        flex: 1 1 0;
+        min-width: 0;
+        white-space: normal;
+        line-height: 1.15;
+    }
+
+    .navbar-toggler {
+        flex-shrink: 0;
+    }
+
+    .navbar .navbar-nav {
+        align-items: stretch !important;
+        padding-top: .75rem;
+    }
+
+    .navbar .nav-link {
+        padding: .65rem .75rem;
+    }
+
+    .navbar .navbar-nav > .nav-item > .btn {
+        width: 100%;
+        margin-top: .5rem;
+    }
+
+    /* menu « Mon compte » à plat dans le menu replié */
+    .navbar .dropdown-menu {
+        border: 0;
+        box-shadow: none;
+        padding-top: 0;
+    }
+
+    .hero h1,
+    .hero .display-4,
+    .hero .display-5 {
+        font-size: clamp(2rem, 6vw, 3rem);
+    }
+
+    .hero .lead {
+        font-size: clamp(1rem, 2.2vw, 1.2rem);
+    }
+}
+
+/* ----- mobile ----- */
+@media (max-width: 767.98px) {
+    main.py-5,
+    main.py-4 {
+        padding-top: 2rem !important;
+        padding-bottom: 2rem !important;
+    }
+
+    .container {
+        padding-right: var(--vg-gutter-mobile);
+        padding-left: var(--vg-gutter-mobile);
+    }
+
+    .hero .display-4,
+    .hero .display-5 {
+        font-size: clamp(1.9rem, 8vw, 2.5rem);
+        line-height: 1.15;
+    }
+
+    .section-title {
+        font-size: clamp(1.6rem, 6vw, 2rem);
+    }
+
+    .card-body.p-lg-5,
+    .card-body.p-md-5,
+    .p-lg-5,
+    .p-md-5 {
+        padding: 1.25rem !important;
+    }
+
+    #menuGrid .card img,
+    .menu-card-image {
+        height: 200px;
+    }
+
+    #orderFinalForm {
+        padding: 1rem !important;
+    }
+
+    #orderFinalForm .btn[type="submit"] {
+        width: 100%;
+    }
+}
+
+/* ----- petit téléphone ----- */
+@media (max-width: 575.98px) {
+    .container {
+        padding-right: .875rem;
+        padding-left: .875rem;
+    }
+
+    .navbar-brand {
+        font-size: 1.15rem;
+    }
+
+    .hero {
+        padding-top: 2.5rem !important;
+        padding-bottom: 2.5rem !important;
+    }
+
+    /* boutons du bandeau d'accueil empilés et pleine largeur */
+    .hero .d-flex {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .hero .d-flex > .btn {
+        width: 100%;
+    }
+
+    .table-responsive {
+        border-radius: .5rem;
+    }
+}
+
+/* ----- animations réduites si le système le demande ----- */
+@media (prefers-reduced-motion: reduce) {
+    .card,
+    .btn {
+        transition: none !important;
+    }
+
+    .btn:hover,
+    .card:hover {
+        transform: none !important;
+    }
+}
+
+
+/* Cartes illustrées des menus */
+@media (max-width: 575.98px) {
+    .menu-card .card-body { padding: 1rem; }
+    .menu-card__image { height: 13.5rem; }
+    .menu-detail-image { height: 15rem; }
+}

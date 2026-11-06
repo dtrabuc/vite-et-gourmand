@@ -1,17 +1,24 @@
 <?php
+declare(strict_types=1);
+
 namespace App\Middleware;
 
-class Admin
+use App\Core\Response;
+use App\Core\Session;
+
+final readonly class Admin
 {
+    public function __construct(
+        private Auth $auth
+    ) {
+    }
+
     public function __invoke(): void
     {
-        if (session_status() !== PHP_SESSION_ACTIVE) {
-            session_start();
-        }
+        ($this->auth)();
 
-        if (empty($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'admin') {
-            header('Location: /login');
-            exit;
+        if (Session::role() !== 'admin') {
+            Response::redirect('/admin/login');
         }
     }
 }

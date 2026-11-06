@@ -1,204 +1,287 @@
 <?php
+declare(strict_types=1);
+
 namespace App\Service;
 
 use App\Entity\User;
 use App\Repository\UserRepository;
+use DateTimeImmutable;
+use InvalidArgumentException;
 
-class AuthService
+final readonly class AuthService
 {
-    private UserRepository $userRepository;
-
-    public function __construct(UserRepository $userRepository)
-    {
-        $this->userRepository = $userRepository;
+    public function __construct(
+        private UserRepository $userRepository,
+        private PasswordPolicy $passwordPolicy,
+        private PhoneValidator $phoneValidator
+    ) {
     }
 
-    /**
-     * Validate password against ECF requirements (10 chars, upper, lower, digit, special)
-     * @param string $password
-     * @return array|null Returns null if valid, otherwise array of error messages
-     */
-    private function validatePassword(string $password): ?array
+    /** @return array{user_id:int, temporary_password:string} */
+    public function register(array $data): array
     {
-        $errors = [];
-        if (strlen($password) < 10) {
-            $errors[] = 'Le mot de passe doit contenir au moins 10 caractères';
-        }
-        if (!preg_match('/[A-Z]/', $password)) {
-            $errors[] = 'Le mot de passe doit contenir au moins une majuscule';
-        }
-        if (!preg_match('/[a-z]/', $password)) {
-            $errors[] = 'Le mot de passe doit contenir au moins une minuscule';
-        }
-        if (!preg_match('/[0-9]/', $password)) {
-            $errors[] = 'Le mot de passe doit contenir au moins un chiffre';
-        }
-        if (!preg_match('/[^A-Za-z0-9]/', $password)) {
-            $errors[] = 'Le mot de passe doit contenir au moins un caractère spécial';
-        }
-        return empty($errors) ? null : $errors;
-    }
+        $email = $this->normalizeEmail((string) ($data['email'] ?? ''));
 
-    public function register(array $data): int
-    {
-        // Validate password
-        $passwordErrors = $this->validatePassword($data['password']);
-        if ($passwordErrors !== null) {
-            // In a real application, we would throw an exception or return an error.
-            // We'll still hash and create the user, but note that the controller should have validated.
-            // To be safe, we'll throw an exception if validation fails.
-            throw new \InvalidArgumentException(implode("\n", $passwordErrors));
+        foreach (['phone'] as $field) {
+            $value = trim((string) ($data[$field] ?? ''));
+            if ($value !== '') {
+                $data[$field] = $this->normalizedPhone($value);
+            }
         }
 
-        // Validate and hash the password
-        $hashedPassword = password_hash($data['password'], PASSWORD_DEFAULT);
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            throw new InvalidArgumentException('Adresse email invalide.');
+        }
 
-        $userData = [
-            'email' => $data['email'],
-            'password' => $hashedPassword,
-            // Le rôle est imposé côté serveur lors d'une inscription publique.
+        if ($this->userRepository->findByEmail($email) !== null) {
+            throw new InvalidArgumentException('Cette adresse email est déjà utilisée.');
+        }
+
+        $temporaryPassword = $this->generateTemporaryPassword();
+        $userId = $this->userRepository->create([
+            'email' => $email,
+            'password' => $this->passwordPolicy->hash($temporaryPassword),
             'role' => 'user',
-            'first_name' => $data['first_name'],
-            'last_name' => $data['last_name'],
-            'phone' => $data['phone'],
-            'gsm' => $data['gsm'],
-            'address' => $data['address'],
-        ];
-
-        return $this->userRepository->create($userData);
+            'first_name' => trim((string) ($data['first_name'] ?? '')),
+            'last_name' => trim((string) ($data['last_name'] ?? '')),
+            'phone' => trim((string) ($data['phone'] ?? '')),
+            'gsm' => '',
+            'address' => trim((string) ($data['address'] ?? '')),
+            'is_active' => true,
+            'must_change_password' => true,
+        ]);
+        return ['user_id' => $userId, 'temporary_password' => $temporaryPassword];
     }
 
     public function login(string $email, string $password): ?User
     {
+        $email = $this->normalizeEmail($email);
         $user = $this->userRepository->findByEmail($email);
 
         if ($user === null || !$this->userRepository->isActive($user->getId())) {
-            // Simulate user not found to prevent user enumeration
-            // We still return null, but we could also log the attempt.
             return null;
         }
 
-        // Check if account is locked
-        if ($user->getLockedUntil() !== null && $user->getLockedUntil() > new \DateTimeImmutable()) {
-            return null; // Locked
+        $lockedUntil = $user->getLockedUntil();
+
+        if (
+            $lockedUntil !== null
+            && $lockedUntil->getTimestamp() > time()
+        ) {
+            return null;
         }
 
-        if (password_verify($password, $user->getPasswordHash())) {
-            // Successful login: reset failed attempts and lock
-            $this->userRepository->updateFailedAttempts($user->getId(), 0, null);
-            return $user;
+        $storedPassword = $user->getPasswordHash();
+
+        // Seul un hash reconnu par password_verify() est accepté :
+        // un mot de passe stocké en clair ne permet jamais de se connecter.
+        if (!password_verify($password, $storedPassword)) {
+            $failedAttempts = $user->getFailedAttempts() + 1;
+
+            $this->userRepository->updateFailedAttempts(
+                $user->getId(),
+                $failedAttempts,
+                $failedAttempts >= 5
+                    ? new DateTimeImmutable('+15 minutes')
+                    : null
+            );
+
+            return null;
         }
 
-        // Failed login: increment failed attempts and lock if >=5
-        $newFailedAttempts = $user->getFailedAttempts() + 1;
-        $lockedUntil = null;
-        if ($newFailedAttempts >= 5) {
-            $lockedUntil = (new \DateTimeImmutable())->modify('+15 minutes');
+        if ($this->passwordPolicy->needsRehash($storedPassword)) {
+            $this->userRepository->updatePassword(
+                $user->getId(),
+                $this->passwordPolicy->hash($password),
+                $user->mustChangePassword()
+            );
         }
-        $this->userRepository->updateFailedAttempts($user->getId(), $newFailedAttempts, $lockedUntil);
 
-        return null;
+        $this->userRepository->updateFailedAttempts(
+            $user->getId(),
+            0,
+            null
+        );
+
+        return $user;
     }
 
-    public function changePassword(int $userId, string $currentPassword, string $newPassword): bool
-    {
+    public function changePassword(
+        int $userId,
+        string $currentPassword,
+        string $newPassword
+    ): void {
         $user = $this->userRepository->findById($userId);
 
-        if ($user === null) {
-            return false;
+        if (
+            $user === null
+            || !password_verify(
+                $currentPassword,
+                $user->getPasswordHash()
+            )
+        ) {
+            throw new InvalidArgumentException(
+                'Mot de passe actuel incorrect.'
+            );
         }
 
-        if (!password_verify($currentPassword, $user->getPasswordHash())) {
-            return false;
-        }
+        $this->assertStrongPassword($newPassword);
 
-        // Validate new password
-        $passwordErrors = $this->validatePassword($newPassword);
-        if ($passwordErrors !== null) {
-            throw new \InvalidArgumentException(implode("\n", $passwordErrors));
-        }
-
-        $hashedNewPassword = password_hash($newPassword, PASSWORD_DEFAULT);
-        $this->userRepository->updatePassword($userId, $hashedNewPassword);
-
-        // Reset failed attempts on password change (optional, but good practice)
-        $this->userRepository->updateFailedAttempts($userId, 0, null);
-
-        return true;
+        $this->userRepository->updatePassword(
+            $userId,
+            $this->passwordPolicy->hash($newPassword)
+        );
+        $this->userRepository->updateFailedAttempts(
+            $userId,
+            0,
+            null
+        );
+        // Un lien de réinitialisation déjà envoyé ne doit plus servir.
+        $this->userRepository->clearResetToken($userId);
     }
 
     public function updateProfile(int $userId, array $data): void
     {
+        $email = $this->normalizeEmail((string) ($data['email'] ?? ''));
+
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            throw new InvalidArgumentException('Adresse email invalide.');
+        }
+
+        $existing = $this->userRepository->findByEmail($email);
+
+        if (
+            $existing !== null
+            && $existing->getId() !== $userId
+        ) {
+            throw new InvalidArgumentException(
+                'Cette adresse email est déjà utilisée.'
+            );
+        }
+
+        $data['email'] = $email;
+
+        foreach (['phone'] as $field) {
+            $value = trim((string) ($data[$field] ?? ''));
+
+            if ($value !== '') {
+                $data[$field] = $this->normalizedPhone($value);
+            }
+        }
+
         $this->userRepository->update($userId, $data);
     }
 
-    /**
-     * Generate a password reset token for the given email.
-     * @param string $email
-     * @return string|null Returns the plain token if successful, null if user not found.
-     */
     public function createResetToken(string $email): ?string
     {
-        $user = $this->userRepository->findByEmail($email);
+        $user = $this->userRepository->findByEmail(
+            $this->normalizeEmail($email)
+        );
 
-        if ($user === null) {
-            // Do not reveal that the user does not exist
+        if (
+            $user === null
+            || !$this->userRepository->isActive($user->getId())
+        ) {
             return null;
         }
 
-        // Generate a cryptographically secure random token
         $token = bin2hex(random_bytes(32));
-        $hashedToken = hash('sha256', $token);
 
-        // Set expiration to 1 hour from now
-        $expiresAt = (new \DateTimeImmutable())->modify('+1 hour');
-
-        // Store the hashed token and expiration in the user record
-        $this->userRepository->updateResetToken($user->getId(), $hashedToken, $expiresAt);
+        $this->userRepository->updateResetToken(
+            $user->getId(),
+            hash('sha256', $token),
+            new DateTimeImmutable('+1 hour')
+        );
 
         return $token;
     }
 
-    /**
-     * Validate a password reset token and return the associated user if valid.
-     * @param string $token
-     * @return User|null
-     */
     public function validateResetToken(string $token): ?User
     {
-        $hashedToken = hash('sha256', $token);
-        $user = $this->userRepository->findByResetTokenHash($hashedToken);
+        if (!preg_match('/^[a-f0-9]{64}$/', $token)) {
+            return null;
+        }
 
-        return $user; // Will be null if not found or expired
+        return $this->userRepository->findByResetTokenHash(
+            hash('sha256', $token)
+        );
+    }
+
+    public function resetPassword(
+        string $token,
+        string $newPassword
+    ): void {
+        $user = $this->validateResetToken($token);
+
+        if ($user === null) {
+            throw new InvalidArgumentException(
+                'Le lien de réinitialisation est invalide ou expiré.'
+            );
+        }
+
+        $this->assertStrongPassword($newPassword);
+
+        $this->userRepository->updatePassword(
+            $user->getId(),
+            $this->passwordPolicy->hash($newPassword)
+        );
+        $this->userRepository->clearResetToken($user->getId());
+        // Le lien reçu par e-mail prouve l'accès au compte : il lève aussi le verrouillage.
+        $this->userRepository->updateFailedAttempts($user->getId(), 0, null);
+    }
+
+    private function assertStrongPassword(string $password): void
+    {
+        $errors = $this->passwordPolicy->validate($password);
+
+        if ($errors !== []) {
+            throw new InvalidArgumentException(implode(' ', $errors));
+        }
+    }
+
+    private function generateTemporaryPassword(): string
+    {
+        $groups = [
+            'ABCDEFGHJKLMNPQRSTUVWXYZ',
+            'abcdefghijkmnopqrstuvwxyz',
+            '23456789',
+            '!@#$%*-_+',
+        ];
+        $characters = [];
+
+        foreach ($groups as $group) {
+            $characters[] = $group[random_int(0, strlen($group) - 1)];
+        }
+
+        $allCharacters = implode('', $groups);
+        while (count($characters) < 18) {
+            $characters[] = $allCharacters[random_int(0, strlen($allCharacters) - 1)];
+        }
+
+        for ($index = count($characters) - 1; $index > 0; $index--) {
+            $swapIndex = random_int(0, $index);
+            [$characters[$index], $characters[$swapIndex]] = [$characters[$swapIndex], $characters[$index]];
+        }
+
+        return implode('', $characters);
     }
 
     /**
-     * Reset the password for the given token.
-     * @param string $token
-     * @param string $newPassword
-     * @return bool True if password was reset, false otherwise.
+     * Valide puis normalise un numéro au format E.164.
      */
-    public function resetPassword(string $token, string $newPassword): bool
+    private function normalizedPhone(string $phone): string
     {
-        // Validate the token
-        $user = $this->validateResetToken($token);
-        if ($user === null) {
-            return false;
+        $error = $this->phoneValidator->validate($phone);
+
+        if ($error !== null) {
+            throw new InvalidArgumentException($error);
         }
 
-        // Validate the new password
-        $passwordErrors = $this->validatePassword($newPassword);
-        if ($passwordErrors !== null) {
-            return false;
-        }
+        return $this->phoneValidator->normalize($phone);
+    }
 
-        // Hash the new password
-        $hashedNewPassword = password_hash($newPassword, PASSWORD_DEFAULT);
-
-        // Update the password and clear the reset token
-        $this->userRepository->updatePassword($user->getId(), $hashedNewPassword);
-        $this->userRepository->clearResetToken($user->getId());
-
-        return true;
+    private function normalizeEmail(string $email): string
+    {
+        return mb_strtolower(trim($email));
     }
 }

@@ -1,59 +1,42 @@
 <?php
+declare(strict_types=1);
+
 namespace App\Repository;
 
-use App\Entity\Comment;
 use App\Core\Database;
+use App\Entity\User;
+use DateTimeImmutable;
+use MongoDB\BSON\ObjectId;
+use MongoDB\BSON\UTCDateTime;
 
-class CommentRepository
+final readonly class CommentRepository
 {
-    public function findPending(): array
-    {
-        $database = Database::getMongoDatabase();
-        $cursor = $database->selectCollection('comments')->find(['isValidated' => false])->sort(['createdAt' => -1]);
-        $reviews=[];
-        foreach($cursor as $doc){
-            $user=(new UserRepository())->findById((int)$doc['userId']);
-            $reviews[]=[
-                'id'=>(string)$doc['_id'],
-                'rating'=>(int)$doc['rating'],
-                'comment'=>(string)$doc['comment'],
-                'first_name'=>$user?->getFirstName() ?? '',
-                'last_name'=>$user?->getLastName() ?? '',
-                'created_at'=>$doc['createdAt'] instanceof \MongoDB\BSON\UTCDateTime ? $doc['createdAt']->toDateTime() : null,
-            ];
-        }
-        return $reviews;
+    public function __construct(
+        private UserRepository $userRepository
+    ) {
     }
 
-    public function findAllValidated(): array
+    public function findPending(): array
     {
-        $database = Database::getMongoDatabase();
-        $collection = $database->selectCollection('comments');
-
-        $cursor = $collection->find(['isValidated' => true]);
+        $cursor = Database::mongoDatabase()
+            ->selectCollection('comments')
+            ->find(
+                ['isValidated' => false],
+                ['sort' => ['createdAt' => -1]]
+            );
 
         $reviews = [];
-        foreach ($cursor as $doc) {
-            // Get user details from MariaDB
-            $userRepository = new \App\Repository\UserRepository();
-            $user = $userRepository->findById((int)$doc['userId']);
+
+        foreach ($cursor as $document) {
+            $user = $this->userRepository->findById((int) $document['userId']);
 
             $reviews[] = [
-                'id' => (string)$doc['_id'], // MongoDB ID as string
-                'user_id' => (string)$doc['userId'],
-                'menu_id' => isset($doc['menuId']) ? (string)$doc['menuId'] : null,
-                'rating' => (int)$doc['rating'],
-                'comment' => $doc['comment'],
-                'is_validated' => (bool)$doc['isValidated'],
-                'created_at' => $doc['createdAt'] instanceof \MongoDB\BSON\UTCDateTime
-                    ? \DateTimeImmutable::createFromMutable($doc['createdAt']->toDateTime())
-                    : null,
-                'updated_at' => $doc['updatedAt'] instanceof \MongoDB\BSON\UTCDateTime
-                    ? \DateTimeImmutable::createFromMutable($doc['updatedAt']->toDateTime())
-                    : null,
-                'first_name' => $user !== null ? $user->getFirstName() : '',
-                'last_name' => $user !== null ? $user->getLastName() : '',
-                'user_name' => $user !== null ? $user->getFirstName() . ' ' . $user->getLastName() : ($doc['authorName'] ?? ''),
+                'id' => (string) $document['_id'],
+                'rating' => (int) ($document['rating'] ?? 0),
+                'comment' => (string) ($document['comment'] ?? $document['content'] ?? ''),
+                'first_name' => $user?->getFirstName() ?? '',
+                'last_name' => $user?->getLastName() ?? '',
+                'created_at' => $this->dateFromMongo($document['createdAt'] ?? null),
             ];
         }
 
@@ -62,90 +45,110 @@ class CommentRepository
 
     public function getHomepageReviews(): array
     {
-        $database = Database::getMongoDatabase();
-        $collection = $database->selectCollection('comments');
+        return $this->loadReviews(
+            ['isValidated' => true],
+            ['sort' => ['createdAt' => -1], 'limit' => 3]
+        );
+    }
 
-        $cursor = $collection->find(['isValidated' => true])->sort(['createdAt' => -1])->limit(3);
+    public function findByOrderId(int $orderId): ?array
+    {
+        $document = Database::mongoDatabase()
+            ->selectCollection('comments')
+            ->findOne(['orderId' => $orderId]);
+
+        if ($document === null) {
+            return null;
+        }
+
+        return [
+            'id' => (string) $document['_id'],
+            'order_id' => (int) ($document['orderId'] ?? 0),
+            'user_id' => (int) $document['userId'],
+            'rating' => (int) ($document['rating'] ?? 0),
+            'comment' => (string) ($document['comment'] ?? $document['content'] ?? ''),
+            'created_at' => $this->dateFromMongo($document['createdAt'] ?? null),
+            'is_validated' => (bool) ($document['isValidated'] ?? false),
+        ];
+    }
+
+    public function create(array $data): int
+    {
+        $result = Database::mongoDatabase()
+            ->selectCollection('comments')
+            ->insertOne([
+                'userId' => (int) $data['user_id'],
+                'menuId' => $data['menu_id'] ?? null,
+                'orderId' => (int) $data['order_id'],
+                'rating' => (int) $data['rating'],
+                'comment' => trim((string) $data['comment']),
+                'isValidated' => (bool) ($data['is_validated'] ?? false),
+                'createdAt' => new UTCDateTime(new DateTimeImmutable()),
+                'updatedAt' => new UTCDateTime(new DateTimeImmutable()),
+            ]);
+
+        return $result->getInsertedCount();
+    }
+
+    public function updateValidation(string $id, bool $isValidated): void
+    {
+        Database::mongoDatabase()
+            ->selectCollection('comments')
+            ->updateOne(
+                ['_id' => new ObjectId($id)],
+                ['$set' => [
+                    'isValidated' => $isValidated,
+                    'updatedAt' => new UTCDateTime(new DateTimeImmutable()),
+                ]]
+            );
+    }
+
+    public function delete(string $id): void
+    {
+        Database::mongoDatabase()
+            ->selectCollection('comments')
+            ->deleteOne(['_id' => new ObjectId($id)]);
+    }
+
+    private function loadReviews(array $filter, array $options = []): array
+    {
+        $cursor = Database::mongoDatabase()
+            ->selectCollection('comments')
+            ->find($filter, $options);
 
         $reviews = [];
-        foreach ($cursor as $doc) {
-            // Get user details from MariaDB
-            $userRepository = new \App\Repository\UserRepository();
-            $user = $userRepository->findById((int)$doc['userId']);
+
+        foreach ($cursor as $document) {
+            $user = $this->userRepository->findById((int) $document['userId']);
 
             $reviews[] = [
-                'id' => (string)$doc['_id'], // MongoDB ID as string
-                'user_id' => (string)$doc['userId'],
-                'menu_id' => isset($doc['menuId']) ? (string)$doc['menuId'] : null,
-                'rating' => (int)$doc['rating'],
-                'comment' => $doc['comment'],
-                'is_validated' => (bool)$doc['isValidated'],
-                'created_at' => $doc['createdAt'] instanceof \MongoDB\BSON\UTCDateTime
-                    ? \DateTimeImmutable::createFromMutable($doc['createdAt']->toDateTime())
+                'id' => (string) $document['_id'],
+                'user_id' => (string) $document['userId'],
+                'menu_id' => isset($document['menuId'])
+                    ? (string) $document['menuId']
                     : null,
-                'updated_at' => $doc['updatedAt'] instanceof \MongoDB\BSON\UTCDateTime
-                    ? \DateTimeImmutable::createFromMutable($doc['updatedAt']->toDateTime())
-                    : null,
-                'first_name' => $user !== null ? $user->getFirstName() : ($doc['authorName'] ?? ''),
-                'last_name' => $user !== null ? $user->getLastName() : '',
+                'rating' => (int) ($document['rating'] ?? 0),
+                'comment' => (string) ($document['comment'] ?? $document['content'] ?? ''),
+                'is_validated' => (bool) ($document['isValidated'] ?? false),
+                'created_at' => $this->dateFromMongo($document['createdAt'] ?? null),
+                'updated_at' => $this->dateFromMongo($document['updatedAt'] ?? null),
+                'first_name' => $user?->getFirstName() ?? '',
+                'last_name' => $user?->getLastName() ?? '',
+                'user_name' => $user !== null
+                    ? $user->getFirstName() . ' ' . $user->getLastName()
+                    : (string) ($document['authorName'] ?? ''),
             ];
         }
 
         return $reviews;
     }
 
-    public function findByOrderId(int $orderId): ?array
+    private function dateFromMongo(mixed $value): ?DateTimeImmutable
     {
-        $database = Database::getMongoDatabase();
-        $document = $database->selectCollection('comments')->findOne(['orderId' => $orderId]);
-        if ($document === null) {
+        if (!$value instanceof UTCDateTime) {
             return null;
         }
-        return [
-            'id' => (string)$document['_id'],
-            'order_id' => (int)($document['orderId'] ?? 0),
-            'user_id' => (int)$document['userId'],
-            'rating' => (int)$document['rating'],
-            'comment' => (string)$document['comment'],
-            'created_at' => $document['createdAt'] instanceof \MongoDB\BSON\UTCDateTime
-                ? $document['createdAt']->toDateTime() : null,
-            'is_validated' => (bool)$document['isValidated'],
-        ];
-    }
 
-    public function create(array $data): int
-    {
-        $database = Database::getMongoDatabase();
-        $collection = $database->selectCollection('comments');
-
-        $document = [
-            'userId' => (int)$data['user_id'],
-            'menuId' => $data['menu_id'] ?? null,
-            'orderId' => (int)$data['order_id'],
-            'rating' => (int)$data['rating'],
-            'comment' => $data['comment'],
-            'isValidated' => (bool)($data['is_validated'] ?? false),
-            'createdAt' => new \MongoDB\BSON\UTCDateTime(new \DateTimeImmutable()),
-            'updatedAt' => new \MongoDB\BSON\UTCDateTime(new \DateTimeImmutable())
-        ];
-
-        $result = $collection->insertOne($document);
-        return (int)$result->getInsertedCount();
-    }
-
-    public function updateValidation(string $id, bool $isValidated): void
-    {
-        $database = Database::getMongoDatabase();
-        $collection = $database->selectCollection('comments');
-
-        $filter = ['_id' => new \MongoDB\BSON\ObjectId((string)$id)];
-        $update = [
-            '$set' => [
-                'isValidated' => $isValidated,
-                'updatedAt' => new \MongoDB\BSON\UTCDateTime(new \DateTimeImmutable())
-            ]
-        ];
-
-        $collection->updateOne($filter, $update);
+        return DateTimeImmutable::createFromMutable($value->toDateTime());
     }
 }

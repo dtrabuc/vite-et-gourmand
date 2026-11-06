@@ -1,88 +1,100 @@
 <?php
+declare(strict_types=1);
+
 namespace App\Controller;
 
-class BaseController
+use App\Core\Response;
+use App\Core\Session;
+use App\Core\View;
+use App\Repository\OpeningHoursRepository;
+
+abstract class BaseController
 {
-    protected function jsonSuccess($data = null): string
-    {
-        $response = [
-            'success' => true,
-            'data' => $data
-        ];
-        return json_encode($response);
-    }
-
-    protected function jsonError(string $message, int $code = 400): string
-    {
-        http_response_code($code);
-        $response = [
-            'success' => false,
-            'error' => $message
-        ];
-        return json_encode($response);
-    }
-
     protected function render(string $template, array $data = []): void
     {
-        if (empty($_SESSION['csrf_token'])) {
-            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+        try {
+            $data['openingHours'] ??= (new OpeningHoursRepository())->findAll();
+        } catch (\Throwable $exception) {
+            error_log('Impossible de charger les horaires : ' . $exception->getMessage());
+            $data['openingHours'] = [];
         }
 
-        // Extract data to variables
-        $escape = static fn (mixed $value): string => htmlspecialchars((string) $value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-        extract($data);
+        $content = View::render($template, $data);
 
-        // Start output buffering
-        ob_start();
-
-        // Include the template
-        $templatePath = __DIR__ . '/../View/' . str_replace('/', '/', $template) . '.php';
-        if (file_exists($templatePath)) {
-            require $templatePath;
-        } else {
-            // Fallback to a simple message
-            echo "<h1>Template not found: $template</h1>";
-        }
-
-        // Get the buffered content
-        $content = ob_get_clean();
-
-        // Render layout
-        try { $openingHours = (new \App\Repository\OpeningHoursRepository())->findAll(); } catch (\Throwable $e) { $openingHours = []; }
-        $this->renderLayout($content, [
-            'title' => ucfirst(str_replace('/', ' ', $template)) . ' - Vite & Gourmand',
-            'user' => $_SESSION['user_id'] ?? null,
+        $layoutData = array_merge($data, [
+            'content' => $content,
+            'title' => $data['title'] ?? $this->titleFromTemplate($template),
+            'user' => Session::id(),
             'first_name' => $_SESSION['first_name'] ?? '',
             'last_name' => $_SESSION['last_name'] ?? '',
             'role' => $_SESSION['role'] ?? '',
-            'csrfToken' => $_SESSION['csrf_token'],
-            'openingHours' => $openingHours,
+            'csrfToken' => Session::csrfToken(),
         ]);
+
+        echo View::render('layout/layout', $layoutData);
     }
 
-    protected function renderLayout(string $content, array $data = []): void
+    /**
+     * Lit des champs texte de $_POST (valeur absente : chaîne vide).
+     *
+     * @param string[] $fields
+     * @return array<string, string>
+     */
+    protected function postFields(array $fields): array
     {
-        extract($data);
+        $values = [];
 
-        // Include header
-        $headerPath = __DIR__ . '/../View/layout/header.php';
-        if (file_exists($headerPath)) {
-            require $headerPath;
+        foreach ($fields as $field) {
+            $value = $_POST[$field] ?? '';
+            $values[$field] = is_scalar($value) ? trim((string) $value) : '';
         }
 
-        // Include flash messages
-        $flashPath = __DIR__ . '/../View/layout/flash.php';
-        if (file_exists($flashPath)) {
-            require $flashPath;
-        }
+        return $values;
+    }
 
-        // Main content
-        echo $content;
+    protected function json(array $data, int $status = 200): never
+    {
+        Response::json($data, $status);
+    }
 
-        // Include footer
-        $footerPath = __DIR__ . '/../View/layout/footer.php';
-        if (file_exists($footerPath)) {
-            require $footerPath;
-        }
+    protected function redirect(string $location, int $status = 302): never
+    {
+        Response::redirect($location, $status);
+    }
+
+    private function titleFromTemplate(string $template): string
+    {
+        $titles = [
+            'auth/login' => 'Connexion client',
+            'auth/admin_login' => 'Connexion équipe',
+            'auth/register' => 'Créer un compte',
+            'auth/profile' => 'Mon profil',
+            'home/index' => 'Accueil',
+            'home/menus' => 'Nos menus',
+            'home/menu_detail' => 'Détail du menu',
+            'home/legal' => 'Mentions légales',
+            'home/cgv' => 'Conditions générales de vente',
+            'home/privacy' => 'Politique de confidentialité',
+            'contact/index' => 'Contact',
+            'quote/index' => 'Demander un devis',
+            'order/new' => 'Nouvelle commande',
+            'order/index' => 'Mes commandes',
+            'order/confirmation' => 'Confirmation de commande',
+            'admin/dashboard' => 'Tableau de bord',
+            'admin/orders' => 'Gestion des commandes',
+            'admin/quotes' => 'Gestion des devis',
+            'admin/dishes' => 'Gestion des plats',
+            'admin/menus' => 'Gestion des menus',
+            'admin/customers' => 'Gestion des clients',
+            'admin/employees' => 'Gestion des employés',
+            'admin/opening_hours' => 'Horaires d’ouverture',
+            'admin/comments' => 'Modération des avis',
+            'admin/revenue' => 'Chiffre d’affaires',
+        ];
+
+        $template = trim($template, '/');
+        $label = $titles[$template] ?? str_replace(['/', '_'], ' ', $template);
+
+        return ucfirst($label) . ' - Vite & Gourmand';
     }
 }

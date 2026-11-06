@@ -1,9 +1,12 @@
 <?php
+declare(strict_types=1);
+
 namespace App\Entity;
 
 class Order
 {
     private int $id;
+    private ?string $orderNumber = null;
     private int $userId;
     private int $menuId;
     private int $numberOfPeople;
@@ -13,18 +16,42 @@ class Order
     private string $deliveryAddress;
     private string $deliveryCity;
     private string $deliveryPostalCode;
-    private ?float $deliveryDistanceKm;
+    private ?float $deliveryDistanceKm = null;
+    private ?string $customization = null;
+    private string $serviceType = 'delivery';
+    private string $paymentMethod = 'cash_on_site';
+    private ?string $deliveryInstructions = null;
+    private string $contactPhone = '';
     private float $deliveryCost;
     private float $menuPrice;
     private float $discountRate;
     private float $totalPrice;
     private string $status;
     private bool $equipmentLoaned = false;
-    private ?string $cancellationReason;
-    private ?\DateTimeInterface $createdAt;
-    private ?\DateTimeInterface $updatedAt;
+    private ?string $cancellationReason = null;
+    private ?\DateTimeInterface $createdAt = null;
+    private ?\DateTimeInterface $updatedAt = null;
+    // Informations d'affichage, renseignées par les requêtes avec jointure (liste équipe).
+    private ?string $customerName = null;
+    private ?string $customerEmail = null;
+    private ?string $menuTitle = null;
 
     public function getId(): int { return $this->id; }
+    public function getCustomerName(): ?string { return $this->customerName; }
+    public function setCustomerName(?string $customerName): void { $this->customerName = $customerName; }
+    public function getCustomerEmail(): ?string { return $this->customerEmail; }
+    public function setCustomerEmail(?string $customerEmail): void { $this->customerEmail = $customerEmail; }
+    public function getMenuTitle(): ?string { return $this->menuTitle; }
+    public function setMenuTitle(?string $menuTitle): void { $this->menuTitle = $menuTitle; }
+    public function getOrderNumber(): string
+    {
+        if ($this->orderNumber !== null && $this->orderNumber !== '') {
+            return $this->orderNumber;
+        }
+
+        return 'VG-' . date('Ymd', strtotime($this->orderDate) ?: time()) . '-' . str_pad((string) $this->id, 6, '0', STR_PAD_LEFT);
+    }
+    public function setOrderNumber(?string $orderNumber): void { $this->orderNumber = $orderNumber; }
     public function setId(int $id): void { $this->id = $id; }
     public function getUserId(): int { return $this->userId; }
     public function setUserId(int $userId): void { $this->userId = $userId; }
@@ -46,6 +73,16 @@ class Order
     public function setDeliveryPostalCode(string $deliveryPostalCode): void { $this->deliveryPostalCode = $deliveryPostalCode; }
     public function getDeliveryDistanceKm(): ?float { return $this->deliveryDistanceKm; }
     public function setDeliveryDistanceKm(?float $deliveryDistanceKm): void { $this->deliveryDistanceKm = $deliveryDistanceKm; }
+    public function getCustomization(): ?string { return $this->customization; }
+    public function setCustomization(?string $customization): void { $this->customization = $customization; }
+    public function getServiceType(): string { return $this->serviceType; }
+    public function setServiceType(string $serviceType): void { $this->serviceType = $serviceType; }
+    public function getPaymentMethod(): string { return $this->paymentMethod; }
+    public function setPaymentMethod(string $paymentMethod): void { $this->paymentMethod = $paymentMethod; }
+    public function getDeliveryInstructions(): ?string { return $this->deliveryInstructions; }
+    public function setDeliveryInstructions(?string $deliveryInstructions): void { $this->deliveryInstructions = $deliveryInstructions; }
+    public function getContactPhone(): string { return $this->contactPhone; }
+    public function setContactPhone(string $contactPhone): void { $this->contactPhone = $contactPhone; }
     public function getDeliveryCost(): float { return $this->deliveryCost; }
     public function setDeliveryCost(float $deliveryCost): void { $this->deliveryCost = $deliveryCost; }
     public function getMenuPrice(): float { return $this->menuPrice; }

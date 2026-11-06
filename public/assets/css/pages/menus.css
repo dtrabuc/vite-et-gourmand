@@ -1,0 +1,40 @@
+/* Catalogue : filtres confortables et bandeau immersif. */
+#menuFilters {
+    border: 1px solid rgba(44, 62, 80, .07);
+    border-radius: 1rem;
+    background: #fff;
+    box-shadow: 0 .4rem 1.25rem rgba(44, 62, 80, .07) !important;
+}
+
+#menuFilters .form-label {
+    color: var(--vg-ink);
+    font-size: .9rem;
+    font-weight: 650;
+}
+
+#menuFilters .form-control,
+#menuFilters .form-select {
+    min-height: 2.9rem;
+    border-color: #dfe3e4;
+    border-radius: .7rem;
+}
+
+#menuFilters .form-control:focus,
+#menuFilters .form-select:focus {
+    border-color: var(--vg-primary);
+    box-shadow: 0 0 0 .2rem rgba(var(--vg-primary-rgb), .12);
+}
+
+.menu-hero {
+    background: linear-gradient(110deg, rgba(74, 22, 31, .92), rgba(74, 22, 31, .54)),
+        url("https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=1900&h=700&q=82") center 48% / cover;
+}
+
+#menuFilterStatus:not(.visually-hidden) {
+    margin: -.5rem 0 1rem;
+    color: var(--vg-muted);
+    font-size: .9rem;
+}
+
+#menuGrid[aria-busy="true"] { opacity: .55; }
+#menuGrid { transition: opacity .18s ease; }

@@ -1,5 +1,10 @@
 RewriteEngine On
 
+# les modules JS (.mjs d'intl-tel-input) doivent partir en text/javascript, sinon le navigateur les refuse
+<IfModule mod_mime.c>
+    AddType text/javascript .mjs
+</IfModule>
+
 # Ne pas réécrire les fichiers et dossiers réellement présents.
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d

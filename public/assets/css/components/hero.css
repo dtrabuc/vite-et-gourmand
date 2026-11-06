@@ -1,0 +1,24 @@
+/*
+ * hero.css : bandeau rouge en haut des pages (accueil, menus, détail d'un menu).
+ */
+.hero {
+    background:
+        radial-gradient(circle at 84% 18%, rgba(212, 165, 116, .18), transparent 28%),
+        linear-gradient(135deg, var(--vg-primary), var(--vg-primary-dark));
+    color: #fff;
+}
+
+.hero h1 {
+    font-weight: 800;
+    letter-spacing: -.025em;
+}
+
+/* texte d'intro bien lisible sur le fond rouge (contraste RGAA) */
+.hero .lead,
+.hero p {
+    color: rgba(255, 255, 255, .92);
+}
+
+.home-hero {
+    min-height: 30rem;
+}

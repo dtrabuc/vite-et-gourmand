@@ -1,0 +1,49 @@
+/*
+ * tokens.css : les variables de la charte (couleurs, rayons, ombres).
+ * On y recâble aussi les variables de Bootstrap sur notre bordeaux,
+ * sinon le thème garde son bleu sur les liens, badges, barres de progression...
+ */
+:root {
+    /* charte Vite & Gourmand */
+    --vg-primary: #8b2635;
+    --vg-primary-rgb: 139, 38, 53;
+    --vg-primary-dark: #6b1c28;
+    --vg-accent: #d4a574;
+    --vg-ink: #2c3e50;
+    --vg-muted: #5f6b76;
+    --vg-surface: #fff;
+    --vg-soft: #faf7f4;
+    --vg-border: #e5e7eb;
+    --vg-footer: #29423f;
+
+    --vg-font: "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+    --vg-radius-sm: .5rem;
+    --vg-radius-md: .75rem;
+    --vg-shadow: 0 .35rem 1.15rem rgba(44, 62, 80, .09);
+    --vg-shadow-lg: 0 .75rem 2rem rgba(44, 62, 80, .14);
+
+    /* marges des côtés selon l'écran (utilisées dans responsive.css) */
+    --vg-gutter-mobile: 1rem;
+
+    /* variables Bootstrap remplacées par la charte */
+    --bs-primary: var(--vg-primary);
+    --bs-primary-rgb: var(--vg-primary-rgb);
+    --bs-primary-text-emphasis: var(--vg-primary-dark);
+    --bs-primary-bg-subtle: #f6e9eb;
+    --bs-primary-border-subtle: #e3bcc2;
+    --bs-link-color: var(--vg-primary);
+    --bs-link-color-rgb: var(--vg-primary-rgb);
+    --bs-link-hover-color: var(--vg-primary-dark);
+    --bs-link-hover-color-rgb: 107, 28, 40;
+    --bs-body-font-family: var(--vg-font);
+    --bs-body-color: var(--vg-ink);
+    --bs-border-radius: var(--vg-radius-sm);
+
+    /* gris, vert et rouge du thème Litera trop clairs pour le contraste RGAA (4,5:1) */
+    --bs-secondary: #5f6b76;
+    --bs-secondary-rgb: 95, 107, 118;
+    --bs-success: #146c43;
+    --bs-success-rgb: 20, 108, 67;
+    --bs-danger: #b02a37;
+    --bs-danger-rgb: 176, 42, 55;
+}

@@ -1,0 +1,234 @@
+/*
+ * accessibility.css : lien d'évitement, panneau « Accessibilité », infobulles
+ * et les modes d'affichage choisis par le visiteur (classes a11y-* sur <html>).
+ */
+
+/* ----- lien « Aller au contenu » : caché tant qu'on n'arrive pas dessus au clavier ----- */
+.skip-link {
+    position: absolute;
+    top: .5rem;
+    left: .5rem;
+    z-index: 2000;
+    padding: .6rem 1rem;
+    border-radius: var(--vg-radius-sm);
+    background: var(--vg-primary);
+    color: #fff;
+    font-weight: 700;
+    transform: translateY(-200%);
+}
+
+.skip-link:focus {
+    transform: none;
+    color: #fff;
+}
+
+#contenu:focus {
+    outline: none;
+}
+
+/* ----- bouton « Accessibilité » de la barre du haut ----- */
+.btn-a11y {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    color: var(--vg-primary);
+    border: 1px solid var(--vg-border);
+    border-radius: 999px;
+    padding: .35rem .75rem;
+    flex-shrink: 0;
+}
+
+.btn-a11y:hover,
+.btn-a11y:focus-visible {
+    color: #fff;
+    background: var(--vg-primary);
+}
+
+.btn-a11y svg {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+/* ----- panneau ----- */
+.a11y-text-sizes {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: .5rem;
+}
+
+.a11y-text-sizes .btn[aria-pressed="true"],
+.a11y-option[aria-pressed="true"] {
+    background: var(--vg-primary);
+    border-color: var(--vg-primary);
+    color: #fff;
+}
+
+.a11y-option {
+    display: flex;
+    gap: .75rem;
+    align-items: flex-start;
+    width: 100%;
+    text-align: left;
+    padding: .75rem;
+    border: 1px solid var(--vg-border);
+    border-radius: var(--vg-radius-md);
+    background: var(--vg-surface);
+    color: var(--vg-ink);
+}
+
+.a11y-option__title {
+    display: block;
+    font-weight: 700;
+}
+
+.a11y-option__desc {
+    display: block;
+    font-size: .875rem;
+}
+
+/* petit interrupteur dessiné en CSS (purement visuel, l'état est dans aria-pressed) */
+.a11y-option__switch {
+    flex: 0 0 2.25rem;
+    height: 1.25rem;
+    margin-top: .15rem;
+    border-radius: 999px;
+    background: #c9ced3;
+    position: relative;
+}
+
+.a11y-option__switch::after {
+    content: "";
+    position: absolute;
+    top: .15rem;
+    left: .15rem;
+    width: .95rem;
+    height: .95rem;
+    border-radius: 50%;
+    background: #fff;
+    transition: left .15s ease;
+}
+
+.a11y-option[aria-pressed="true"] .a11y-option__switch {
+    background: var(--vg-accent);
+}
+
+.a11y-option[aria-pressed="true"] .a11y-option__switch::after {
+    left: 1.15rem;
+}
+
+/* ----- icône d'aide « i » et infobulle ----- */
+.info-tip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;          /* 24 px : taille de cible minimale (WCAG 2.5.8) */
+    height: 1.5rem;
+    margin-left: .35rem;
+    padding: 0;
+    border: 2px solid var(--vg-primary);
+    border-radius: 50%;
+    background: var(--vg-surface);
+    color: var(--vg-primary);
+    font: italic 700 .8rem/1 Georgia, serif;
+    vertical-align: middle;
+    cursor: help;
+}
+
+.info-tip:hover,
+.info-tip:focus-visible {
+    background: var(--vg-primary);
+    color: #fff;
+}
+
+.info-tip--static {
+    cursor: default;
+}
+
+.tooltip {
+    --bs-tooltip-bg: var(--vg-ink);
+    --bs-tooltip-color: #fff;
+    --bs-tooltip-max-width: 18rem;
+    --bs-tooltip-font-size: .875rem;
+    --bs-tooltip-opacity: 1;
+}
+
+/* ----- taille du texte (tout est en rem avec Bootstrap : tout grandit avec) ----- */
+html.a11y-text-1 { font-size: 112.5%; }
+html.a11y-text-2 { font-size: 125%; }
+html.a11y-text-3 { font-size: 140%; }
+
+/* ----- contraste renforcé ----- */
+html.a11y-contrast {
+    --vg-ink: #000;
+    --vg-muted: #1f1f1f;
+    --vg-border: #000;
+    --vg-soft: #fff;
+    --vg-primary: #6e0f1d;
+    --vg-primary-rgb: 110, 15, 29;
+    --vg-primary-dark: #4a0812;
+    --vg-shadow: none;
+    --vg-shadow-lg: none;
+}
+
+html.a11y-contrast body {
+    background: #fff;
+}
+
+html.a11y-contrast .card,
+html.a11y-contrast .summary-box,
+html.a11y-contrast .form-control,
+html.a11y-contrast .form-select {
+    border: 2px solid #000 !important;
+}
+
+html.a11y-contrast .hero {
+    background: var(--vg-primary);
+}
+
+html.a11y-contrast .text-muted,
+html.a11y-contrast .form-text {
+    color: #1f1f1f !important;
+}
+
+html.a11y-contrast a:not(.btn):not(.dropdown-item) {
+    text-decoration: underline !important;
+}
+
+html.a11y-contrast :focus-visible {
+    outline: 4px solid #000;
+    outline-offset: 2px;
+}
+
+/* ----- lecture facilitée (dyslexie, troubles de l'attention) ----- */
+html.a11y-readable body {
+    letter-spacing: .05em;
+    word-spacing: .16em;
+    line-height: 1.8;
+}
+
+html.a11y-readable p,
+html.a11y-readable li,
+html.a11y-readable dd {
+    text-align: left !important;
+    max-width: 70ch;
+}
+
+html.a11y-readable em,
+html.a11y-readable i {
+    font-style: normal;
+}
+
+/* ----- liens soulignés ----- */
+html.a11y-links a:not(.btn):not(.nav-link):not(.dropdown-item):not(.navbar-brand) {
+    text-decoration: underline !important;
+}
+
+/* ----- animations réduites (choisies dans le panneau ou demandées par le système) ----- */
+html.a11y-motion *,
+html.a11y-motion *::before,
+html.a11y-motion *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+}

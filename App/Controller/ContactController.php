@@ -1,75 +1,66 @@
 <?php
+declare(strict_types=1);
+
 namespace App\Controller;
 
-use App\Service\ContactService;
 use App\Service\MailService;
+use App\Core\Session;
 
-class ContactController extends BaseController
+final class ContactController extends BaseController
 {
-    private ContactService $contactService;
-    private MailService $mailService;
-
-    public function __construct()
-    {
-        $this->contactService = new ContactService();
-        $this->mailService = new MailService(
-            $_ENV['MAIL_FROM_ADDRESS'] ?? 'noreply@viteetgourmand.com',
-            $_ENV['MAIL_FROM_NAME'] ?? 'Vite & Gourmand'
-        );
+    public function __construct(
+        private readonly MailService $mailService
+    ) {
     }
 
     public function index(): void
     {
-        $this->render('contact/index');
+        $this->render('contact/index', [
+            'errors' => (array) Session::pullFlash('contact_errors', []),
+            'old' => (array) Session::pullFlash('contact_old_input', []),
+        ]);
     }
 
     public function send(): void
     {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(405);
-            echo 'Method Not Allowed';
-            return;
-        }
-
-        $email = trim((string)($_POST['email'] ?? ''));
-        $subject = trim((string)($_POST['subject'] ?? ''));
-        $message = trim((string)($_POST['message'] ?? ''));
+        $email = trim((string) ($_POST['email'] ?? ''));
+        $subject = trim((string) ($_POST['subject'] ?? ''));
+        $message = trim((string) ($_POST['message'] ?? ''));
         $errors = [];
 
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $errors['email'] = 'Adresse email invalide.';
         }
+
         if ($subject === '' || mb_strlen($subject) > 150) {
             $errors['subject'] = 'Le titre est requis et doit contenir au maximum 150 caractères.';
         }
+
         if ($message === '') {
             $errors['message'] = 'La description est requise.';
         }
 
         if ($errors !== []) {
-            $_SESSION['contact_errors'] = $errors;
-            $_SESSION['contact_old_input'] = $_POST;
-            header('Location: /contact');
-            exit;
+            Session::flash('contact_errors', $errors);
+            Session::flash('contact_old_input', ['email' => $email, 'subject' => $subject, 'message' => $message]);
+            $this->redirect('/contact');
         }
 
-        try {
-            $this->contactService->createMessage($email, $subject, $message);
+        // le message part directement à l'adresse de l'entreprise (MAIL_TO_ADDRESS du .env),
+        // avec l'adresse du visiteur en « Répondre à » : l'équipe répond depuis sa messagerie
+        $companyEmail = $this->mailService->companyAddress();
+        $body = "Message reçu depuis le formulaire de contact.\n\n"
+            . "Email : {$email}\nTitre : {$subject}\n\n{$message}";
 
-            $companyEmail = $_ENV['MAIL_TO_ADDRESS'] ?? $_ENV['MAIL_FROM_ADDRESS'] ?? 'noreply@viteetgourmand.com';
-            $body = "Message reçu depuis le formulaire de contact.\n\n"
-                . "Email : {$email}\nTitre : {$subject}\n\n{$message}";
-            if (!$this->mailService->send($companyEmail, 'Formulaire de contact : ' . $subject, $body)) {
-                error_log('Impossible d\'envoyer le message de contact à ' . $companyEmail);
-            }
-
-            $_SESSION['contact_success'] = 'Votre message a bien été envoyé.';
-        } catch (\Throwable $e) {
-            error_log('Contact form error: ' . $e->getMessage());
-            $_SESSION['contact_errors'] = ['general' => 'Impossible d\'enregistrer votre message.'];
+        if ($this->mailService->send($companyEmail, 'Formulaire de contact : ' . $subject, $body, false, $email)) {
+            Session::flash('contact_success', 'Votre message a bien été envoyé. Nous vous répondrons par e-mail.');
+        } else {
+            // sans enregistrement en base, un échec d'envoi doit être visible : on garde la saisie
+            error_log('Impossible d’envoyer le message de contact à ' . $companyEmail);
+            Session::flash('contact_errors', ['general' => 'Votre message n’a pas pu être envoyé. Merci de réessayer plus tard.']);
+            Session::flash('contact_old_input', ['email' => $email, 'subject' => $subject, 'message' => $message]);
         }
 
-        header('Location: /contact');
-        exit;
+        $this->redirect('/contact');
     }
 }

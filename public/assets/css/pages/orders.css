@@ -1,0 +1,15 @@
+/*
+ * orders.css : commande d'un menu et suivi des commandes.
+ */
+
+/* carte « mode de prestation » : bordure bordeaux quand l'option est choisie */
+.service-type-option {
+    cursor: pointer;
+    transition: border-color .18s ease, background-color .18s ease, box-shadow .18s ease;
+}
+
+.service-type-option:has(input:checked) {
+    border-color: var(--vg-primary) !important;
+    background: var(--bs-primary-bg-subtle);
+    box-shadow: 0 0 0 .15rem rgba(var(--vg-primary-rgb), .06);
+}

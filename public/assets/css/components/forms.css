@@ -1,0 +1,37 @@
+/*
+ * forms.css : champs de formulaire, cases à cocher, champ téléphone.
+ */
+.form-control,
+.form-select {
+    border: 1px solid var(--vg-border);
+    border-radius: .55rem;
+    padding: .7rem .8rem;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--vg-primary);
+    box-shadow: 0 0 0 .2rem rgba(var(--vg-primary-rgb), .14);
+}
+
+.form-label {
+    color: var(--vg-ink);
+    font-weight: 650;
+}
+
+/* cases à cocher et boutons radio en bordeaux (le thème les met en bleu) */
+.form-check-input:checked {
+    background-color: var(--vg-primary);
+    border-color: var(--vg-primary);
+}
+
+.form-check-input:focus {
+    border-color: var(--vg-primary);
+    box-shadow: 0 0 0 .2rem rgba(var(--vg-primary-rgb), .18);
+}
+
+/* champ téléphone intl-tel-input : prend toute la largeur comme un .form-control normal */
+.iti {
+    display: block;
+    width: 100%;
+}

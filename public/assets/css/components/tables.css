@@ -1,0 +1,23 @@
+/*
+ * tables.css : tableaux (plats, chiffre d'affaires, confidentialité).
+ * Sur petit écran le tableau garde une largeur lisible et défile sur le côté
+ * dans son .table-responsive, au lieu d'écraser les colonnes lettre par lettre.
+ */
+.table th {
+    color: var(--vg-ink);
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+/* montants et nombres toujours sur une ligne (« 69,90 € ») */
+.table td.text-end,
+.table td.text-nowrap,
+.table .num {
+    white-space: nowrap;
+}
+
+@media (max-width: 767.98px) {
+    .table-responsive > .table-wide {
+        min-width: 34rem;
+    }
+}

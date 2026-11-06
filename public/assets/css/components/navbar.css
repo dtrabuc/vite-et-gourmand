@@ -1,0 +1,50 @@
+/*
+ * navbar.css : barre de navigation du haut + menu « Mon compte ».
+ */
+.navbar {
+    background: rgba(255, 255, 255, .97) !important;
+    box-shadow: 0 .2rem 1rem rgba(44, 62, 80, .08);
+    backdrop-filter: blur(8px);
+}
+
+.navbar-brand {
+    color: var(--vg-primary) !important;
+    font-weight: 800;
+}
+
+.navbar .nav-link {
+    color: var(--vg-ink) !important;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: color .2s ease;
+}
+
+.navbar .nav-link:hover,
+.navbar .nav-link.active {
+    color: var(--vg-primary) !important;
+}
+
+/* lien de la page en cours : trait doré dessous (en grand écran) */
+@media (min-width: 992px) {
+    .navbar .nav-link.active {
+        box-shadow: inset 0 -2px 0 var(--vg-accent);
+    }
+}
+
+/* menu déroulant « Mon compte » */
+.navbar .dropdown-menu {
+    border: 1px solid var(--vg-border);
+    border-radius: var(--vg-radius-md);
+    box-shadow: var(--vg-shadow);
+}
+
+.navbar .dropdown-item:active,
+.navbar .dropdown-item.active {
+    background: var(--vg-primary);
+}
+
+/* le bouton de déconnexion est un formulaire POST : il doit ressembler aux autres lignes */
+.navbar .dropdown-menu form .dropdown-item {
+    width: 100%;
+    text-align: left;
+}

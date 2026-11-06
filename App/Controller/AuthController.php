@@ -1,495 +1,343 @@
 <?php
+declare(strict_types=1);
+
 namespace App\Controller;
 
-use App\Service\AuthService;
+use App\Core\Session;
 use App\Repository\UserRepository;
+use App\Service\AuthService;
+use App\Service\MailService;
+use App\Service\PasswordPolicy;
+use App\Service\PhoneValidator;
+use App\Service\RateLimiter;
+use Throwable;
 
-class AuthController extends BaseController
+final class AuthController extends BaseController
 {
-    private AuthService $authService;
-
-    public function __construct()
-    {
-        $this->authService = new AuthService(new UserRepository());
+    public function __construct(
+        private readonly AuthService $authService,
+        private readonly UserRepository $userRepository,
+        private readonly MailService $mailService,
+        private readonly RateLimiter $rateLimiter,
+        private readonly PhoneValidator $phoneValidator,
+        private readonly PasswordPolicy $passwordPolicy
+    ) {
     }
 
     public function showLogin(): void
     {
+        // lien « Connectez-vous pour commander » : page où revenir après la connexion
+        $redirect = $_GET['redirect'] ?? null;
 
-        // Render login template
+        if (is_string($redirect)) {
+            Session::rememberReturnUrl($redirect);
+        }
+
         $this->render('auth/login');
     }
 
     public function login(): void
     {
-        // Apply guest middleware
-        (new \App\Middleware\Guest())();
-
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(405);
-            echo 'Method Not Allowed';
-            return;
-        }
-
-        $email = $_POST['email'] ?? '';
-        $password = $_POST['password'] ?? '';
-
-        $user = $this->authService->login($email, $password);
+        $user = $this->authService->login(
+            (string) ($_POST['email'] ?? ''),
+            (string) ($_POST['password'] ?? '')
+        );
 
         if ($user === null) {
-            // Redirect back with error
-            $_SESSION['login_error'] = 'Identifiants invalides';
-            header('Location: /login');
-            exit;
+            $this->rateLimiter->hit('/login');
+            Session::flash('login_error', 'Identifiants invalides, compte indisponible ou accès réservé à l’espace équipe.');
+            $this->redirect('/login');
         }
 
-        // Set session
-        session_regenerate_id(true);
-        $_SESSION['user_id'] = $user->getId();
-        $_SESSION['email'] = $user->getEmail();
-        $_SESSION['role'] = $user->getRole();
-        $_SESSION['first_name'] = $user->getFirstName();
-        $_SESSION['last_name'] = $user->getLastName();
+        $this->rateLimiter->clear('/login');
 
-        // Redirect based on role
-        switch ($user->getRole()) {
-            case 'admin':
-                header('Location: /admin/dashboard');
-                break;
-            case 'employee':
-                header('Location: /'); // Employee dashboard would be here
-                break;
-            default:
-                header('Location: /'); // User dashboard
-                break;
+        if (!in_array($user->getRole(), ['user'], true)) {
+            Session::flash(
+                'login_error',
+                'Ce compte appartient à l’équipe. Utilisez l’accès « Espace admin ».'
+            );
+            $this->redirect('/admin/login');
         }
-        exit;
+
+        Session::login($user->getId(), $user->getRole(), [
+            'email' => $user->getEmail(),
+            'first_name' => $user->getFirstName(),
+            'last_name' => $user->getLastName(),
+            'must_change_password' => $user->mustChangePassword(),
+        ]);
+
+        if ($user->mustChangePassword()) {
+            $this->redirect('/profile');
+        }
+
+        // retour à la page demandée avant la connexion (une seule fois), sinon l'accueil
+        $this->redirect(Session::pullReturnUrl('/'));
     }
 
     public function showRegister(): void
     {
-        // Apply guest middleware
-        (new \App\Middleware\Guest())();
-
-        // Render register template
-        $this->render('auth/register');
+        $this->render('auth/register', [
+            'phoneInput' => true, // page avec champ téléphone : charge intl-tel-input
+            'oldInput' => (array) Session::pullFlash('register_old_input', []),
+            'errors' => (array) Session::pullFlash('register_errors', []),
+        ]);
     }
 
     public function register(): void
     {
-        // Apply guest middleware
-        (new \App\Middleware\Guest())();
+        $data = $this->collectUserInput();
+        $errors = $this->validateRegistrationInput($data);
+        // saisie renvoyée au formulaire en cas d'erreur : jamais le mot de passe en session
+        $keptInput = array_diff_key($data, ['password' => true]);
 
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(405);
-            echo 'Method Not Allowed';
-            return;
-        }
-
-        // Validate input
-        $errors = [];
-
-        // Required fields
-        $requiredFields = ['email', 'password', 'first_name', 'last_name', 'phone', 'gsm', 'address'];
-        foreach ($requiredFields as $field) {
-            if (empty($_POST[$field] ?? '')) {
-                $errors[$field] = 'Ce champ est requis';
-            }
+        if ($errors !== []) {
+            Session::flash('register_errors', $errors);
+            Session::flash('register_old_input', $keptInput);
+            $this->redirect('/register');
         }
 
-        // Email format
-        if (!empty($_POST['email'] ?? '') && !filter_var($_POST['email'], FILTER_VALIDATE_EMAIL)) {
-            $errors['email'] = 'Email invalide';
-        }
-
-        // Password validation according to the ECF requirements
-        $password = $_POST['password'] ?? '';
-        if (strlen($password) < 10) {
-            $errors['password'] = 'Le mot de passe doit contenir au moins 10 caractères';
-        }
-        if (!preg_match('/[A-Z]/', $password)) {
-            $errors['password'] = 'Le mot de passe doit contenir au moins une majuscule';
-        }
-        if (!preg_match('/[a-z]/', $password)) {
-            $errors['password'] = 'Le mot de passe doit contenir au moins une minuscule';
-        }
-        if (!preg_match('/[0-9]/', $password)) {
-            $errors['password'] = 'Le mot de passe doit contenir au moins un chiffre';
-        }
-        if (!preg_match('/[^A-Za-z0-9]/', $password)) {
-            $errors['password'] = 'Le mot de passe doit contenir au moins un caractère spécial';
-        }
-
-        if (!empty($errors)) {
-            $_SESSION['register_errors'] = $errors;
-            $_SESSION['register_old_input'] = $_POST;
-            header('Location: /register');
-            exit;
-        }
-
-        // Create user
         try {
-            $userId = $this->authService->register([
-                'email' => $_POST['email'],
-                'password' => $password,
-                'role' => 'user', // Default role for registration
-                'first_name' => $_POST['first_name'],
-                'last_name' => $_POST['last_name'],
-                'phone' => $_POST['phone'],
-                'gsm' => $_POST['gsm'],
-                'address' => $_POST['address'],
-            ]);
-
-            // Send welcome email
-            $mailService = new \App\Service\MailService(
-                $_ENV['MAIL_FROM_ADDRESS'] ?? 'noreply@viteetgourmand.com',
-                $_ENV['MAIL_FROM_NAME'] ?? 'Vite & Gourmand'
-            );
-            $mailService->sendWelcomeEmail($_POST['email'], $_POST['first_name']);
-
-            // Redirect to login with success message
-            $_SESSION['register_success'] = 'Inscription réussie. Vous pouvez maintenant vous connecter.';
-            header('Location: /login');
-            exit;
-        } catch (\Exception $e) {
-            // Handle duplicate email or other database errors
-            $_SESSION['register_error'] = 'Une erreur est survenue lors de l\'inscription';
-            header('Location: /register');
-            exit;
+            $registration = $this->authService->register($data);
+            try {
+                $sent = $this->mailService->sendTemporaryPasswordEmail(
+                    $data['email'],
+                    $data['first_name'],
+                    $registration['temporary_password']
+                );
+            } catch (Throwable $mailException) {
+                $this->userRepository->deleteNewCustomer($registration['user_id']);
+                throw $mailException;
+            }
+            if (!$sent) {
+                $this->userRepository->deleteNewCustomer($registration['user_id']);
+                Session::flash('register_errors', ['general' => 'Le mail contenant votre mot de passe provisoire n’a pas pu être envoyé. Vérifiez votre adresse e-mail puis réessayez.']);
+                $this->redirect('/register');
+            }
+            Session::flash('register_success', 'Compte créé. Votre mot de passe provisoire vous a été envoyé par e-mail. Vous devrez le changer lors de votre première connexion.');
+            $this->redirect('/login');
+        } catch (Throwable $exception) {
+            error_log('Inscription : ' . $exception->getMessage());
+            Session::flash('register_errors', ['general' => 'Impossible de créer ce compte.']);
+            Session::flash('register_old_input', $keptInput);
+            $this->redirect('/register');
         }
     }
 
     public function profile(): void
     {
-        // Apply auth middleware
-        (new \App\Middleware\Auth())();
+        $user = $this->userRepository->findById((int) Session::id());
 
-        $userId = $_SESSION['user_id'] ?? 0;
-        if ($userId === 0) {
-            header('Location: /login');
-            exit;
+        if ($user === null) {
+            Session::logout();
+            $this->redirect('/login');
         }
 
-        $user = (new UserRepository())->findById((int) $userId);
-        if ($user === null) { header('Location: /login'); exit; }
-        $this->render('auth/profile', ['user' => [
-            'email' => $user->getEmail(), 'first_name' => $user->getFirstName(), 'last_name' => $user->getLastName(),
-            'phone' => $user->getPhone(), 'gsm' => $user->getGsm(), 'address' => $user->getAddress(),
-        ]]);
+        $this->render('auth/profile', [
+            'phoneInput' => true, // page avec champ téléphone : charge intl-tel-input
+            'user' => [
+                'email' => $user->getEmail(),
+                'first_name' => $user->getFirstName(),
+                'last_name' => $user->getLastName(),
+                'phone' => $user->getPhone(),
+                'gsm' => $user->getGsm(),
+                'address' => $user->getAddress(),
+            ],
+            'mustChangePassword' => $user->mustChangePassword(),
+            'errors' => (array) Session::pullFlash('profile_errors', []),
+            'oldInput' => (array) Session::pullFlash('profile_old_input', []),
+            'passwordErrors' => (array) Session::pullFlash('password_errors', []),
+        ]);
     }
 
     public function updateProfile(): void
     {
-        // Apply auth middleware
-        (new \App\Middleware\Auth())();
+        $data = [
+            'email' => trim((string) ($_POST['email'] ?? '')),
+            'first_name' => trim((string) ($_POST['first_name'] ?? '')),
+            'last_name' => trim((string) ($_POST['last_name'] ?? '')),
+            'phone' => trim((string) ($_POST['phone'] ?? '')),
+            'gsm' => trim((string) ($_POST['gsm'] ?? '')),
+            'address' => trim((string) ($_POST['address'] ?? '')),
+        ];
 
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(405);
-            echo 'Method Not Allowed';
-            return;
-        }
-
-        $userId = $_SESSION['user_id'] ?? 0;
-        if ($userId === 0) {
-            header('Location: /login');
-            exit;
-        }
-
-        // Validate input (similar to registration but without password)
         $errors = [];
 
-        $requiredFields = ['email', 'first_name', 'last_name', 'phone', 'gsm', 'address'];
-        foreach ($requiredFields as $field) {
-            if (empty($_POST[$field] ?? '')) {
-                $errors[$field] = 'Ce champ est requis';
+        foreach ($data as $field => $value) {
+            if ($value === '') {
+                $errors[$field] = 'Ce champ est requis.';
             }
         }
 
-        // Email format
-        if (!empty($_POST['email'] ?? '') && !filter_var($_POST['email'], FILTER_VALIDATE_EMAIL)) {
-            $errors['email'] = 'Email invalide';
+        if ($data['email'] !== '' && !filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+            $errors['email'] = 'Adresse email invalide.';
         }
 
-        if (!empty($errors)) {
-            // For AJAX requests, return JSON
-            if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
-                header('Content-Type: application/json');
-                echo json_encode(['success' => false, 'errors' => $errors]);
-                return;
-            }
+        foreach (['phone', 'gsm'] as $field) {
+            $phoneError = $data[$field] !== ''
+                ? $this->phoneValidator->validate($data[$field])
+                : null;
 
-            // For form redirects
-            $_SESSION['profile_errors'] = $errors;
-            $_SESSION['profile_old_input'] = $_POST;
-            header('Location: /profile');
-            exit;
+            if ($phoneError !== null) {
+                $errors[$field] = $phoneError;
+            }
+        }
+
+        if ($errors !== []) {
+            Session::flash('profile_errors', $errors);
+            Session::flash('profile_old_input', $data);
+            $this->redirect('/profile');
         }
 
         try {
-            $this->authService->updateProfile((int) $userId, [
-                'email' => trim($_POST['email']), 'first_name' => trim($_POST['first_name']), 'last_name' => trim($_POST['last_name']),
-                'phone' => trim($_POST['phone']), 'gsm' => trim($_POST['gsm']), 'address' => trim($_POST['address']),
-            ]);
-        } catch (\Throwable $e) {
-            error_log('Profile update error: ' . $e->getMessage());
-            $_SESSION['profile_errors'] = ['general' => 'Impossible de mettre à jour le profil.'];
-            header('Location: /profile'); exit;
-        }
-        $_SESSION['email'] = trim($_POST['email']);
-        $_SESSION['first_name'] = trim($_POST['first_name']);
-        $_SESSION['last_name'] = trim($_POST['last_name']);
-        $_SESSION['phone'] = trim($_POST['phone']);
-        $_SESSION['gsm'] = trim($_POST['gsm']);
-        $_SESSION['address'] = trim($_POST['address']);
-
-        // For AJAX requests
-        if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
-            header('Content-Type: application/json');
-            echo json_encode(['success' => true, 'message' => 'Profil mis à jour avec succès']);
-            return;
+            $this->authService->updateProfile((int) Session::id(), $data);
+            Session::flash('profile_success', 'Profil mis à jour avec succès.');
+        } catch (Throwable $exception) {
+            Session::flash('profile_errors', ['general' => $exception->getMessage()]);
         }
 
-        $_SESSION['profile_success'] = 'Profil mis à jour avec succès';
-        header('Location: /profile');
-        exit;
+        $this->redirect('/profile');
     }
 
     public function changePassword(): void
     {
-        // Apply auth middleware
-        (new \App\Middleware\Auth())();
+        $current = (string) ($_POST['current_password'] ?? '');
+        $new = (string) ($_POST['new_password'] ?? '');
+        $confirm = (string) ($_POST['confirm_password'] ?? '');
 
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(405);
-            echo 'Method Not Allowed';
-            return;
+        if ($new !== $confirm) {
+            Session::flash('password_errors', [
+                'confirm_password' => 'Les mots de passe ne correspondent pas.',
+            ]);
+            $this->redirect('/profile');
         }
 
-        $userId = $_SESSION['user_id'] ?? 0;
-        if ($userId === 0) {
-            header('Location: /login');
-            exit;
+        try {
+            $this->authService->changePassword((int) Session::id(), $current, $new);
+            $_SESSION['must_change_password'] = false;
+            Session::flash('password_success', 'Mot de passe modifié avec succès.');
+        } catch (Throwable $exception) {
+            Session::flash('password_errors', ['new_password' => $exception->getMessage()]);
         }
 
-        $currentPassword = $_POST['current_password'] ?? '';
-        $newPassword = $_POST['new_password'] ?? '';
-        $confirmPassword = $_POST['confirm_password'] ?? '';
-
-        $errors = [];
-
-        if (empty($currentPassword)) {
-            $errors['current_password'] = 'Le mot de passe actuel est requis';
-        }
-        if (empty($newPassword)) {
-            $errors['new_password'] = 'Le nouveau mot de passe est requis';
-        } elseif (strlen($newPassword) < 10) {
-            $errors['new_password'] = 'Le mot de passe doit contenir au moins 10 caractères';
-        } elseif (!preg_match('/[A-Z]/', $newPassword)) {
-            $errors['new_password'] = 'Le mot de passe doit contenir au moins une majuscule';
-        } elseif (!preg_match('/[a-z]/', $newPassword)) {
-            $errors['new_password'] = 'Le mot de passe doit contenir au moins une minuscule';
-        } elseif (!preg_match('/[0-9]/', $newPassword)) {
-            $errors['new_password'] = 'Le mot de passe doit contenir au moins un chiffre';
-        } elseif (!preg_match('/[^A-Za-z0-9]/', $newPassword)) {
-            $errors['new_password'] = 'Le mot de passe doit contenir au moins un caractère spécial';
-        }
-        if ($newPassword !== $confirmPassword) {
-            $errors['confirm_password'] = 'Les mots de passe ne correspondent pas';
-        }
-
-        if (!empty($errors)) {
-            // For AJAX requests
-            if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
-                header('Content-Type: application/json');
-                echo json_encode(['success' => false, 'errors' => $errors]);
-                return;
-            }
-
-            $_SESSION['password_errors'] = $errors;
-            $_SESSION['password_old_input'] = $_POST;
-            header('Location: /password');
-            exit;
-        }
-
-        // Change password
-        if ($this->authService->changePassword($userId, $currentPassword, $newPassword)) {
-            // For AJAX requests
-            if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
-                header('Content-Type: application/json');
-                echo json_encode(['success' => true, 'message' => 'Mot de passe modifié avec succès']);
-                return;
-            }
-
-            $_SESSION['password_success'] = 'Mot de passe modifié avec succès';
-            header('Location: /password');
-            exit;
-        } else {
-            // For AJAX requests
-            if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
-                header('Content-Type: application/json');
-                echo json_encode(['success' => false, 'errors' => ['current_password' => 'Mot de passe actuel incorrect']]);
-                return;
-            }
-
-            $_SESSION['password_errors'] = ['current_password' => 'Mot de passe actuel incorrect'];
-            header('Location: /password');
-            exit;
-        }
+        $this->redirect('/profile');
     }
 
-    public function logout(): void
+    public function logout(): never
     {
-        // Apply auth middleware
-        (new \App\Middleware\Auth())();
-
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(405);
-            echo 'Method Not Allowed';
-            return;
-        }
-
-        // Destroy session
-        $_SESSION = [];
-        if (ini_get("session.use_cookies")) {
-            $params = session_get_cookie_params();
-            setcookie(session_name(), '', time() - 42000,
-                $params["path"], $params["domain"],
-                $params["secure"], $params["httponly"]
-            );
-        }
-        session_destroy();
-
-        header('Location: /login');
-        exit;
+        Session::logout();
+        $this->redirect('/login');
     }
 
     public function showForgotPassword(): void
     {
-        // Apply guest middleware
-        (new \App\Middleware\Guest())();
-
         $this->render('auth/forgot_password');
     }
 
     public function forgotPassword(): void
     {
-        // Apply guest middleware
-        (new \App\Middleware\Guest())();
-
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(405);
-            echo 'Method Not Allowed';
-            return;
-        }
-
-        $email = $_POST['email'] ?? '';
-
-        if (empty($email)) {
-            $_SESSION['forgot_error'] = 'L\'email est requis';
-            header('Location: /forgot-password');
-            exit;
-        }
+        $email = mb_strtolower(trim((string) ($_POST['email'] ?? '')));
 
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $_SESSION['forgot_error'] = 'Email invalide';
-            header('Location: /forgot-password');
-            exit;
+            Session::flash('forgot_error', 'Adresse email invalide.');
+            $this->redirect('/forgot-password');
         }
 
         $token = $this->authService->createResetToken($email);
 
-        // Toujours utiliser le même message afin de ne pas révéler l'existence d'un compte.
         if ($token !== null) {
-            $user = (new UserRepository())->findByEmail($email);
-            $baseUrl = rtrim($_ENV['APP_URL'] ?? 'http://127.0.0.1:8080', '/');
-            $resetUrl = $baseUrl . '/reset-password/' . rawurlencode($token);
-            $mailService = new \App\Service\MailService(
-                $_ENV['MAIL_FROM_ADDRESS'] ?? 'noreply@viteetgourmand.com',
-                $_ENV['MAIL_FROM_NAME'] ?? 'Vite & Gourmand'
-            );
-            if ($user !== null && !$mailService->sendPasswordResetEmail($email, $user->getFirstName(), $resetUrl)) {
-                error_log('Impossible d\'envoyer le mail de réinitialisation à ' . $email);
+            $user = $this->userRepository->findByEmail($email);
+            $baseUrl = rtrim((string) config('app.url', 'http://127.0.0.1:8000'), '/');
+
+            try {
+                $this->mailService->sendPasswordResetEmail(
+                    $email,
+                    $user?->getFirstName() ?? '',
+                    $baseUrl . '/reset-password/' . rawurlencode($token)
+                );
+            } catch (Throwable $exception) {
+                error_log('Réinitialisation du mot de passe : ' . $exception->getMessage());
             }
         }
 
-        $_SESSION['forgot_success'] = 'Si cet email existe dans notre système, vous recevrez un lien de réinitialisation';
-        header('Location: /forgot-password');
-        exit;
+        Session::flash(
+            'forgot_success',
+            'Si cette adresse existe, un lien de réinitialisation vous sera envoyé.'
+        );
+        $this->redirect('/forgot-password');
     }
 
     public function showResetPassword(string $token): void
     {
-        // Apply guest middleware
-        (new \App\Middleware\Guest())();
-
-        // Validate the token
-        $authService = new \App\Service\AuthService(
-            new \App\Repository\UserRepository()
-        );
-        $user = $authService->validateResetToken($token);
-
-        if ($user === null) {
-            // Token invalid or expired
-            $_SESSION['reset_error'] = 'Le token de réinitialisation est invalide ou expiré';
-            header('Location: /forgot-password');
-            exit;
+        if ($this->authService->validateResetToken($token) === null) {
+            Session::flash('reset_error', 'Le lien est invalide ou expiré.');
+            $this->redirect('/forgot-password');
         }
 
-        // Render the form with the token
         $this->render('auth/reset_password', ['token' => $token]);
     }
 
-    public function resetPassword(): void
+    public function resetPassword(string $token = ''): void
     {
-        // Apply guest middleware
-        (new \App\Middleware\Guest())();
+        $token = trim($token !== '' ? $token : (string) ($_POST['token'] ?? ''));
+        $password = (string) ($_POST['password'] ?? '');
+        $confirm = (string) ($_POST['confirm_password'] ?? '');
 
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(405);
-            echo 'Method Not Allowed';
-            return;
+        if ($password !== $confirm) {
+            Session::flash('reset_errors', [
+                'confirm_password' => 'Les mots de passe ne correspondent pas.',
+            ]);
+            $this->redirect('/reset-password/' . rawurlencode($token));
         }
 
-        $token = $_POST['token'] ?? '';
-        $password = $_POST['password'] ?? '';
-        $confirmPassword = $_POST['confirm_password'] ?? '';
+        try {
+            $this->authService->resetPassword($token, $password);
+            Session::flash('reset_success', 'Mot de passe réinitialisé. Vous pouvez vous connecter.');
+            $this->redirect('/login');
+        } catch (Throwable $exception) {
+            Session::flash('reset_errors', ['password' => $exception->getMessage()]);
+            $this->redirect('/reset-password/' . rawurlencode($token));
+        }
+    }
 
-        // Validate token (in real implementation)
-        // Validate password (same rules as registration)
+    private function collectUserInput(): array
+    {
+        return [
+            'email' => mb_strtolower(trim((string) ($_POST['email'] ?? ''))),
+            'first_name' => trim((string) ($_POST['first_name'] ?? '')),
+            'last_name' => trim((string) ($_POST['last_name'] ?? '')),
+            'phone' => trim((string) ($_POST['phone'] ?? '')),
+            'address' => trim((string) ($_POST['address'] ?? '')),
+        ];
+    }
+
+    private function validateRegistrationInput(array $data): array
+    {
         $errors = [];
 
-        if (strlen($password) < 10) {
-            $errors['password'] = 'Le mot de passe doit contenir au moins 10 caractères';
-        }
-        if (!preg_match('/[A-Z]/', $password)) {
-            $errors['password'] = 'Le mot de passe doit contenir au moins une majuscule';
-        }
-        if (!preg_match('/[a-z]/', $password)) {
-            $errors['password'] = 'Le mot de passe doit contenir au moins une minuscule';
-        }
-        if (!preg_match('/[0-9]/', $password)) {
-            $errors['password'] = 'Le mot de passe doit contenir au moins un chiffre';
-        }
-        if (!preg_match('/[^A-Za-z0-9]/', $password)) {
-            $errors['password'] = 'Le mot de passe doit contenir au moins un caractère spécial';
-        }
-        if ($password !== $confirmPassword) {
-            $errors['confirm_password'] = 'Les mots de passe ne correspondent pas';
+        foreach (['email', 'first_name', 'last_name', 'phone', 'address'] as $field) {
+            if ($data[$field] === '') {
+                $errors[$field] = 'Ce champ est requis.';
+            }
         }
 
-        if (!empty($errors)) {
-            $_SESSION['reset_errors'] = $errors;
-            $_SESSION['reset_old_input'] = $_POST;
-            header("Location: /reset-password/$token");
-            exit;
+        if ($data['email'] !== '' && !filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+            $errors['email'] = 'Adresse email invalide.';
         }
 
-        if (!$this->authService->resetPassword($token, $password)) {
-            $_SESSION['reset_errors'] = ['general' => 'Le lien de réinitialisation est invalide ou expiré.'];
-            header("Location: /reset-password/$token"); exit;
+        foreach (['phone'] as $field) {
+            $phoneError = $data[$field] !== '' && !isset($errors[$field])
+                ? $this->phoneValidator->validate($data[$field])
+                : null;
+
+            if ($phoneError !== null) {
+                $errors[$field] = $phoneError;
+            }
         }
-        $_SESSION['reset_success'] = 'Mot de passe réinitialisé avec succès. Vous pouvez maintenant vous connecter.';
-        header('Location: /login');
-        exit;
+
+        if (($_POST['privacy_consent'] ?? '') !== '1') {
+            $errors['privacy_consent'] = 'Vous devez accepter la politique de confidentialité et les CGV pour créer un compte.';
+        }
+
+        return $errors;
     }
 }

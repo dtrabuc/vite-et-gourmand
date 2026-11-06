@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 namespace App\Entity;
 
 class User
@@ -7,17 +9,18 @@ class User
     private string $email;
     private string $passwordHash; // hashed password
     private string $role; // 'user', 'employee', 'admin'
+    private bool $mustChangePassword = false;
     private string $firstName;
     private string $lastName;
     private string $phone;
     private string $gsm; // separate field for GSM as per ECF
     private string $address;
-    private ?\DateTimeInterface $createdAt;
-    private ?\DateTimeInterface $updatedAt;
+    private ?\DateTimeInterface $createdAt = null;
+    private ?\DateTimeInterface $updatedAt = null;
     private int $failedAttempts = 0;
-    private ?\DateTimeInterface $lockedUntil;
-    private ?string $resetTokenHash;
-    private ?\DateTimeInterface $resetTokenExpiresAt;
+    private ?\DateTimeInterface $lockedUntil = null;
+    private ?string $resetTokenHash = null;
+    private ?\DateTimeInterface $resetTokenExpiresAt = null;
 
     // Getters and setters
 
@@ -59,6 +62,16 @@ class User
     public function setRole(string $role): void
     {
         $this->role = $role;
+    }
+
+    public function mustChangePassword(): bool
+    {
+        return $this->mustChangePassword;
+    }
+
+    public function setMustChangePassword(bool $mustChangePassword): void
+    {
+        $this->mustChangePassword = $mustChangePassword;
     }
 
     public function getFirstName(): string

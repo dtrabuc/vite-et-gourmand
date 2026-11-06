@@ -1,7 +1,6 @@
 <?php
-$errors = $_SESSION['contact_errors'] ?? [];
-$old = $_SESSION['contact_old_input'] ?? [];
-unset($_SESSION['contact_errors'], $_SESSION['contact_old_input']);
+$errors = is_array($errors ?? null) ? $errors : [];
+$old = is_array($old ?? null) ? $old : [];
 ?>
 <main class="py-5">
     <div class="container">
