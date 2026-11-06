@@ -162,6 +162,7 @@ final class UserRepository
         $stmt = Database::pdo()->prepare(
             'SELECT * FROM users
              WHERE reset_token_hash = :hash
+               AND is_active = 1
                AND reset_token_expires_at > CURRENT_TIMESTAMP
              LIMIT 1'
         );

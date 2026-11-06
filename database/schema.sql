@@ -12,6 +12,8 @@
 --   - horaires, 10 allergènes, 32 plats, 9 menus et leurs compositions ;
 --   - 5 commandes terminées (1001 à 1005) du client, reprises par les avis
 --     et les statistiques de database/mongodb-init.js.
+-- Structure à jour : inclut database/migrations/2026-11-04-temporary-password.sql
+-- (ne pas rejouer cette migration après un import de ce fichier).
 -- Après cet import, lancer database/mongodb-init.js pour MongoDB.
 -- ================================================================
 
@@ -57,8 +59,8 @@ CREATE TABLE `users` (
   `locked_until` DATETIME NULL,
   `reset_token_hash` CHAR(64) NULL,
   `reset_token_expires_at` DATETIME NULL,
-  `must_change_password` TINYINT(1) NOT NULL DEFAULT 0,
   `is_active` TINYINT(1) NOT NULL DEFAULT 1,
+  `must_change_password` TINYINT(1) NOT NULL DEFAULT 0,
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),

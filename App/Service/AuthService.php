@@ -136,6 +136,8 @@ final readonly class AuthService
             0,
             null
         );
+        // Un lien de réinitialisation déjà envoyé ne doit plus servir.
+        $this->userRepository->clearResetToken($userId);
     }
 
     public function updateProfile(int $userId, array $data): void
@@ -224,6 +226,8 @@ final readonly class AuthService
             $this->passwordPolicy->hash($newPassword)
         );
         $this->userRepository->clearResetToken($user->getId());
+        // Le lien reçu par e-mail prouve l'accès au compte : il lève aussi le verrouillage.
+        $this->userRepository->updateFailedAttempts($user->getId(), 0, null);
     }
 
     private function assertStrongPassword(string $password): void

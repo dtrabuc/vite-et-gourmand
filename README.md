@@ -18,11 +18,12 @@ Les visiteurs consultent et filtrent les menus. Les clients commandent (livraiso
 
 ## 2. Prérequis
 
-- **PHP 8.2 ou plus récent** (le projet est testé en local avec PHP 8.5.0 de WAMP).
+- **PHP 8.2 ou plus récent** (testé en local avec PHP 8.3 sous Linux et PHP 8.5 sous WAMP ; PHP 8.3 en production chez Alwaysdata).
 - **Extensions PHP** : `pdo_mysql`, `mongodb` (1.21 ou plus), `mbstring`, `openssl` (SMTP en TLS et appels HTTPS à Google), `ctype`, `filter`, `hash` et `iconv` (demandées par les dépendances). Vérifier avec `php -m`.
 - `allow_url_fopen = On` dans `php.ini` : les appels à l'API Google passent par `file_get_contents`.
 - **Composer 2**.
 - **MariaDB** (10.x ou 11.x) et **MongoDB** (6 ou plus) avec `mongosh`.
+- **Node.js 20.11 ou plus récent**, seulement pour le test de bout en bout (`scripts/simulate-registration.mjs`) et le script de connexion SSH (`connect-ssh.js`). L'application elle-même n'utilise ni Node ni npm.
 - Une connexion Internet pour les photos de démonstration (Unsplash) et l'API Google Maps et pour Bootstrap JS (CDN jsDelivr).
 
 ### Activer l'extension `mongodb` sous Windows
@@ -57,8 +58,12 @@ Renseigner ensuite `.env` :
 | `MAIL_DRIVER`, `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_ENCRYPTION` | Serveur SMTP (PHPMailer). Sans `MAIL_HOST`, aucun e-mail ne part (l'erreur est écrite dans le journal PHP). `MAIL_ENCRYPTION` : `tls`, `ssl` ou `none`. | Mailpit : `smtp`, `127.0.0.1`, `1025`, vide, vide, `none` |
 | `MAIL_FROM_ADDRESS`, `MAIL_FROM_NAME` | Expéditeur des e-mails | `noreply@viteetgourmand.local` |
 | `MAIL_TO_ADDRESS` | Adresse de l'entreprise (contact, nouvelles commandes, devis) | `contact@viteetgourmand.local` |
+| `DEMO_*_EMAIL`, `DEMO_*_PASSWORD` | Identifiants des comptes de démonstration (voir la section 6) | |
+| `SSH_HOST`, `SSH_USERNAME`, `SSH_PASSWORD` | Accès SSH à l'hébergement, lus par `connect-ssh.js` (voir la section 8) | vide en local |
 
-Les nouveaux comptes clients reçoivent par e-mail un mot de passe provisoire unique, qu'ils doivent changer à la première connexion. Sur une base déjà installée, exécutez une fois `database/migrations/2026-11-04-temporary-password.sql` avant de déployer cette version.
+**Inscription :** le formulaire ne demande pas de mot de passe. Le compte est créé actif, avec un mot de passe provisoire aléatoire envoyé par e-mail. À la première connexion, le client est redirigé vers son profil et doit choisir un nouveau mot de passe avant d'accéder au reste de son espace. Si l'e-mail ne peut pas partir, le compte est supprimé et un message d'erreur s'affiche.
+
+Sur une base installée avant le 4 novembre 2026, exécutez une fois `database/migrations/2026-11-04-temporary-password.sql` (voir la section 8).
 
 Pour voir les e-mails en local sans vrai serveur, on peut utiliser Mailpit (SMTP sur le port 1025, interface sur http://localhost:8025). En ligne, renseignez le serveur SMTP de l'hébergeur. Les messages du formulaire de contact partent à `MAIL_TO_ADDRESS`, avec l'adresse du visiteur en « Répondre à » : l'équipe y répond depuis sa messagerie (webmail de l'hébergeur).
 
@@ -151,34 +156,81 @@ Un mot de passe changé **depuis le site** (profil, « Changer mon mot de passe 
 
 ```text
 App/
-├── Controller/    requêtes HTTP → services → vues (Public, Auth, Order, Admin, Dish, MenuComposition, Email, Quote, Contact, Notification, Error…)
+├── Controller/    requêtes HTTP → services → vues (Public, Auth, Order, Admin, Dish, MenuComposition, Address, Quote, Contact, Notification, Error)
 ├── Core/          Application, Router, Container, Config (+ functions.php), Database, View, Session, Response, Request, Labels, UploadFile, Exception/
 ├── Entity/        Menu, Order, User
-├── Middleware/    Security (en-têtes, CSRF, limitation de débit), Auth, Staff, Admin, Guest
-├── Repository/    accès MariaDB (users, menus, plats, commandes, horaires, devis, messages, notifications) et MongoDB (images, avis, statistiques)
-├── Service/       règles métier (commandes, livraison, menus, plats, e-mails, téléphone, mots de passe, cache…)
+├── Middleware/    Security (en-têtes, CSRF, limitation de débit), Auth (dont le changement de mot de passe imposé), Staff, Admin, Guest
+├── Repository/    accès MariaDB (utilisateurs, menus, plats, commandes, horaires, devis, notifications) et MongoDB (images, avis, statistiques)
+├── Service/       règles métier (authentification, commandes, livraison, menus, plats, devis, e-mails, téléphone, mots de passe, limitation de débit, cache…)
 └── View/          gabarits PHP (layout, home, auth, order, admin, contact, quote, notification, errors)
 config/            app.php (configuration lue dans .env) et routes.php
-database/          schema.sql (structure + données), mongodb-init.js
-scripts/           set-password.php (changer ou vérifier un mot de passe en ligne de commande)
-docs2/             énoncé de l'ECF
+database/          schema.sql (structure + données), shema_deployement.sql (variante historique), migrations/, mongodb-init.js
+docs/conception/   MCD, diagramme de séquence de l'inscription, diagramme de cas d'utilisation (.drawio, .lucid, .png, .svg)
+scripts/           set-password.php (mots de passe en ligne de commande), simulate-registration.mjs (test de bout en bout)
+connect-ssh.js     connexion SSH à l'hébergement, identifiants lus dans .env
 public/            racine web : index.php, .htaccess, assets/ (css découpé par composant, js, vendor/intl-tel-input)
 storage/           créé à l'exécution : cache et limitation de débit (ignoré par git)
 public/uploads/    créé à l'exécution : images ajoutées aux galeries (ignoré par git)
 ```
 
-## 8. Fonctionnalités par rôle
+## 8. Tests et déploiement
+
+### Test de bout en bout de l'inscription
+
+```bash
+node scripts/simulate-registration.mjs             # SMTP local de capture, aucun e-mail envoyé
+node scripts/simulate-registration.mjs --ethereal  # boîte Ethereal jetable, e-mails relus en IMAP
+```
+
+Le script lance l'application depuis une copie temporaire du projet, sur la base MariaDB **locale** du `.env`. Il contrôle par HTTP, avec cookies et jetons CSRF :
+- l'inscription, la réception du mot de passe provisoire et la première connexion ;
+- le changement de mot de passe imposé ;
+- les liens de réinitialisation : falsifiés, expirés ou déjà utilisés refusés, lien annulé par une nouvelle demande, par un changement de mot de passe ou sur un compte désactivé ;
+- l'état réel de la base à chaque étape.
+
+Les comptes de test (`codex-sim-…@example.invalid`) sont supprimés à la fin, même en cas d'échec. Les validations JavaScript du navigateur ne sont pas couvertes.
+
+### Déploiement (Alwaysdata)
+
+Le site est hébergé chez Alwaysdata : https://dylantrabuc.alwaysdata.net, avec le projet dans `~/www/vite-et-gourmand`.
+
+1. **Sauvegarder** la base (`mysqldump`) et les fichiers remplacés, hors du dossier web.
+2. **Envoyer** les fichiers modifiés en FTPS. Ne jamais écraser le `.env` distant, ni `storage/` ou `public/uploads/`.
+3. **Appliquer les migrations** de `database/migrations/` qui ne le sont pas encore, une seule fois chacune.
+4. **Vérifier** les pages principales, puis faire une inscription réelle avec une boîte de test.
+
+**Ne jamais importer `schema.sql` ni `shema_deployement.sql` sur une base en service :** ces fichiers suppriment et recréent toutes les tables.
+
+`connect-ssh.js` ouvre une connexion SSH avec `SSH_HOST`, `SSH_USERNAME` et `SSH_PASSWORD` du `.env` (le mot de passe passe par `SSH_ASKPASS`, jamais par la ligne de commande) :
+
+```bash
+node connect-ssh.js              # teste la connexion
+node connect-ssh.js "commande"   # exécute une commande sur le serveur
+```
+
+En production, le SMTP de l'hébergeur (`MAIL_HOST`, port 587, `MAIL_ENCRYPTION=tls`) est utilisé sans identifiants, car les envois partent d'un site hébergé chez Alwaysdata.
+
+## 9. Documents de conception
+
+`docs/conception/` contient trois diagrammes, chacun en `.drawio`, `.lucid`, `.png` et `.svg` :
+- **MCD** (`mcd.*`) : les tables MariaDB et leurs relations, avec les collections MongoDB dans un encadré ;
+- **Séquence** (`sequence-inscription.*`) : l'inscription, l'envoi du mot de passe provisoire et la première connexion ;
+- **Cas d'utilisation** (`cas-utilisation.*`) : les actions du visiteur, du client, de l'employé et de l'administrateur.
+
+Les `.drawio` s'ouvrent dans draw.io ou diagrams.net, et s'importent dans Lucidchart. Les `.lucid` utilisent le format d'import standard de Lucidchart.
+
+## 10. Fonctionnalités par rôle
 
 **Visiteur**
 - Accueil : présentation de l'entreprise et de l'équipe, avis validés, horaires.
 - Catalogue des menus avec filtres sans rechargement (prix, fourchette de prix, thème, régime, nombre de personnes).
 - Détail d'un menu : galerie d'images, plats avec leurs allergènes, conditions.
-- Contact, demande de devis (facultative), inscription, mot de passe oublié, mentions légales, CGV, politique de confidentialité.
+- Contact, demande de devis (facultative), inscription avec mot de passe provisoire envoyé par e-mail, mot de passe oublié, mentions légales, CGV, politique de confidentialité.
 
 **Client** (en plus)
 - Commande : menu pré-sélectionné, créneaux selon les horaires, prix détaillé (remise de 10 % dès le minimum + 5 personnes, livraison offerte dans Bordeaux, sinon 5 € + 0,59 €/km calculés par le serveur).
 - Suivi des commandes avec l'historique, modification (tout sauf le menu) et annulation tant que la commande n'est pas acceptée.
-- Avis (note de 1 à 5 et commentaire) une fois la commande terminée ; profil, changement de mot de passe, notifications.
+- Avis (note de 1 à 5 et commentaire) une fois la commande terminée ; profil, changement de mot de passe (obligatoire à la première connexion), notifications.
 
 **Employé**
 - Commandes : filtres, changement de statut (mode de contact obligatoire, motif en cas d'annulation), modification après contact client (historisée), prêt de matériel.
@@ -189,7 +241,7 @@ public/uploads/    créé à l'exécution : images ajoutées aux galeries (ignor
 - Création d'employés (e-mail d'information sans le mot de passe), désactivation et réactivation.
 - Tableau de bord : graphique des commandes par menu (données MongoDB) ; chiffre d'affaires par menu avec filtres menu et période.
 
-## 9. Choix techniques : MariaDB et MongoDB
+## 11. Choix techniques : MariaDB et MongoDB
 
 **MariaDB** contient les données structurées et liées entre elles, qui ont besoin d'intégrité (clés étrangères, transactions) : comptes, menus, plats, allergènes et leurs tables de liaison, commandes et historique des statuts, horaires, devis, notifications. Une commande est enregistrée dans une transaction : création, décrémentation du stock et première ligne d'historique, tout ou rien.
 
@@ -198,17 +250,17 @@ public/uploads/    créé à l'exécution : images ajoutées aux galeries (ignor
 - `comments` : les avis clients et leur état de modération ;
 - `menu_statistics` : les agrégats « commandes et CA par menu » affichés dans le graphique du tableau de bord (l'énoncé demande que ces données viennent d'une base NoSQL). Ils sont recalculés à partir des commandes terminées de MariaDB, le même critère que la page CA.
 
-## 10. Sécurité en bref
+## 12. Sécurité en bref
 
 - **Requêtes préparées** partout (PDO, préparations natives) ; aucune valeur saisie n'est concaténée dans le SQL.
 - **CSRF** : jeton vérifié sur toutes les requêtes POST (middleware `Security`).
 - **Échappement** de toutes les sorties dans les vues (`$escape()` = `htmlspecialchars`) ; en-têtes de sécurité (CSP sans script inline, seul `cdn.jsdelivr.net` est autorisé en plus du site ; `X-Frame-Options`, `nosniff`…). Bootstrap JS est vérifié par son empreinte SRI.
-- **Mots de passe** : bcrypt (coût `PASSWORD_HASH_COST`), politique de robustesse unique, blocage 15 minutes après 5 échecs, limitation des tentatives par adresse IP ; lien de réinitialisation à usage unique valable 1 heure, stocké haché.
+- **Mots de passe** : bcrypt (coût `PASSWORD_HASH_COST`), politique de robustesse unique, blocage 15 minutes après 5 échecs, limitation des tentatives par adresse IP ; lien de réinitialisation à usage unique valable 1 heure, stocké haché, annulé par une nouvelle demande ou un changement de mot de passe, refusé sur un compte désactivé ; une réinitialisation lève le blocage du compte. Mot de passe provisoire à changer obligatoirement à la première connexion.
 - **Validation côté serveur** de toutes les saisies (le JavaScript ne fait qu'aider) ; prix, remises et frais de livraison recalculés par le serveur.
 - **Téléphones** : validés avec libphonenumber (France, Espagne, Belgique, Royaume-Uni, Italie) et stockés au format international **E.164** (`+33612345678`).
 - **Session** : cookie persistant renouvelé à l'activité, `HttpOnly`, `SameSite=Lax` et `Secure` en HTTPS ; expiration après 30 minutes d'inactivité par défaut ; identifiant régénéré à la connexion. `APP_DEBUG=false` par défaut (pas de trace d'erreur affichée).
 - **Fichiers envoyés** (galerie) : type vérifié sur le contenu (JPEG, PNG, WebP), 5 Mo maximum, nom aléatoire ; le cache n'accepte aucun objet désérialisé.
 
-## 11. Secrets et fichiers non versionnés
+## 13. Secrets et fichiers non versionnés
 
-Aucun mot de passe ni clé n'est versionné. Ils vivent uniquement dans le `.env` (ignoré par git, voir `.gitignore`) : base MariaDB, MongoDB, SMTP, clé Google Maps et comptes de démonstration (`DEMO_*`). `.env.example` en donne la liste, avec des valeurs vides. Les mots de passe des comptes sont stockés en base sous forme de hash bcrypt uniquement.
+Aucun mot de passe ni clé n'est versionné. Ils vivent uniquement dans le `.env` (ignoré par git, voir `.gitignore`) : base MariaDB, MongoDB, SMTP, clé Google Maps, comptes de démonstration (`DEMO_*`) et accès SSH (`SSH_*`). `.env.example` en donne la liste, avec des valeurs vides. Les mots de passe des comptes sont stockés en base sous forme de hash bcrypt uniquement.

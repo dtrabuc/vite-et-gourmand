@@ -15,3 +15,47 @@ footer a:hover {
     color: #fff;
     text-decoration: underline;
 }
+
+/* boutons de connexion : côte à côte, ou empilés si la colonne est trop étroite */
+.footer-auth {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+}
+
+footer a.footer-auth-btn {
+    flex: 1 1 8.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.75rem; /* cible tactile de 44 px */
+    padding: .5rem .75rem;
+    border: 2px solid #fff;
+    border-radius: var(--vg-radius-sm);
+    font-size: .875rem;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: normal;
+}
+
+footer a.footer-auth-btn--client {
+    background-color: #fff;
+    color: var(--vg-primary);
+}
+
+footer a.footer-auth-btn--admin {
+    background-color: transparent;
+    color: #fff;
+}
+
+footer a.footer-auth-btn:hover {
+    background-color: var(--vg-accent);
+    border-color: var(--vg-accent);
+    color: #2c1a12;
+    text-decoration: none;
+}
+
+footer a.footer-auth-btn:focus-visible {
+    outline: 3px solid var(--vg-accent);
+    outline-offset: 2px;
+}

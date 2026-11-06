@@ -46,9 +46,12 @@
                 <a class="link-light small d-block" href="/legal">Mentions légales</a>
                 <a class="link-light small d-block" href="/cgv">CGV</a>
                 <a class="link-light small d-block" href="/confidentialite">Confidentialité</a>
-                <a class="link-light small d-block" href="/login">Espace client</a>
-                <a class="link-light small d-block opacity-75" href="/admin/login">Espace admin</a>
                 <a class="link-light small d-block" href="/quote">Demander un devis</a>
+                <h2 class="h6 fw-bold mt-3">Connexion</h2>
+                <div class="footer-auth">
+                    <a class="btn footer-auth-btn footer-auth-btn--client" href="/login">Espace client</a>
+                    <a class="btn footer-auth-btn footer-auth-btn--admin" href="/admin/login">Espace admin</a>
+                </div>
             </div>
         </div>
     </div>
