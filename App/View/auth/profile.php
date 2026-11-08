@@ -116,6 +116,32 @@ $value = static fn (string $key): string => (string) ($oldInput[$key] ?? $user[$
                         </form>
                     </div>
                 </section>
+
+                <section class="card border-0 shadow-sm mt-4" aria-labelledby="privacyTitle">
+                    <div class="card-body p-4">
+                        <h2 class="h4 text-primary" id="privacyTitle">Mes données personnelles</h2>
+                        <p class="small text-muted">Vos droits RGPD : voir la <a href="/confidentialite">politique de confidentialité</a>.</p>
+                        <a class="btn btn-outline-primary" href="/profile/export">Télécharger mes données (JSON)</a>
+
+                        <details class="mt-4">
+                            <summary class="text-danger fw-semibold">Supprimer mon compte</summary>
+                            <p class="small mt-2">Vos informations personnelles (identité, e-mail, téléphone, adresse, allergies, notifications, avis) sont effacées définitivement.
+                                Les commandes terminées sont conservées sans votre identité pour nos obligations comptables. Impossible si une commande est en cours.</p>
+                            <form method="post" action="/profile/delete" class="row g-2">
+                                <input type="hidden" name="csrf_token" value="<?= $escape($csrfToken) ?>">
+                                <div class="col-md-6">
+                                    <label class="form-label" for="delete_password">Mot de passe actuel</label>
+                                    <input class="form-control" id="delete_password" name="current_password" type="password" autocomplete="current-password" required>
+                                </div>
+                                <div class="col-12 form-check ms-1">
+                                    <input class="form-check-input" type="checkbox" id="confirm_delete" name="confirm_delete" value="1" required>
+                                    <label class="form-check-label small" for="confirm_delete">Je comprends que la suppression est définitive.</label>
+                                </div>
+                                <div class="col-12"><button class="btn btn-danger" type="submit" data-confirm="Supprimer définitivement votre compte ?">Supprimer mon compte</button></div>
+                            </form>
+                        </details>
+                    </div>
+                </section>
             </div>
         </div>
     </div>

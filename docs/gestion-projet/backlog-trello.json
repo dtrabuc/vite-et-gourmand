@@ -500,6 +500,160 @@
         "Could"
       ],
       "desc": "database/migrations/2026-11-04-registration-confirmation.sql ne doit plus être rejouée."
+    },
+    {
+      "list": "En test / revue",
+      "name": "Catalogue façon appli de livraison : nombre de personnes, prix par personne, total",
+      "labels": [
+        "Front",
+        "Back",
+        "Must",
+        "Sprint 5"
+      ],
+      "desc": "Retour des testeurs (08/11) : on ne sait pas à quoi on a droit ni comment le prix est calculé. Sélecteur − / + en haut de /menus, prix par personne, « Inclus pour chaque convive », total pour N personnes avec remise, encadré « Comment est calculé le prix ? ».",
+      "checklist": [
+        "Sélecteur de personnes et puces thème / régime",
+        "Prix par personne et total serveur (MenuPricing)",
+        "Fiche menu avec calculateur",
+        "Test navigateur 1280 et 390 px"
+      ]
+    },
+    {
+      "list": "En test / revue",
+      "name": "Commande : choix du menu en cartes, sans fenêtre de confirmation",
+      "labels": [
+        "Front",
+        "Must",
+        "Sprint 5"
+      ],
+      "desc": "Testeur : 15 personnes, menu « vert » impossible à valider. La fenêtre modale et la liste déroulante sont remplacées par des cartes de menus avec le total, un récapitulatif permanent et un message « Il manque : … » au lieu d'un blocage muet.",
+      "checklist": [
+        "Nombre de personnes repris du catalogue",
+        "Récapitulatif (personnes × prix, remise, livraison, total)",
+        "Commande 15 personnes Signature validée en test"
+      ]
+    },
+    {
+      "list": "En test / revue",
+      "name": "Cohérence des menus : accompagnements, compositions, prix",
+      "labels": [
+        "BDD",
+        "Must",
+        "Sprint 5"
+      ],
+      "desc": "Catégorie « accompagnement » ajoutée. Signature : deux garnitures (gratin, légumes rôtis). Familial : salade verte au lieu des frites avec les lasagnes. Noms sans « Solo / Duo / Trio ». Prix par personne croissants (Signature le plus cher par personne). schema.sql, mongodb-init.js et scripts/update-menus.php pour une base existante."
+    },
+    {
+      "list": "Sprint backlog (Sprint 5)",
+      "name": "Mettre en production la refonte des menus",
+      "labels": [
+        "DevOps",
+        "Must",
+        "Sprint 5"
+      ],
+      "desc": "Sauvegarde, envoi FTPS, puis php scripts/update-menus.php sur le serveur (ajoute la catégorie, met à jour les menus 1 à 9 et les commandes de démonstration, recalcule les statistiques MongoDB). Les commandes réelles gardent leur prix."
+    },
+    {
+      "list": "En test / revue",
+      "name": "Adresses vérifiées sur OpenStreetMap, zone de 25 km, hors zone sur acceptation",
+      "labels": [
+        "Back",
+        "Front",
+        "Must",
+        "Sprint 5"
+      ],
+      "desc": "Saubens (31600) : 216 km. Photon (suggestions, vérification avec contrôle du nom de rue) et OSRM (distance par la route), sans clé. Au-delà de 25 km : retrait gratuit ou livraison hors zone acceptée (≈ 158 €). Saisie manuelle si l'adresse est introuvable ou le service indisponible ; frais confirmés par l'équipe si aucune distance n'est calculable. Google Maps retiré."
+    },
+    {
+      "list": "Terminé",
+      "name": "Maquettes régénérées (12 écrans, dont commande et confirmation)",
+      "labels": [
+        "Doc / Conception",
+        "Could"
+      ],
+      "desc": "PNG, wireframes.pdf et mockups.pdf (25 pages), maquettes.md. Figma : import bloqué par la limite d’appels du plan Starter ; les HTML prêts à importer sont dans docs/maquettes."
+    },
+    {
+      "list": "En test / revue",
+      "name": "Apéritifs et digestifs, compositions revues menu par menu",
+      "labels": [
+        "BDD",
+        "Must",
+        "Sprint 5"
+      ],
+      "desc": "Catégories apéritif et digestif. Chaque menu adulte : apéritif avec ou sans alcool, entrée, plat et accompagnements accordés (steak-frites, saucisse-purée, dahl-riz, curry-riz, lasagnes-salade, saumon-riz-haricots, volaille ou bœuf-gratin), dessert, digestif. Vrai menu de Noël (foie gras, chapon aux marrons, bûche)."
+    },
+    {
+      "list": "En test / revue",
+      "name": "Notifications et validation visible de la commande",
+      "labels": [
+        "Front",
+        "Back",
+        "Must",
+        "Sprint 5"
+      ],
+      "desc": "Cloche avec compteur dans la barre de navigation, bulles en direct (toutes les 30 s), e-mail à chaque changement d'état, page de confirmation avec suivi en 5 étapes."
+    },
+    {
+      "list": "En test / revue",
+      "name": "Parcours « nombre de personnes d'abord », sans barrière",
+      "labels": [
+        "Front",
+        "Must",
+        "Sprint 5"
+      ],
+      "desc": "Choix rapide 1, 2, 4, 6, 10, 15, 20. Tous les menus possibles affichés avec leur total ; ceux qui demandent plus de monde sont repliés, jamais bloquants. Le budget n'est plus un point d'entrée."
+    },
+    {
+      "list": "En test / revue",
+      "name": "Composer son menu : répartition, remplacements, variantes sans allergène",
+      "labels": [
+        "Front",
+        "Back",
+        "BDD",
+        "Must",
+        "Sprint 5"
+      ],
+      "desc": "Table order_items. Pour chaque catégorie : répartir les convives entre les options, remplacer un plat par un autre compatible (régime, pas d’alcool dans un menu qui n’en a pas), variante « sans gluten » pour quelques convives. Validé côté serveur (OrderCompositionService), prix inchangé, choix visibles partout (confirmation, mails, espace équipe)."
+    },
+    {
+      "list": "En test / revue",
+      "name": "Délai de modification : 15 min / 24 h / 48 h",
+      "labels": [
+        "Back",
+        "Must",
+        "Sprint 5"
+      ],
+      "desc": "Le client modifie ou annule tant que la commande est en attente (énoncé) ET dans le délai depuis la commande : 15 min si la prestation est le jour même, 24 h le lendemain, 48 h au-delà, jamais après la prestation (OrderModificationPolicy). Délai affiché sur la commande, rappelé dans les CGV et le mail."
+    },
+    {
+      "list": "En test / revue",
+      "name": "Audit sécurité et RGPD",
+      "labels": [
+        "Sécurité",
+        "Must",
+        "Sprint 5"
+      ],
+      "desc": "Requêtes préparées natives partout, filtres MongoDB typés, aucune sortie non échappée. Sonde automatique : 134 contrôles sur 56 routes (anonyme, client, employé, accès croisé entre clients). Pages Confidentialité et CGV restaurées (erreur 500), consentement explicite pour les allergies, export JSON et suppression du compte depuis le profil."
+    },
+    {
+      "list": "Terminé",
+      "name": "Diagrammes de conception à jour",
+      "labels": [
+        "Doc / Conception",
+        "Must",
+        "Sprint 5"
+      ],
+      "desc": "Diagramme de classes UML (attributs et méthodes, services), MCD, cas d’utilisation, séquences inscription et commande, en .drawio, .svg et .png (docs/conception/outils/diagrams.py)."
+    },
+    {
+      "list": "Backlog produit",
+      "name": "Livrables de l’énoncé encore à produire",
+      "labels": [
+        "Doc / Conception",
+        "Must"
+      ],
+      "desc": "Manuel d’utilisation en PDF (avec identifiants de test), charte graphique en PDF (palette, police, export des maquettes 3 bureau + 3 mobile), branches de fonctionnalité issues de dev."
     }
   ]
 }

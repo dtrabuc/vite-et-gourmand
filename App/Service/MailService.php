@@ -260,6 +260,8 @@ TEXT;
     public function sendOrderNotificationToStaff(string $to, array $details): bool
     {
         $serviceLabel = Labels::serviceType((string) ($details['service_type'] ?? ''));
+        $money = static fn (mixed $amount): string => MenuPricing::format((float) $amount);
+        $choices = implode("\n", array_map(static fn (string $l): string => '- ' . $l, $details['composition'] ?? []));
 
         $body = <<<TEXT
 Nouvelle commande #{$details['id']}
@@ -277,9 +279,11 @@ Ville : {$details['delivery_city']}
 Code postal : {$details['delivery_postal_code']}
 Instructions : {$details['delivery_instructions']}
 
-Options : {$details['customization']}
+Choix du client :
+{$choices}
+Précisions cuisine : {$details['customization']}
 Paiement : Espèces sur place
-Total : {$details['total_price']} €
+Total : {$money($details['total_price'])}
 
 Connectez-vous à l’espace équipe pour traiter la commande.
 TEXT;
@@ -289,27 +293,85 @@ TEXT;
 
     public function sendOrderConfirmationEmail(string $to, string $firstName, array $orderDetails): bool
     {
-        $subject = 'Confirmation de votre commande';
+        $money = static fn (mixed $amount): string => MenuPricing::format((float) $amount);
+        $people = (int) $orderDetails['number_of_people'];
+        $menuLine = $people . ' × ' . $money($orderDetails['per_person'] ?? 0);
+        if ((float) ($orderDetails['discount_rate'] ?? 0) > 0) {
+            $menuLine .= ', remise de 10 % incluse';
+        }
+        if (($orderDetails['service_type'] ?? '') !== 'delivery') {
+            $delivery = 'aucune (retrait ou repas sur place)';
+        } elseif (!empty($orderDetails['delivery_cost_pending'])) {
+            $delivery = 'à confirmer par notre équipe (adresse saisie manuellement), nous vous appellerons';
+        } else {
+            $delivery = (float) $orderDetails['delivery_cost'] > 0 ? $money($orderDetails['delivery_cost']) : 'offerte';
+            if (($orderDetails['delivery_zone'] ?? '') === 'outside') {
+                $delivery .= ' (livraison hors zone acceptée)';
+            }
+        }
+        $firstName = mb_convert_case(trim($firstName), MB_CASE_TITLE, 'UTF-8');
+        $serviceLabel = Labels::serviceType((string) ($orderDetails['service_type'] ?? ''));
+        $orderDate = self::frenchDate((string) $orderDetails['order_date'], true);
+        $choices = implode("\n", array_map(static fn (string $l): string => '- ' . $l, $orderDetails['composition'] ?? []));
+        $choices = $choices !== '' ? "\nVos choix :\n" . $choices . "\n" : '';
+        $notes = trim((string) ($orderDetails['customization'] ?? ''));
+        $notes = $notes !== '' ? 'Précisions pour la cuisine : ' . $notes . "\n" : '';
+        $serviceDate = self::frenchDate((string) ($orderDetails['delivery_date'] ?? '') . ' ' . (string) ($orderDetails['delivery_time'] ?? ''), true);
+
         $body = <<<TEXT
 Bonjour {$firstName},
 
-Merci pour votre commande ! Voici les détails :
+Merci pour votre commande ! Voici le récapitulatif :
 
-Numéro de commande : {$orderDetails['id']}
-Date : {$orderDetails['order_date']}
+Commande n° {$orderDetails['id']} du {$orderDate}
 Menu : {$orderDetails['menu_title']}
-Nombre de personnes : {$orderDetails['number_of_people']}
-Prix du menu : {$orderDetails['menu_price']} €
-Coût de livraison : {$orderDetails['delivery_cost']} €
-Total : {$orderDetails['total_price']} €
+Nombre de personnes : {$people}
+Prestation : {$serviceLabel}, le {$serviceDate}
+{$choices}{$notes}
+Prix du menu : {$money($orderDetails['menu_price'])} ({$menuLine})
+Livraison : {$delivery}
+Total à régler en espèces : {$money($orderDetails['total_price'])}
 
-Nous vous contacterons bientôt pour confirmer les détails de la livraison.
+Prochaine étape : notre équipe vérifie votre commande et l'accepte, en général sous 24 h.
+Vous recevrez un e-mail et une notification sur le site à chaque étape (acceptée, en préparation, en livraison…).
+Modification ou annulation : depuis « Mes commandes », tant que la commande n'est pas acceptée,
+dans un délai de 15 min (prestation le jour même), 24 h (le lendemain) ou 48 h (plus tard).
+Suivi : {$this->siteUrl()}/orders
 
 À bientôt,
 L'équipe Vite & Gourmand
 TEXT;
 
-        return $this->send($to, $subject, $body);
+        return $this->send($to, 'Confirmation de votre commande n° ' . $orderDetails['id'], $body);
+    }
+
+    /** Changement d'état d'une commande (acceptée, en préparation, en livraison, livrée, annulée). */
+    public function sendOrderStatusEmail(string $to, string $firstName, int $orderId, string $title, string $message): bool
+    {
+        $firstName = mb_convert_case(trim($firstName), MB_CASE_TITLE, 'UTF-8');
+        $body = <<<TEXT
+Bonjour {$firstName},
+
+{$message}
+
+Suivre la commande : {$this->siteUrl()}/orders
+
+À bientôt,
+L'équipe Vite & Gourmand
+TEXT;
+
+        return $this->send($to, $title, $body);
+    }
+
+    private static function frenchDate(string $value, bool $withTime): string
+    {
+        return french_date($value, $withTime);
+    }
+
+    /** Adresse publique du site (APP_URL), sans barre finale. */
+    private function siteUrl(): string
+    {
+        return rtrim((string) config('app.url', ''), '/');
     }
 
     private function fromAddress(): string

@@ -2,7 +2,7 @@
     <div class="menu-detail-hero hero py-5 text-center text-white mb-5">
         <div class="container py-4">
             <h1 class="display-5 fw-bold"><?= $escape($menu->getTitle()) ?></h1>
-            <p class="lead mb-0">Entrées, plats, desserts, conditions de réservation et minimum de convives.</p>
+            <p class="lead mb-0"><?= \App\Service\MenuPricing::format(\App\Service\MenuPricing::perPerson($menu->getBasePrice(), $menu->getMinPeople())) ?> par personne · à partir de <?= $menu->getMinPeople() ?> personne<?= $menu->getMinPeople() > 1 ? 's' : '' ?></p>
         </div>
     </div>
 
@@ -57,43 +57,66 @@
                             <h2 class="display-6 text-primary mt-3"><?= $escape($menu->getTitle()) ?></h2>
                             <p class="lead text-muted"><?= $escape($menu->getDescription()) ?></p>
 
-                            <dl class="row mt-4">
-                                <dt class="col-sm-5">Prix du menu <?= info_tip('Prix pour le nombre minimum de personnes. Au-delà, le prix augmente par personne.') ?></dt>
-                                <dd class="col-sm-7"><?= number_format($menu->getBasePrice(), 2, ',', ' ') ?> €</dd>
-                                <dt class="col-sm-5">Minimum <?= info_tip('Nombre de personnes minimum pour commander ce menu. Remise de 10 % à partir de 5 personnes de plus.') ?></dt>
-                                <dd class="col-sm-7"><?= $menu->getMinPeople() ?> personne<?= $menu->getMinPeople() > 1 ? 's' : '' ?></dd>
-                                <dt class="col-sm-5">Régime alimentaire</dt>
-                                <dd class="col-sm-7"><?= $escape(\App\Core\Labels::dietaryRegime($menu->getDietaryRegime())) ?></dd>
-                                <dt class="col-sm-5">Stock disponible <?= info_tip('Nombre de commandes encore possibles pour ce menu.') ?></dt>
-                                <dd class="col-sm-7"><?= $menu->getAvailableStock() ?> commandes</dd>
-                            </dl>
+                            <?php
+                            $minPeople = $menu->getMinPeople();
+                            $perPerson = \App\Service\MenuPricing::perPerson($menu->getBasePrice(), $minPeople);
+                            $people = max((int) ($people ?? $minPeople), 1);
+                            $quote = \App\Service\MenuPricing::quote($menu->getBasePrice(), $minPeople, $people);
+                            $orderUrl = '/orders/new?menu=' . $menu->getId() . '&people=' . max($people, $minPeople);
+                            ?>
+                            <div class="row g-4 mt-1">
+                                <div class="col-lg-7">
+                                    <h3 class="h5 text-primary">Inclus pour chaque convive</h3>
+                                    <?php foreach (menu_composition($details['dishes'] ?? []) as $group): ?>
+                                        <div class="menu-detail-group">
+                                            <h4 class="h6 fw-bold mb-2"><?= $escape($group['summary']) ?></h4>
+                                            <?php foreach ($details['dishes'] as $dish): ?>
+                                                <?php if ($dish['category'] === $group['key']): ?>
+                                                    <div class="menu-detail-dish mb-2">
+                                                        <strong><?= $escape($dish['name']) ?></strong>
+                                                        <?php if (!empty($dish['description'])): ?>
+                                                            <p class="small text-muted mb-0 mt-1"><?= $escape($dish['description']) ?></p>
+                                                        <?php endif; ?>
+                                                        <p class="small mb-0 mt-1">
+                                                            <span class="fw-semibold">Allergènes :</span>
+                                                            <?= ($dish['allergens'] ?? []) !== [] ? $escape(implode(', ', $dish['allergens'])) : 'aucun' ?>
+                                                        </p>
+                                                    </div>
+                                                <?php endif; ?>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    <?php endforeach; ?>
+                                    <p class="small text-muted mb-0">Régime : <?= $escape(\App\Core\Labels::dietaryRegime($menu->getDietaryRegime())) ?> · thème <?= $escape($menu->getTheme()) ?></p>
+                                </div>
 
-                            <?php if (($details['dishes'] ?? []) !== []): ?>
-                                <section class="mt-4">
-                                    <h3 class="h4 text-primary">Composition du menu</h3>
-                                    <div class="row g-3 mt-1">
-                                        <?php foreach (['starter' => 'Entrée', 'main' => 'Plat / accompagnement', 'dessert' => 'Dessert'] as $category => $label): ?>
-                                            <div class="col-md-4">
-                                                <h4 class="h6 fw-bold"><?= $label ?></h4>
-                                                <?php foreach ($details['dishes'] as $dish): ?>
-                                                    <?php if ($dish['category'] === $category): ?>
-                                                        <div class="menu-detail-dish mb-2">
-                                                            <strong><?= $escape($dish['name']) ?></strong>
-                                                            <?php if (!empty($dish['description'])): ?>
-                                                                <p class="small text-muted mb-0 mt-1"><?= $escape($dish['description']) ?></p>
-                                                            <?php endif; ?>
-                                                            <p class="small mb-0 mt-2">
-                                                                <span class="fw-semibold">Allergènes :</span>
-                                                                <?= ($dish['allergens'] ?? []) !== [] ? $escape(implode(', ', $dish['allergens'])) : 'aucun' ?>
-                                                            </p>
-                                                        </div>
-                                                    <?php endif; ?>
-                                                <?php endforeach; ?>
-                                            </div>
-                                        <?php endforeach; ?>
-                                    </div>
-                                </section>
-                            <?php endif; ?>
+                                <div class="col-lg-5">
+                                    <aside class="price-box" id="menuQuote" data-endpoint="/menus/<?= $menu->getId() ?>/quote" data-menu-id="<?= $menu->getId() ?>" data-min-people="<?= $minPeople ?>" data-logged-in="<?= !empty($user) ? '1' : '0' ?>">
+                                        <p class="price-box__unit mb-1"><strong><?= \App\Service\MenuPricing::format($perPerson) ?></strong> / personne</p>
+                                        <p class="small text-muted">À partir de <?= $minPeople ?> personne<?= $minPeople > 1 ? 's' : '' ?> · −10 % dès <?= \App\Service\MenuPricing::discountFrom($minPeople) ?> personnes</p>
+
+                                        <label class="form-label fw-semibold" for="quotePeople">Nombre de personnes</label>
+                                        <div class="input-group people-stepper mb-3">
+                                            <button class="btn btn-outline-primary" type="button" data-step="-1" aria-label="Une personne de moins">−</button>
+                                            <input id="quotePeople" class="form-control text-center" type="number" min="1" max="999" inputmode="numeric" value="<?= $people ?>">
+                                            <button class="btn btn-outline-primary" type="button" data-step="1" aria-label="Une personne de plus">+</button>
+                                        </div>
+
+                                        <dl class="price-box__lines mb-2" aria-live="polite">
+                                            <div><dt data-quote-label><?= $people ?> × <?= \App\Service\MenuPricing::format($perPerson) ?></dt><dd data-quote-gross><?= \App\Service\MenuPricing::format($quote['gross']) ?></dd></div>
+                                            <div data-quote-discount-row <?= $quote['discount_rate'] > 0 ? '' : 'hidden' ?>><dt>Remise −10 %</dt><dd data-quote-discount>−<?= \App\Service\MenuPricing::format($quote['discount_amount']) ?></dd></div>
+                                            <div class="price-box__total"><dt>Total menu</dt><dd data-quote-total><?= \App\Service\MenuPricing::format($quote['total']) ?></dd></div>
+                                        </dl>
+                                        <p class="small mb-3" data-quote-message><?= $quote['orderable'] ? 'Livraison offerte dans Bordeaux, sinon 5 € + 0,59 €/km.' : 'Ce menu se commande à partir de ' . $minPeople . ' personnes.' ?></p>
+
+                                        <?php if (!empty($user)): ?>
+                                            <a class="btn btn-primary w-100" data-quote-order href="<?= $escape($orderUrl) ?>">Commander ce menu</a>
+                                        <?php else: ?>
+                                            <a class="btn btn-primary w-100" data-quote-order href="/login?redirect=<?= $escape(rawurlencode($orderUrl)) ?>">Se connecter pour commander</a>
+                                            <a class="btn btn-link w-100" href="/register">Créer un compte</a>
+                                        <?php endif; ?>
+                                    </aside>
+                                </div>
+                            </div>
 
                             <section class="alert alert-warning mt-4">
                                 <h3 class="h5">Conditions de commande</h3>
@@ -109,15 +132,7 @@
                                 <?php endif; ?>
                             </section>
 
-                            <div class="d-flex gap-2 flex-wrap mt-4">
-                                <a class="btn btn-outline-primary" href="/menus">Retour aux menus</a>
-                                <?php if (!empty($user)): ?>
-                                    <a class="btn btn-primary" href="/orders/new?menu=<?= $menu->getId() ?>">Commander cette formule</a>
-                                <?php else: ?>
-                                    <a class="btn btn-primary" href="/login?redirect=<?= $escape(rawurlencode('/orders/new?menu=' . $menu->getId())) ?>">Connectez-vous pour commander</a>
-                                    <a class="btn btn-outline-secondary" href="/register">Créer un compte</a>
-                                <?php endif; ?>
-                            </div>
+                            <a class="btn btn-outline-primary mt-2" href="/menus">Retour aux menus</a>
                         </div>
                     </article>
                 </div>

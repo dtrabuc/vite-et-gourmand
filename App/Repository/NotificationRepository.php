@@ -72,4 +72,36 @@ final class NotificationRepository
         );
         $stmt->execute(['user_id' => $userId]);
     }
+
+    public function countUnread(int $userId): int
+    {
+        $stmt = Database::pdo()->prepare('SELECT COUNT(*) FROM user_notifications WHERE user_id = :user_id AND is_read = 0');
+        $stmt->execute(['user_id' => $userId]);
+
+        return (int) $stmt->fetchColumn();
+    }
+
+    /** Notifications plus récentes que $afterId (affichage en direct). */
+    public function findAfter(int $userId, int $afterId, int $limit = 10): array
+    {
+        $limit = max(1, min($limit, 20));
+        $stmt = Database::pdo()->prepare(
+            "SELECT id, order_id, quote_request_id, type, title, message, is_read, created_at
+             FROM user_notifications
+             WHERE user_id = :user_id AND id > :after_id
+             ORDER BY id DESC
+             LIMIT {$limit}"
+        );
+        $stmt->execute(['user_id' => $userId, 'after_id' => $afterId]);
+
+        return $stmt->fetchAll();
+    }
+
+    public function lastId(int $userId): int
+    {
+        $stmt = Database::pdo()->prepare('SELECT COALESCE(MAX(id), 0) FROM user_notifications WHERE user_id = :user_id');
+        $stmt->execute(['user_id' => $userId]);
+
+        return (int) $stmt->fetchColumn();
+    }
 }

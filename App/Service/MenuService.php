@@ -58,13 +58,14 @@ final readonly class MenuService
         foreach (array_keys(DishService::CATEGORIES) as $category) {
             $inCategory = array_filter($dishes, static fn (array $dish): bool => $dish['category'] === $category);
 
-            if ($inCategory === []) {
+            // entrée, plat et dessert obligatoires ; apéritif, accompagnements et digestif facultatifs
+            if ($inCategory === [] && in_array($category, ['starter', 'main', 'dessert'], true)) {
                 throw new InvalidArgumentException(
                     'Un menu doit comporter au moins une entrée, un plat et un dessert.'
                 );
             }
 
-            // Ordre d'affichage : entrées, plats puis desserts, dans l'ordre de sélection.
+            // Ordre d'affichage : celui des catégories (apéritif → digestif), puis l'ordre de sélection.
             foreach ($ids as $id) {
                 if (isset($inCategory[$id])) {
                     $ordered[] = $id;

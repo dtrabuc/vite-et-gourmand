@@ -51,6 +51,19 @@ $active = static fn (bool $on): string => $on ? ' active" aria-current="page' : 
                         <li class="nav-item"><a class="nav-link<?= $active($currentPath === '/orders' || str_starts_with($currentPath, '/orders/confirmation/')) ?>" href="/orders">Mes commandes</a></li>
                     <?php endif; ?>
 
+                    <?php /* cloche : nombre de notifications non lues, mis à jour par notifications.js */ ?>
+                    <?php $unread = (int) ($unreadNotifications ?? 0); ?>
+                    <li class="nav-item">
+                        <a class="nav-link nav-bell<?= $active($currentPath === '/notifications') ?>" href="/notifications" id="notificationBell"
+                           aria-label="Notifications<?= $unread > 0 ? ' : ' . $unread . ' non lue' . ($unread > 1 ? 's' : '') : '' ?>">
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true" focusable="false">
+                                <path d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-6V11a7 7 0 0 0-5.5-6.84V3.5a1.5 1.5 0 0 0-3 0v.66A7 7 0 0 0 5 11v5l-2 2v1h18v-1Z"/>
+                            </svg>
+                            <span class="d-lg-none ms-1">Notifications</span>
+                            <span class="badge rounded-pill text-bg-danger nav-bell__count<?= $unread > 0 ? '' : ' d-none' ?>" id="notificationCount"><?= $unread > 99 ? '99+' : $unread ?></span>
+                        </a>
+                    </li>
+
                     <?php /* menu déroulant du compte (Bootstrap JS) */ ?>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle<?= $active(in_array($currentPath, ['/profile', '/notifications'], true)) ?>" href="#" role="button"

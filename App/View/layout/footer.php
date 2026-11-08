@@ -64,8 +64,11 @@
 <script src="/assets/js/accessibility.js" defer></script>
 <script src="/assets/js/api.js" defer></script>
 <script src="/assets/js/script.js" defer></script>
+<script src="/assets/js/notifications.js" defer></script>
 <script src="/assets/js/password.js" defer></script>
 <script src="/assets/js/menus.js" defer></script>
+<script src="/assets/js/menu-detail.js" defer></script>
+<script src="/assets/js/composition.js" defer></script>
 <script src="/assets/js/order.js" defer></script>
 <script src="/assets/js/order-edit.js" defer></script>
 <script src="/assets/js/address.js" defer></script>

@@ -104,6 +104,7 @@ final class AdminController extends BaseController
             'phoneInput' => true, // page avec champ téléphone : charge intl-tel-input
             'orders' => $orders,
             'history' => $history,
+            'items' => $this->orderService->itemsForOrders(array_map(static fn ($o): int => $o->getId(), $orders)),
             'editableStatuses' => OrderService::STAFF_EDITABLE_STATUSES,
             'transitions' => OrderService::ALLOWED_TRANSITIONS,
             'selectedStatus' => $status,
@@ -120,7 +121,7 @@ final class AdminController extends BaseController
             $this->orderService->updateOrderByStaff(
                 $id,
                 (int) Session::id(),
-                $this->postFields(OrderService::EDITABLE_FIELDS),
+                $this->postFields(OrderService::EDITABLE_FIELDS) + ['items' => $_POST['items'] ?? null],
                 trim((string) ($_POST['contact_mode'] ?? '')),
                 trim((string) ($_POST['modification_reason'] ?? ''))
             );

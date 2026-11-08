@@ -48,6 +48,8 @@
 <?php require __DIR__ . '/flash.php'; ?>
 <?= $content ?>
 </div>
+<?php /* notifications en direct (notifications.js) */ ?>
+<div class="toast-container position-fixed bottom-0 end-0 p-3" id="toastArea" aria-live="polite" aria-atomic="false"></div>
 <?php require __DIR__ . '/accessibility.php'; ?>
 <?php require __DIR__ . '/footer.php'; ?>
 </body>

@@ -15,10 +15,10 @@ final class DishRepository
      */
     public function findAll(bool $activeOnly = true): array
     {
-        $sql = 'SELECT id, name, description, category, dietary_regime, is_active
+        $sql = 'SELECT id, name, description, category, dietary_regime, contains_alcohol, is_active
                 FROM dishes'
             . ($activeOnly ? ' WHERE is_active = 1' : '')
-            . " ORDER BY FIELD(category, 'starter', 'main', 'dessert'), name";
+            . " ORDER BY FIELD(category, 'aperitif', 'starter', 'main', 'side', 'dessert', 'digestif'), name";
 
         $rows = Database::pdo()->query($sql)->fetchAll();
 
@@ -28,7 +28,7 @@ final class DishRepository
     public function findById(int $id): ?array
     {
         $stmt = Database::pdo()->prepare(
-            'SELECT id, name, description, category, dietary_regime, is_active
+            'SELECT id, name, description, category, dietary_regime, contains_alcohol, is_active
              FROM dishes WHERE id = :id'
         );
         $stmt->execute(['id' => $id]);
@@ -103,14 +103,15 @@ final class DishRepository
 
         try {
             $stmt = $pdo->prepare(
-                'INSERT INTO dishes (name, description, category, dietary_regime)
-                 VALUES (:name, :description, :category, :dietary_regime)'
+                'INSERT INTO dishes (name, description, category, dietary_regime, contains_alcohol)
+                 VALUES (:name, :description, :category, :dietary_regime, :contains_alcohol)'
             );
             $stmt->execute([
                 'name' => $data['name'],
                 'description' => $data['description'],
                 'category' => $data['category'],
                 'dietary_regime' => $data['dietary_regime'],
+                'contains_alcohol' => (int) ($data['contains_alcohol'] ?? 0),
             ]);
             $id = (int) $pdo->lastInsertId();
 
@@ -139,7 +140,7 @@ final class DishRepository
             $stmt = $pdo->prepare(
                 'UPDATE dishes
                  SET name = :name, description = :description, category = :category,
-                     dietary_regime = :dietary_regime, updated_at = NOW()
+                     dietary_regime = :dietary_regime, contains_alcohol = :contains_alcohol, updated_at = NOW()
                  WHERE id = :id'
             );
             $stmt->execute([
@@ -148,6 +149,7 @@ final class DishRepository
                 'description' => $data['description'],
                 'category' => $data['category'],
                 'dietary_regime' => $data['dietary_regime'],
+                'contains_alcohol' => (int) ($data['contains_alcohol'] ?? 0),
             ]);
 
             $this->replaceAllergens($id, $allergenIds);
@@ -235,6 +237,7 @@ final class DishRepository
                 $allergens = $byDish[(int) $row['id']] ?? [];
                 $row['id'] = (int) $row['id'];
                 $row['is_active'] = (bool) $row['is_active'];
+                $row['contains_alcohol'] = (bool) ($row['contains_alcohol'] ?? false);
                 $row['allergen_ids'] = array_column($allergens, 'id');
                 $row['allergens'] = array_column($allergens, 'name');
 

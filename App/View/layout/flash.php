@@ -10,6 +10,7 @@ $flashKeys = [
     'register_errors' => 'danger',
     'profile_success' => 'success',
     'profile_errors' => 'danger',
+    'privacy_error' => 'danger',
     'password_success' => 'success',
     'password_errors' => 'danger',
     'order_success' => 'success',

@@ -32,6 +32,12 @@
                             <?php endforeach; ?>
                         </select>
                     </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="dish_alcohol" name="contains_alcohol" value="1" <?= !empty($dish['contains_alcohol']) ? 'checked' : '' ?>>
+                            <label class="form-check-label" for="dish_alcohol">Contient de l’alcool</label>
+                        </div>
+                    </div>
                     <div class="col-12">
                         <label class="form-label" for="dish_description">Description</label>
                         <textarea class="form-control" id="dish_description" name="description" rows="3" required><?= $escape($dish['description']) ?></textarea>

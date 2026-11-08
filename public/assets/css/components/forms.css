@@ -35,3 +35,19 @@
     display: block;
     width: 100%;
 }
+
+/* Sélecteur − / + du nombre de personnes (catalogue, fiche menu, commande) */
+.people-stepper { width: 10.5rem; flex-wrap: nowrap; }
+.people-stepper .form-control { min-width: 3.5rem; padding-inline: .25rem; -moz-appearance: textfield; appearance: textfield; }
+.people-stepper .form-control::-webkit-outer-spin-button,
+.people-stepper .form-control::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.people-stepper .form-control { font-weight: 700; font-size: 1.1rem; }
+.people-stepper .btn { min-width: 2.75rem; font-size: 1.2rem; line-height: 1; }
+
+/* Choix rapide du nombre de personnes (puces 1, 2, 4…) */
+.people-quick { display: flex; flex-wrap: wrap; gap: .35rem; }
+.people-quick .btn-chip.is-active {
+    border-color: var(--vg-primary);
+    background: var(--vg-primary);
+    color: #fff;
+}

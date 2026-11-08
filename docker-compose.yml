@@ -26,7 +26,6 @@ services:
       APP_DEBUG: "false"
       APP_TIMEZONE: Europe/Paris
       APP_URL: "http://localhost:${VG_HTTP_PORT:-8080}"
-      GOOGLE_MAPS_API_KEY: ""
       HOSTING_NAME: "Docker (poste local)"
       DB_HOST: mariadb
       DB_PORT: "3306"

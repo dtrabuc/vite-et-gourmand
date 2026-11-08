@@ -51,9 +51,14 @@ dist/
 
 # Scripts de test locaux (non versionnés)
 scripts/simulate-registration.mjs
+# mise à jour ponctuelle d'une base existante (le schéma de référence reste database/schema.sql)
+scripts/update-menus.php
 scripts/*.test.js
 scripts/*.spec.js
 
 # Maquettes : captures HTML intermédiaires (lourdes) et outils locaux ; PNG, PDF et maquettes.md sont versionnés
 docs/maquettes/*.html
 docs/maquettes/outils/
+
+# Retours de test bruts (photos et captures privées)
+feedback/

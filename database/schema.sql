@@ -13,7 +13,8 @@
 -- Contenu des données :
 --   - 3 comptes de démonstration (ids fixes 1 admin, 2 employé, 3 client),
 --     identifiants dans le .env (DEMO_*), à changer avec scripts/set-password.php ;
---   - horaires, 10 allergènes, 32 plats, 9 menus et leurs compositions ;
+--   - horaires, 10 allergènes, 46 plats (apéritifs, entrées, plats,
+--     accompagnements, desserts, digestifs), 10 menus et leurs compositions ;
 --   - 5 commandes terminées (1001 à 1005) du client, reprises par les avis
 --     et les statistiques de database/mongodb-init.js.
 -- Structure complète et à jour : il n'y a plus de fichiers de migration séparés.
@@ -31,6 +32,7 @@ DROP TABLE IF EXISTS
   `email_outbox`,
   `contact_messages`,
   `quote_requests`,
+  `order_items`,
   `order_status_history`,
   `orders`,
   `menu_dishes`,
@@ -92,8 +94,10 @@ CREATE TABLE `dishes` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(180) NOT NULL,
   `description` TEXT NOT NULL,
-  `category` ENUM('starter','main','dessert') NOT NULL,
+  `category` ENUM('aperitif','starter','main','side','dessert','digestif') NOT NULL,
   `dietary_regime` ENUM('classic','vegetarian','vegan','other') NOT NULL DEFAULT 'classic',
+  -- boisson alcoolisée : jamais proposée en remplacement dans un menu sans alcool (enfant)
+  `contains_alcohol` TINYINT(1) NOT NULL DEFAULT 0,
   `is_active` TINYINT(1) NOT NULL DEFAULT 1,
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -146,6 +150,10 @@ CREATE TABLE `orders` (
   `delivery_city` VARCHAR(100) NULL,
   `delivery_postal_code` VARCHAR(10) NULL,
   `delivery_distance_km` DECIMAL(7,2) NULL,
+  -- verified : adresse trouvée sur OpenStreetMap ; manual : saisie manuelle acceptée
+  `address_status` ENUM('verified','manual') NULL,
+  -- bordeaux : gratuit ; zone : 25 km autour ; outside : hors zone, frais acceptés par le client
+  `delivery_zone` ENUM('bordeaux','zone','outside') NULL,
   `delivery_cost` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
   `customization` TEXT NULL,
   `service_type` ENUM('delivery','on_site','pickup') NOT NULL DEFAULT 'delivery',
@@ -169,6 +177,28 @@ CREATE TABLE `orders` (
     FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT,
   CONSTRAINT `fk_orders_menu`
     FOREIGN KEY (`menu_id`) REFERENCES `menus`(`id`) ON DELETE RESTRICT
+) ENGINE=InnoDB;
+
+-- Choix du client pour chaque commande : répartition des convives entre les
+-- options du menu, plat remplacé par un autre de la même catégorie, et
+-- allergènes à retirer (ids séparés par des virgules).
+-- slot_dish_id = plat du menu d'origine ; dish_id = plat servi.
+CREATE TABLE `order_items` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `order_id` INT UNSIGNED NOT NULL,
+  `slot_dish_id` INT UNSIGNED NOT NULL,
+  `dish_id` INT UNSIGNED NOT NULL,
+  `category` ENUM('aperitif','starter','main','side','dessert','digestif') NOT NULL,
+  `quantity` INT UNSIGNED NOT NULL,
+  `without_allergens` VARCHAR(100) NOT NULL DEFAULT '',
+  PRIMARY KEY (`id`),
+  KEY `idx_order_items_order` (`order_id`),
+  CONSTRAINT `fk_order_items_order`
+    FOREIGN KEY (`order_id`) REFERENCES `orders`(`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_order_items_dish`
+    FOREIGN KEY (`dish_id`) REFERENCES `dishes`(`id`) ON DELETE RESTRICT,
+  CONSTRAINT `fk_order_items_slot`
+    FOREIGN KEY (`slot_dish_id`) REFERENCES `dishes`(`id`) ON DELETE RESTRICT
 ) ENGINE=InnoDB;
 
 CREATE TABLE `order_status_history` (
@@ -401,11 +431,11 @@ VALUES
      'main', 'vegan'),
 
     (16, 'Dahl de lentilles corail',
-     'Lentilles corail, tomate, épices douces et riz.',
+     'Lentilles corail mijotées, tomate et épices douces.',
      'main', 'vegan'),
 
     (17, 'Galette végétale',
-     'Galette végétale, sauce aux herbes et légumes.',
+     'Galette de légumes et céréales, sauce aux herbes.',
      'main', 'vegetarian'),
 
     (18, 'Saumon rôti citron',
@@ -422,19 +452,19 @@ VALUES
 
     (21, 'Frites maison',
      'Pommes de terre frites sur place.',
-     'main', 'vegan'),
+     'side', 'vegan'),
 
     (22, 'Purée de pommes de terre',
      'Purée onctueuse au lait et beurre.',
-     'main', 'vegetarian'),
+     'side', 'vegetarian'),
 
     (23, 'Haricots verts persillés',
      'Haricots verts, ail et persil.',
-     'main', 'vegan'),
+     'side', 'vegan'),
 
     (24, 'Riz basmati',
      'Riz basmati parfumé.',
-     'main', 'vegan'),
+     'side', 'vegan'),
 
     (25, 'Mousse au chocolat',
      'Mousse au chocolat noir.',
@@ -466,6 +496,66 @@ VALUES
 
     (32, 'Panna cotta vanille',
      'Panna cotta vanillée, coulis de fruits rouges.',
+     'dessert', 'vegetarian'),
+
+    (33, 'Salade verte',
+     'Salade verte croquante, vinaigrette maison.',
+     'side', 'vegan'),
+
+    (34, 'Gratin dauphinois',
+     'Pommes de terre fondantes à la crème, gratinées au four.',
+     'side', 'vegetarian'),
+
+    (35, 'Légumes rôtis de saison',
+     'Légumes du marché rôtis à l’huile d’olive et au thym.',
+     'side', 'vegan'),
+
+    -- Apéritifs : une boisson et une bouchée. Chaque menu adulte propose
+    -- une formule avec alcool et une sans alcool.
+    (36, 'Kir et gougères',
+     'Kir au vin blanc et crème de cassis, gougères au fromage.',
+     'aperitif', 'vegetarian'),
+
+    (37, 'Cocktail sans alcool et gougères',
+     'Cocktail de jus de fruits frais, gougères au fromage.',
+     'aperitif', 'vegetarian'),
+
+    (38, 'Cocktail sans alcool et toasts de houmous',
+     'Cocktail de jus de fruits frais, toasts de houmous et légumes croquants.',
+     'aperitif', 'vegan'),
+
+    (39, 'Crémant et toasts de saumon fumé',
+     'Coupe de crémant de Bordeaux, toasts de saumon fumé à l’aneth.',
+     'aperitif', 'classic'),
+
+    (40, 'Jus de pomme pétillant et gressins',
+     'Jus de pomme pétillant sans alcool et gressins.',
+     'aperitif', 'vegan'),
+
+    -- Digestifs
+    (41, 'Café ou thé',
+     'Café expresso ou thé, servi avec un carré de chocolat.',
+     'digestif', 'vegetarian'),
+
+    (42, 'Infusion verveine-menthe',
+     'Infusion de verveine et menthe fraîche.',
+     'digestif', 'vegan'),
+
+    (43, 'Armagnac',
+     'Verre d’Armagnac (2 cl), eau-de-vie de Gascogne.',
+     'digestif', 'classic'),
+
+    -- Menu de Noël
+    (44, 'Terrine de foie gras',
+     'Terrine de foie gras de canard, chutney de figues et pain d’épices.',
+     'starter', 'classic'),
+
+    (45, 'Chapon rôti aux marrons',
+     'Chapon fermier rôti, farce aux marrons, jus réduit.',
+     'main', 'classic'),
+
+    (46, 'Bûche glacée vanille-marron',
+     'Bûche glacée à la vanille et à la crème de marron.',
      'dessert', 'vegetarian')
 ON DUPLICATE KEY UPDATE
     `name` = VALUES(`name`),
@@ -474,6 +564,9 @@ ON DUPLICATE KEY UPDATE
     `dietary_regime` = VALUES(`dietary_regime`),
     `is_active` = 1,
     `updated_at` = CURRENT_TIMESTAMP;
+
+-- Boissons alcoolisées (kir, crémant, Armagnac)
+UPDATE `dishes` SET `contains_alcohol` = (`id` IN (36, 39, 43));
 
 -- ----------------------------------------------------------------
 -- Allergènes associés aux plats
@@ -512,11 +605,31 @@ INSERT INTO `dish_allergens` (`dish_id`, `allergen_id`) VALUES
     (31, 1),
     (31, 2),
     (31, 3),
-    (32, 2);
+    (32, 2),
+    (34, 2),
+    (36, 1),
+    (36, 2),
+    (36, 3),
+    (37, 1),
+    (37, 2),
+    (37, 3),
+    (38, 1),
+    (39, 1),
+    (39, 7),
+    (40, 1),
+    (41, 2),
+    (44, 1),
+    (46, 2),
+    (46, 3);
 
 -- ----------------------------------------------------------------
--- Menus : au moins 3 formules compatibles avec 1 personne.
--- Pour les minimums > 1, une alternative est explicitement fournie.
+-- Menus. base_price = prix pour le nombre minimum de personnes ;
+-- le site affiche le prix par personne (base_price / min_people) :
+-- de 12,90 € (enfant) à 36,90 € (Noël).
+-- Chaque convive a droit à 1 apéritif, 1 entrée, 1 plat (au choix s'il y
+-- en a deux), les accompagnements, 1 dessert et 1 digestif (sauf enfant).
+-- Accords vérifiés : steak-frites, saucisse-purée, dahl-riz, curry-riz,
+-- lasagnes-salade verte, poisson-riz-haricots, volaille ou bœuf-gratin.
 -- ----------------------------------------------------------------
 
 INSERT INTO `menus`
@@ -524,94 +637,104 @@ INSERT INTO `menus`
      `min_people`, `base_price`, `conditions`, `available_stock`)
 VALUES
     (1,
-     'Formule Solo Classique',
-     'Entrée, plat, accompagnement et dessert. Pensée pour une personne avec une formule simple et accessible.',
+     'Formule Bistrot',
+     'Kir ou cocktail sans alcool avec gougères, œuf mayonnaise, steak haché sauce échalote et frites maison, crème caramel, café.',
      'Classique',
      'classic',
      1,
-     16.90,
-     'Minimum 1 personne. Commande directe possible selon le stock disponible.',
+     18.90,
+     'À partir de 1 personne. Remise de 10 % dès 6 personnes.',
      40),
 
     (2,
-     'Formule Solo Végétale',
-     'Entrée végétale, plat végétalien, accompagnement et dessert fruité.',
+     'Formule Végétale',
+     'Cocktail sans alcool et toasts de houmous, carottes râpées, dahl de lentilles corail et riz basmati, salade de fruits frais, infusion. 100 % végétal.',
      'Classique',
      'vegan',
      1,
-     17.90,
-     'Minimum 1 personne. Cuisine 100 % végétale. Commande directe possible selon le stock disponible.',
+     19.90,
+     'À partir de 1 personne. Cuisine 100 % végétale. Remise de 10 % dès 6 personnes.',
      30),
 
     (3,
-     'Formule Enfant Gourmande',
-     'Plat enfant, accompagnement, dessert et boisson non alcoolisée.',
+     'Formule Enfant',
+     'Jus de pomme pétillant et gressins, carottes râpées, saucisse grillée et purée, compote pomme poire. Sans alcool.',
      'Classique',
      'classic',
      1,
-     11.90,
-     'Minimum 1 personne. Formule pensée pour un repas enfant.',
+     12.90,
+     'À partir de 1 personne. Portions adaptées aux enfants, sans alcool. Remise de 10 % dès 6 personnes.',
      35),
 
     (4,
-     'Menu Duo Convivial',
-     'Entrée au choix, plat généreux et dessert pour deux convives.',
+     'Menu Convivial',
+     'Kir ou cocktail sans alcool avec gougères, crudités de saison, poulet rôti avec purée et haricots verts, tarte aux pommes, café ou thé.',
      'Classique',
      'classic',
      2,
-     34.90,
-     'Minimum 2 personnes. Pour 1 personne, choisir la Formule Solo Classique.',
+     43.80,
+     'À partir de 2 personnes. Remise de 10 % dès 7 personnes.',
      25),
 
     (5,
-     'Menu Trio Végétal',
-     'Entrée, plat végétarien, accompagnement et dessert pour trois convives.',
+     'Menu Végétarien du Marché',
+     'Kir ou cocktail sans alcool avec gougères, salade de lentilles, galette végétale et haricots verts, panna cotta vanille, café, thé ou infusion.',
      'Pâques',
      'vegetarian',
      3,
-     52.90,
-     'Minimum 3 personnes. Pour 1 personne, choisir la Formule Solo Végétale.',
+     68.70,
+     'À partir de 3 personnes. Remise de 10 % dès 8 personnes.',
      20),
 
     (6,
-     'Menu Familial Tradition',
-     'Entrée, plats traditionnels, deux accompagnements et dessert familial.',
-     'Noël',
+     'Menu Familial',
+     'Kir ou cocktail sans alcool avec gougères, tomates mozzarella, lasagnes bolognaises et salade verte, mousse au chocolat, café ou thé.',
+     'Classique',
      'classic',
      3,
-     64.90,
-     'Minimum 3 personnes. Pour moins de 3 personnes, choisir une formule Solo ou Duo.',
+     62.70,
+     'À partir de 3 personnes. Remise de 10 % dès 8 personnes.',
      18),
 
     (7,
-     'Menu Terroir & Mer',
-     'Entrée raffinée, poisson ou viande, accompagnement travaillé et dessert.',
+     'Menu Marée de Printemps',
+     'Crémant ou cocktail sans alcool avec bouchées, tarte fine aux légumes, saumon rôti au citron avec riz basmati et haricots verts, fromage blanc aux fruits rouges, café ou Armagnac.',
      'Pâques',
      'classic',
      2,
-     49.90,
-     'Minimum 2 personnes. Pour 1 personne, choisir la Formule Solo Classique.',
+     57.80,
+     'À partir de 2 personnes. Remise de 10 % dès 7 personnes.',
      15),
 
     (8,
      'Menu Végétal Élégance',
-     'Entrée gastronomique, plat végétalien travaillé, garniture de saison et dessert.',
+     'Cocktail sans alcool et toasts de houmous, velouté de légumes, curry de légumes et riz basmati, salade de fruits frais, infusion. 100 % végétal.',
      'Évènement',
      'vegan',
      2,
-     45.90,
-     'Minimum 2 personnes. Pour 1 personne, choisir la Formule Solo Végétale.',
+     51.80,
+     'À partir de 2 personnes. Cuisine 100 % végétale. Remise de 10 % dès 7 personnes.',
      15),
 
     (9,
      'Menu Réception Signature',
-     'Entrée, deux choix de plats premium, deux garnitures et dessert signature.',
+     'Crémant ou cocktail sans alcool avec bouchées, tarte fine aux légumes, volaille farcie ou bœuf mijoté au vin, gratin dauphinois et légumes rôtis, fondant au chocolat, café ou Armagnac.',
      'Évènement',
      'classic',
      6,
-     69.90,
-     'Minimum 6 personnes. Pour moins de 6 personnes, une formule Solo, Duo ou Trio est recommandée.',
-     12)
+     209.40,
+     'À partir de 6 personnes. Les deux plats sont prévus : chaque convive choisit le sien sur place. Remise de 10 % dès 11 personnes.',
+     12),
+
+    (10,
+     'Menu de Noël',
+     'Crémant ou cocktail sans alcool avec bouchées, terrine de foie gras, chapon rôti aux marrons avec gratin dauphinois et haricots verts, bûche glacée vanille-marron, café ou Armagnac.',
+     'Noël',
+     'classic',
+     4,
+     147.60,
+     'À partir de 4 personnes. Remise de 10 % dès 9 personnes.',
+     15)
 ON DUPLICATE KEY UPDATE
     `title` = VALUES(`title`),
     `description` = VALUES(`description`),
@@ -630,58 +753,96 @@ ON DUPLICATE KEY UPDATE
 -- ----------------------------------------------------------------
 
 INSERT INTO `menu_dishes` (`menu_id`, `dish_id`, `position`) VALUES
-    (1, 1, 1),
-    (1, 9, 2),
-    (1, 21, 3),
-    (1, 26, 4),
+    (1, 36, 1),
+    (1, 37, 2),
+    (1, 3, 3),
+    (1, 9, 4),
+    (1, 21, 5),
+    (1, 26, 6),
+    (1, 41, 7),
 
-    (2, 7, 1),
-    (2, 16, 2),
-    (2, 24, 3),
-    (2, 30, 4),
+    (2, 38, 1),
+    (2, 7, 2),
+    (2, 16, 3),
+    (2, 24, 4),
+    (2, 30, 5),
+    (2, 42, 6),
 
-    (3, 3, 1),
-    (3, 14, 2),
-    (3, 21, 3),
-    (3, 29, 4),
+    (3, 40, 1),
+    (3, 7, 2),
+    (3, 14, 3),
+    (3, 22, 4),
+    (3, 29, 5),
 
-    (4, 2, 1),
-    (4, 10, 2),
-    (4, 22, 3),
-    (4, 27, 4),
+    (4, 36, 1),
+    (4, 37, 2),
+    (4, 2, 3),
+    (4, 10, 4),
+    (4, 22, 5),
+    (4, 23, 6),
+    (4, 27, 7),
+    (4, 41, 8),
 
-    (5, 6, 1),
-    (5, 17, 2),
-    (5, 23, 3),
-    (5, 32, 4),
+    (5, 36, 1),
+    (5, 37, 2),
+    (5, 6, 3),
+    (5, 17, 4),
+    (5, 23, 5),
+    (5, 32, 6),
+    (5, 41, 7),
+    (5, 42, 8),
 
-    (6, 4, 1),
-    (6, 12, 2),
-    (6, 21, 3),
-    (6, 23, 4),
-    (6, 27, 5),
+    (6, 36, 1),
+    (6, 37, 2),
+    (6, 4, 3),
+    (6, 12, 4),
+    (6, 33, 5),
+    (6, 25, 6),
+    (6, 41, 7),
 
-    (7, 8, 1),
-    (7, 18, 2),
-    (7, 22, 3),
-    (7, 31, 4),
+    (7, 39, 1),
+    (7, 37, 2),
+    (7, 8, 3),
+    (7, 18, 4),
+    (7, 24, 5),
+    (7, 23, 6),
+    (7, 28, 7),
+    (7, 41, 8),
+    (7, 43, 9),
 
-    (8, 5, 1),
-    (8, 15, 2),
-    (8, 24, 3),
-    (8, 30, 4),
+    (8, 38, 1),
+    (8, 5, 2),
+    (8, 15, 3),
+    (8, 24, 4),
+    (8, 30, 5),
+    (8, 42, 6),
 
-    (9, 4, 1),
-    (9, 19, 2),
-    (9, 20, 3),
-    (9, 22, 4),
-    (9, 31, 5);
+    (9, 39, 1),
+    (9, 37, 2),
+    (9, 8, 3),
+    (9, 19, 4),
+    (9, 20, 5),
+    (9, 34, 6),
+    (9, 35, 7),
+    (9, 31, 8),
+    (9, 41, 9),
+    (9, 43, 10),
+
+    (10, 39, 1),
+    (10, 37, 2),
+    (10, 44, 3),
+    (10, 45, 4),
+    (10, 34, 5),
+    (10, 23, 6),
+    (10, 46, 7),
+    (10, 41, 8),
+    (10, 43, 9);
 
 -- ----------------------------------------------------------------
 -- Commandes de démonstration terminées (identifiants fixes 1001 à 1005)
 -- passées par le compte client user@viteetgourmand.com, retrait sur place.
 -- Elles portent les avis et les statistiques de database/mongodb-init.js.
--- Prix = prix du menu pour son minimum de personnes (pas de remise).
+-- Prix = prix par personne × minimum de personnes du menu (pas de remise).
 -- ----------------------------------------------------------------
 
 SET @client_id := (SELECT `id` FROM `users` WHERE `email` = 'user@viteetgourmand.com');
@@ -697,12 +858,12 @@ SELECT d.id, d.order_number, @client_id, d.menu_id, d.people, d.order_date,
        NULL, 0.00, 'pickup', 'cash_on_site', '+33612345678',
        d.price, 0.00, d.price, 'completed', 0, d.order_date
 FROM (
-    SELECT 1001 AS id, 'VG-DEMO-001001' AS order_number, 1 AS menu_id, 1 AS people, 16.90 AS price,
+    SELECT 1001 AS id, 'VG-DEMO-001001' AS order_number, 1 AS menu_id, 1 AS people, 18.90 AS price,
            '2026-08-30 10:00:00' AS order_date, '2026-09-02' AS delivery_date, '12:00:00' AS delivery_time
-    UNION ALL SELECT 1002, 'VG-DEMO-001002', 2, 1, 17.90, '2026-09-01 09:30:00', '2026-09-05', '19:00:00'
-    UNION ALL SELECT 1003, 'VG-DEMO-001003', 4, 2, 34.90, '2026-09-03 14:00:00', '2026-09-08', '19:00:00'
-    UNION ALL SELECT 1004, 'VG-DEMO-001004', 7, 2, 49.90, '2026-09-05 11:15:00', '2026-09-10', '20:00:00'
-    UNION ALL SELECT 1005, 'VG-DEMO-001005', 9, 6, 69.90, '2026-09-07 16:45:00', '2026-09-12', '19:30:00'
+    UNION ALL SELECT 1002, 'VG-DEMO-001002', 2, 1, 19.90, '2026-09-01 09:30:00', '2026-09-05', '19:00:00'
+    UNION ALL SELECT 1003, 'VG-DEMO-001003', 4, 2, 43.80, '2026-09-03 14:00:00', '2026-09-08', '19:00:00'
+    UNION ALL SELECT 1004, 'VG-DEMO-001004', 7, 2, 57.80, '2026-09-05 11:15:00', '2026-09-10', '20:00:00'
+    UNION ALL SELECT 1005, 'VG-DEMO-001005', 9, 6, 209.40, '2026-09-07 16:45:00', '2026-09-12', '19:30:00'
 ) AS d
 WHERE @client_id IS NOT NULL;
 
