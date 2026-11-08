@@ -38,7 +38,7 @@ function menu_image_fallbacks(): array
 {
     static $images = [
         1 => ['url' => 'https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=1200&h=800&q=82', 'alt_text' => 'Soupe et légumes de saison'],
-        2 => ['url' => 'https://images.unsplash.com/photo-1512621776951-a57141f2e8c0?auto=format&fit=crop&w=1200&h=800&q=82', 'alt_text' => 'Assiette végétale colorée'],
+        2 => ['url' => 'https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=1200&h=800&q=82', 'alt_text' => 'Assiette végétale colorée'],
         3 => ['url' => 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=1200&h=800&q=82', 'alt_text' => 'Menu gourmand pour enfant'],
         4 => ['url' => 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1200&h=800&q=82', 'alt_text' => 'Table généreuse pour un repas convivial'],
         5 => ['url' => 'https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?auto=format&fit=crop&w=1200&h=800&q=82', 'alt_text' => 'Assiette fraîche et végétale'],
