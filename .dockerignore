@@ -1,0 +1,20 @@
+# secrets et fichiers locaux : jamais dans l'image
+.env
+.env.*
+!.env.example
+.git
+.github
+.idea
+.vscode
+vendor
+node_modules
+storage
+public/uploads
+backups
+tests
+log.txt
+CLAUDE.md
+CODEX.md
+connect-ssh.js
+docs
+*.log

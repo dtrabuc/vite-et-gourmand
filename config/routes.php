@@ -10,7 +10,7 @@ return [
     ['GET', '/public/menus/{id}', 'PublicController@getMenuById', ['Security']],
     ['GET', '/contact', 'ContactController@index', ['Security']],
     ['POST', '/contact', 'ContactController@send', ['Security']],
-    ['GET', '/api/address/autocomplete', 'AddressController@autocomplete', ['Security']],
+    ['GET', '/api/address/autocomplete', 'AddressController@autocomplete', ['Security', 'Auth']],
     ['GET', '/quote', 'QuoteController@index', ['Security']],
     ['POST', '/quote', 'QuoteController@submit', ['Security']],
     ['GET', '/legal', 'PublicController@legal', ['Security']],

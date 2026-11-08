@@ -101,23 +101,20 @@ class MailService
         }
     }
 
-    public function sendTemporaryPasswordEmail(string $to, string $firstName, string $temporaryPassword): bool
+    public function sendWelcomeEmail(string $to, string $firstName): bool
     {
         $body = <<<TEXT
 Bonjour {$firstName},
 
-Votre compte Vite & Gourmand est créé. Utilisez les identifiants ci-dessous pour votre première connexion :
+Bienvenue chez Vite & Gourmand ! Votre compte client est créé avec l'adresse {$to}.
+Vous pouvez dès maintenant vous connecter pour consulter nos menus et passer commande.
 
-Adresse e-mail : {$to}
-Mot de passe provisoire : {$temporaryPassword}
-
-Vous devrez choisir un nouveau mot de passe dès votre première connexion. Ne communiquez ce mot de passe provisoire à personne.
-Si vous n'êtes pas à l'origine de cette inscription, contactez Vite & Gourmand.
+Si vous n'êtes pas à l'origine de cette inscription, contactez-nous.
 
 À bientôt,
 L'équipe Vite & Gourmand
 TEXT;
-        return $this->send($to, 'Votre accès à Vite & Gourmand', $body);
+        return $this->send($to, 'Bienvenue chez Vite & Gourmand', $body);
     }
 
     /**

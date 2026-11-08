@@ -314,7 +314,9 @@ final class Container
 
         $this->set(
             AddressController::class,
-            static fn (): AddressController => new AddressController()
+            static fn (Container $container): AddressController => new AddressController(
+                $container->get(RateLimiter::class)
+            )
         );
 
         $this->set(

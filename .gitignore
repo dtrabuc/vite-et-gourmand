@@ -48,3 +48,12 @@ coverage/
 node_modules/
 build/
 dist/
+
+# Scripts de test locaux (non versionnés)
+scripts/simulate-registration.mjs
+scripts/*.test.js
+scripts/*.spec.js
+
+# Maquettes : captures HTML intermédiaires (lourdes) et outils locaux ; PNG, PDF et maquettes.md sont versionnés
+docs/maquettes/*.html
+docs/maquettes/outils/

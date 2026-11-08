@@ -1,0 +1,174 @@
+==================================================================
+ VITE & GOURMAND - LANCER LE PROJET AVEC DOCKER
+==================================================================
+
+Le seul logiciel à installer est Docker. PHP, Apache, Composer, MariaDB,
+MongoDB et la boîte mail de test sont dans les conteneurs : rien d'autre
+à installer sur la machine.
+
+------------------------------------------------------------------
+ 1. PRÉREQUIS
+------------------------------------------------------------------
+
+ - Windows 10/11 ou macOS : Docker Desktop
+     https://www.docker.com/products/docker-desktop/
+   L'installer, le lancer, attendre que l'icône indique "Engine running".
+   Sous Windows, accepter l'activation de WSL 2 si elle est demandée.
+
+ - Linux : Docker Engine avec le plugin Compose
+     https://docs.docker.com/engine/install/
+   (ou Docker Desktop pour Linux)
+
+ - Vérifier dans un terminal (PowerShell, Terminal, etc.) :
+
+       docker --version
+       docker compose version
+
+   Les deux commandes doivent afficher une version. Il faut Compose v2
+   (commande "docker compose" avec un espace).
+
+ - Environ 2 Go d'espace disque et une connexion Internet pour le premier
+   lancement (téléchargement des images).
+
+ - Les ports 8080 et 8025 doivent être libres (sinon voir la section 6).
+
+------------------------------------------------------------------
+ 2. RÉCUPÉRER LE PROJET
+------------------------------------------------------------------
+
+ Avec Git :
+
+       git clone -b dev https://github.com/dtrabuc/vite-et-gourmand.git
+       cd vite-et-gourmand
+
+ Ou bien télécharger l'archive ZIP du dépôt, la décompresser, puis ouvrir
+ un terminal DANS le dossier décompressé (celui qui contient
+ docker-compose.yml).
+
+ Aucun fichier .env n'est nécessaire : la configuration Docker est déjà
+ dans docker-compose.yml.
+
+------------------------------------------------------------------
+ 3. LANCER
+------------------------------------------------------------------
+
+       docker compose up -d --build
+
+ Le premier lancement prend quelques minutes (téléchargement et
+ construction de l'image). Les suivants prennent quelques secondes.
+
+ Au tout premier démarrage :
+   - MariaDB importe automatiquement database/schema.sql ;
+   - MongoDB exécute automatiquement database/mongodb-init.js ;
+   - l'application applique les mots de passe des comptes de démonstration.
+
+ Vérifier que tout tourne :
+
+       docker compose ps
+
+ Les 4 services (app, mariadb, mongodb, mailpit) doivent être "Up"
+ (mariadb et mongodb en "healthy"). Attendre 20 à 30 secondes après le
+ premier lancement avant d'ouvrir le site.
+
+------------------------------------------------------------------
+ 4. UTILISER
+------------------------------------------------------------------
+
+ Site :                    http://localhost:8080
+ Boîte mail de test :      http://localhost:8025   (Mailpit)
+
+ Tous les e-mails envoyés par le site (bienvenue, mot de passe oublié,
+ confirmation de commande...) arrivent dans Mailpit. Aucun mail ne part
+ vers Internet.
+
+ Comptes de démonstration :
+
+   Rôle         Connexion sur          E-mail                          Mot de passe
+   ----------   --------------------   -----------------------------   ------------------
+   Client       /login                 user@viteetgourmand.com         Client!Docker2026
+   Employé      /admin/login           employee@viteetgourmand.com     Employe!Docker2026
+   Admin        /admin/login           admin@viteetgourmand.com        Admin!Docker2026
+
+ Ces mots de passe ne servent qu'à cette installation locale.
+
+ Test de l'inscription :
+   1. http://localhost:8080/register
+   2. remplir le formulaire ; cocher "Me proposer un mot de passe
+      aléatoire sécurisé" ou saisir son propre mot de passe ;
+      le bouton "Afficher" montre les caractères saisis ;
+   3. valider, puis se connecter sur /login avec ce mot de passe ;
+   4. le mail de bienvenue est visible dans http://localhost:8025
+
+ Note : l'autocomplétion d'adresse et le calcul de distance utilisent
+ l'API Google, désactivée ici (pas de clé). Le reste du site fonctionne.
+
+------------------------------------------------------------------
+ 5. ARRÊTER, RELANCER, REPARTIR DE ZÉRO
+------------------------------------------------------------------
+
+ Arrêter (les données sont conservées) :
+       docker compose stop
+
+ Relancer :
+       docker compose start
+
+ Arrêter et supprimer les conteneurs (données conservées dans les volumes) :
+       docker compose down
+
+ Tout remettre à zéro (SUPPRIME les bases, comptes créés, images envoyées) :
+       docker compose down -v
+       docker compose up -d --build
+
+ Après une modification du code PHP/CSS/JS, reconstruire l'image :
+       docker compose up -d --build
+
+------------------------------------------------------------------
+ 6. PROBLÈMES FRÉQUENTS
+------------------------------------------------------------------
+
+ "port is already allocated" (8080 ou 8025 déjà utilisé)
+   Choisir d'autres ports au lancement :
+     Linux/macOS :  VG_HTTP_PORT=8090 VG_MAIL_PORT=8026 docker compose up -d --build
+     PowerShell  :  $env:VG_HTTP_PORT=8090; $env:VG_MAIL_PORT=8026; docker compose up -d --build
+   Le site est alors sur http://localhost:8090
+
+ "Cannot connect to the Docker daemon" / "docker: command not found"
+   Docker Desktop n'est pas lancé, ou (Linux) l'utilisateur n'est pas
+   dans le groupe docker : sudo usermod -aG docker $USER puis se
+   déconnecter / reconnecter.
+
+ Le site affiche une erreur juste après le premier lancement
+   Les bases s'initialisent encore. Attendre 30 secondes et recharger.
+   Voir les journaux :
+       docker compose logs app
+       docker compose logs mariadb
+
+ Les comptes de démonstration refusent le mot de passe
+   Les mots de passe ne sont appliqués qu'une fois. Pour repartir de zéro :
+       docker compose down -v
+       docker compose up -d --build
+
+ Windows : "exec vg-entrypoint: no such file or directory"
+   Le dépôt a été récupéré avec des fins de ligne Windows. L'image les
+   corrige normalement ; sinon : git config --global core.autocrlf input,
+   puis cloner à nouveau le dépôt.
+
+ Mac Apple Silicon (M1/M2/M3...)
+   Rien à faire : toutes les images existent en version arm64.
+
+------------------------------------------------------------------
+ 7. ACCÈS AUX BASES (facultatif)
+------------------------------------------------------------------
+
+ MariaDB :
+       docker compose exec mariadb mariadb -uvg_app -pvg_app_docker viteetgourmand
+
+ MongoDB :
+       docker compose exec mongodb mongosh viteetgourmand
+
+ Les ports des bases ne sont pas ouverts sur la machine : pour y accéder
+ depuis un outil graphique (DBeaver, Compass...), ajouter dans
+ docker-compose.yml, sous le service concerné :
+       ports:
+         - "3307:3306"      (mariadb)
+         - "27018:27017"    (mongodb)

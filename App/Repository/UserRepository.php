@@ -66,14 +66,6 @@ final class UserRepository
         return (int) Database::pdo()->lastInsertId();
     }
 
-    public function deleteNewCustomer(int $id): void
-    {
-        $stmt = Database::pdo()->prepare(
-            'DELETE FROM users WHERE id = :id AND role = :role AND must_change_password = 1'
-        );
-        $stmt->execute(['id' => $id, 'role' => 'user']);
-    }
-
     public function isActive(int $id): bool
     {
         $stmt = Database::pdo()->prepare(

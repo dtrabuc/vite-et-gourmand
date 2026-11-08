@@ -10,7 +10,6 @@ $errors = is_array($errors ?? null) ? $errors : [];
                     <div class="card-body p-4 p-md-5">
                         <h1 class="h2 text-primary">Créer votre compte</h1>
                         <p class="text-muted">Les champs sont nécessaires à la préparation de votre prestation.</p>
-                        <p class="alert alert-info">Un mot de passe provisoire vous sera envoyé par e-mail. Vous devrez le changer lors de votre première connexion.</p>
 
                         <form method="post" action="/register" class="row g-3">
                             <input type="hidden" name="csrf_token" value="<?= $escape($csrfToken) ?>">
@@ -61,6 +60,46 @@ $errors = is_array($errors ?? null) ? $errors : [];
                                     <div class="invalid-feedback"><?= $escape($errors['address']) ?></div>
                                 <?php endif; ?>
                             </div>
+
+                            <fieldset class="col-12" data-password-generator>
+                                <legend class="h5 mt-2">Mot de passe</legend>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="generate_password" data-generate-toggle>
+                                    <label class="form-check-label" for="generate_password">
+                                        Me proposer un mot de passe aléatoire sécurisé
+                                    </label>
+                                </div>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label" for="register_password">Mot de passe</label>
+                                        <input class="form-control <?= isset($errors['password']) ? 'is-invalid' : '' ?>"
+                                               id="register_password" name="password" type="password"
+                                               autocomplete="new-password" minlength="10"
+                                               aria-describedby="registerPasswordRules" data-generated-target required>
+                                        <?php if (isset($errors['password'])): ?>
+                                            <div class="invalid-feedback d-block"><?= $escape($errors['password']) ?></div>
+                                        <?php endif; ?>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label" for="register_password_confirm">Confirmation</label>
+                                        <input class="form-control <?= isset($errors['password_confirm']) ? 'is-invalid' : '' ?>"
+                                               id="register_password_confirm" name="password_confirm" type="password"
+                                               autocomplete="new-password" minlength="10" data-generated-target required>
+                                        <?php if (isset($errors['password_confirm'])): ?>
+                                            <div class="invalid-feedback d-block"><?= $escape($errors['password_confirm']) ?></div>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                                <div class="d-flex flex-wrap gap-2 mt-2" data-generator-actions hidden>
+                                    <button class="btn btn-sm btn-outline-secondary" type="button" data-regenerate>Générer un autre</button>
+                                    <button class="btn btn-sm btn-outline-secondary" type="button" data-copy-password>Copier</button>
+                                    <span class="small text-success align-self-center" data-copy-feedback aria-live="polite"></span>
+                                </div>
+                                <p class="form-text mb-0" id="registerPasswordRules">
+                                    Au moins 10 caractères, avec une majuscule, une minuscule, un chiffre et un caractère spécial.
+                                    Pensez à noter le mot de passe généré avant de valider.
+                                </p>
+                            </fieldset>
 
                             <div class="col-12">
                                 <div class="form-check">
