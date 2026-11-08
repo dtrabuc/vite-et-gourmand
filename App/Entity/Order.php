@@ -17,6 +17,8 @@ class Order
     private string $deliveryCity;
     private string $deliveryPostalCode;
     private ?float $deliveryDistanceKm = null;
+    private ?string $addressStatus = null;
+    private ?string $deliveryZone = null;
     private ?string $customization = null;
     private string $serviceType = 'delivery';
     private string $paymentMethod = 'cash_on_site';
@@ -73,6 +75,18 @@ class Order
     public function setDeliveryPostalCode(string $deliveryPostalCode): void { $this->deliveryPostalCode = $deliveryPostalCode; }
     public function getDeliveryDistanceKm(): ?float { return $this->deliveryDistanceKm; }
     public function setDeliveryDistanceKm(?float $deliveryDistanceKm): void { $this->deliveryDistanceKm = $deliveryDistanceKm; }
+    /** verified, manual ou null (retrait, sur place) */
+    public function getAddressStatus(): ?string { return $this->addressStatus; }
+    public function setAddressStatus(?string $addressStatus): void { $this->addressStatus = $addressStatus; }
+    /** bordeaux, zone, outside ou null */
+    public function getDeliveryZone(): ?string { return $this->deliveryZone; }
+    public function setDeliveryZone(?string $deliveryZone): void { $this->deliveryZone = $deliveryZone; }
+    /** Livraison dont les frais restent à confirmer par l'équipe (adresse saisie à la main, hors carte). */
+    public function isDeliveryCostPending(): bool
+    {
+        return $this->serviceType === 'delivery' && $this->addressStatus === 'manual'
+            && $this->deliveryZone === null && $this->deliveryCost <= 0;
+    }
     public function getCustomization(): ?string { return $this->customization; }
     public function setCustomization(?string $customization): void { $this->customization = $customization; }
     public function getServiceType(): string { return $this->serviceType; }

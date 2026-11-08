@@ -10,9 +10,12 @@ use InvalidArgumentException;
 final readonly class DishService
 {
     public const CATEGORIES = [
+        'aperitif' => 'Apéritif',
         'starter' => 'Entrée',
         'main' => 'Plat',
+        'side' => 'Accompagnement',
         'dessert' => 'Dessert',
+        'digestif' => 'Digestif',
     ];
 
     public const DIETARY_REGIMES = Labels::DIETARY_REGIME;
@@ -93,7 +96,7 @@ final readonly class DishService
         }
 
         if (!array_key_exists($category, self::CATEGORIES)) {
-            throw new InvalidArgumentException('La catégorie doit être entrée, plat ou dessert.');
+            throw new InvalidArgumentException('Catégorie de plat invalide.');
         }
 
         if (!array_key_exists($regime, self::DIETARY_REGIMES)) {
@@ -112,6 +115,7 @@ final readonly class DishService
                 'description' => $description,
                 'category' => $category,
                 'dietary_regime' => $regime,
+                'contains_alcohol' => !empty($input['contains_alcohol']) ? 1 : 0,
             ],
             $existing,
         ];

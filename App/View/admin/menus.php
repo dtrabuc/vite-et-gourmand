@@ -46,6 +46,7 @@ $menuFields = static function (string $prefix, ?\App\Entity\Menu $menu) use ($es
         </label>
         <input class="form-control" id="<?= $id('base_price') ?>" type="number" step="0.01" min="0" name="base_price"
                value="<?= $menu?->getBasePrice() ?? '' ?>" required>
+        <div class="form-text">Le catalogue affiche ce prix divisé par le minimum de personnes (prix par personne).</div>
     </div>
     <div class="col-12">
         <label class="form-label" for="<?= $id('description') ?>">Description</label>

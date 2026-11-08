@@ -21,6 +21,7 @@ final readonly class RateLimiter
         '/reset-password' => ['limit' => 3, 'window' => 300, 'failures_only' => false],
         // Requêtes de saisie de l'autocomplétion d'adresse.
         '/api/address/autocomplete' => ['limit' => 60, 'window' => 300, 'failures_only' => true],
+        '/api/address/check' => ['limit' => 30, 'window' => 300, 'failures_only' => true],
     ];
 
     public function __construct(

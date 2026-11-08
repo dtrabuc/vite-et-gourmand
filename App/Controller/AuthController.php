@@ -55,7 +55,7 @@ final class AuthController extends BaseController
         if (!in_array($user->getRole(), ['user'], true)) {
             Session::flash(
                 'login_error',
-                'Ce compte appartient à l’équipe. Utilisez l’accès « Espace admin ».'
+                'Ce compte appartient à l’équipe. Utilisez l’accès « Espace équipe » (bas de page, « Accès réservé »).'
             );
             $this->redirect('/admin/login');
         }

@@ -7,7 +7,7 @@
 //
 // Comme schema.sql, ce script REPART DE ZÉRO : les 3 collections sont
 // supprimées puis recréées, pour rester alignées sur les données SQL
-// (menus 1 à 9, client 3, commandes 1001 à 1005).
+// (menus 1 à 10, client 3, commandes 1001 à 1005).
 // ================================================================
 
 const dbName = "viteetgourmand";
@@ -62,24 +62,26 @@ database.menu_statistics.createIndex(
 // Galeries : [menuId, position, url, texte alternatif]
 // ----------------------------------------------------------------
 const menuImages = [
-  [1, 1, "https://images.unsplash.com/photo-1547592180-85f173990554?w=1200&auto=format&fit=crop", "Velouté de légumes et formule solo classique"],
+  [1, 1, "https://images.unsplash.com/photo-1547592180-85f173990554?w=1200&auto=format&fit=crop", "Formule bistrot"],
   [1, 2, "https://images.unsplash.com/photo-1543353071-873f17a7a088?w=1200&auto=format&fit=crop", "Steak haché et accompagnement"],
-  [2, 1, "https://images.unsplash.com/photo-1512621776951-a57141f2e8c0?w=1200&auto=format&fit=crop", "Assiette végétale"],
+  [2, 1, "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=1200&auto=format&fit=crop", "Assiette végétale colorée"],
   [2, 2, "https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=1200&auto=format&fit=crop", "Curry végétal et riz"],
   [3, 1, "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=1200&auto=format&fit=crop", "Menu enfant"],
   [3, 2, "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=1200&auto=format&fit=crop", "Dessert enfant"],
-  [4, 1, "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1200&auto=format&fit=crop", "Menu duo convivial"],
+  [4, 1, "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1200&auto=format&fit=crop", "Menu convivial"],
   [4, 2, "https://images.unsplash.com/photo-1504754524776-8f4f37790ca0?w=1200&auto=format&fit=crop", "Plat familial"],
-  [5, 1, "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=1200&auto=format&fit=crop", "Menu végétal pour trois"],
-  [5, 2, "https://images.unsplash.com/photo-1512621776951-a57141f2e8c0?w=1200&auto=format&fit=crop", "Assiette végétarienne"],
+  [5, 1, "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=1200&auto=format&fit=crop", "Menu végétarien du marché"],
+  [5, 2, "https://images.unsplash.com/photo-1543339308-43e59d6b73a6?w=1200&auto=format&fit=crop", "Salade végétarienne à l’avocat"],
   [6, 1, "https://images.unsplash.com/photo-1547592180-85f173990554?w=1200&auto=format&fit=crop", "Menu familial traditionnel"],
   [6, 2, "https://images.unsplash.com/photo-1543353071-873f17a7a088?w=1200&auto=format&fit=crop", "Plat familial généreux"],
   [7, 1, "https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=1200&auto=format&fit=crop", "Poisson et garniture"],
   [7, 2, "https://images.unsplash.com/photo-1559339352-11d035aa65de?w=1200&auto=format&fit=crop", "Dessert gourmand"],
   [8, 1, "https://images.unsplash.com/photo-1498837167922-ddd27525d352?w=1200&auto=format&fit=crop", "Menu végétal élégant"],
-  [8, 2, "https://images.unsplash.com/photo-1512621776951-a57141f2e8c0?w=1200&auto=format&fit=crop", "Composition végétale"],
+  [8, 2, "https://images.unsplash.com/photo-1511690743698-d9d85f2fbf38?w=1200&auto=format&fit=crop", "Composition végétale aux épinards et grenade"],
   [9, 1, "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1200&auto=format&fit=crop", "Réception gastronomique"],
-  [9, 2, "https://images.unsplash.com/photo-1547592180-85f173990554?w=1200&auto=format&fit=crop", "Présentation événementielle"]
+  [9, 2, "https://images.unsplash.com/photo-1547592180-85f173990554?w=1200&auto=format&fit=crop", "Présentation événementielle"],
+  [10, 1, "https://images.unsplash.com/photo-1574672280600-4accfa5b6f98?w=1200&auto=format&fit=crop", "Chapon rôti découpé pour le repas de Noël"],
+  [10, 2, "https://images.unsplash.com/photo-1608835291093-394b0c943a75?w=1200&auto=format&fit=crop", "Table de fête avec gratin et accompagnements"]
 ];
 
 const now = new Date();
@@ -102,11 +104,11 @@ database.menu_images.insertMany(
 
 // [orderId, menuId, titre du menu, total de la commande, note, commentaire, date]
 const demoOrders = [
-  [1001, 1, "Formule Solo Classique", 16.90, 5, "Formule simple, portions correctes et commande facile pour une personne.", "2026-09-02T12:15:00Z"],
-  [1002, 2, "Formule Solo Végétale", 17.90, 5, "Très bonne formule végétale, fraîche et suffisamment copieuse.", "2026-09-05T18:30:00Z"],
-  [1003, 4, "Menu Duo Convivial", 34.90, 4, "Le menu duo fonctionne bien pour un repas familial sans complication.", "2026-09-08T19:10:00Z"],
-  [1004, 7, "Menu Terroir & Mer", 49.90, 5, "Très bonne présentation et poisson bien préparé. Prestation soignée.", "2026-09-10T20:05:00Z"],
-  [1005, 9, "Menu Réception Signature", 69.90, 5, "Nous avons choisi le menu réception pour un petit événement professionnel. Très pratique.", "2026-09-12T19:45:00Z"]
+  [1001, 1, "Formule Bistrot", 18.90, 5, "Formule simple, portions correctes et commande facile pour une personne.", "2026-09-02T12:15:00Z"],
+  [1002, 2, "Formule Végétale", 19.90, 5, "Très bonne formule végétale, fraîche et suffisamment copieuse.", "2026-09-05T18:30:00Z"],
+  [1003, 4, "Menu Convivial", 43.80, 4, "Le menu convivial fonctionne bien pour un repas à deux sans complication.", "2026-09-08T19:10:00Z"],
+  [1004, 7, "Menu Marée de Printemps", 57.80, 5, "Très bonne présentation et poisson bien préparé. Prestation soignée.", "2026-09-10T20:05:00Z"],
+  [1005, 9, "Menu Réception Signature", 209.40, 5, "Nous avons choisi le menu réception pour un petit événement professionnel. Très pratique.", "2026-09-12T19:45:00Z"]
 ];
 
 database.comments.insertMany(

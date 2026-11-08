@@ -63,11 +63,48 @@ $isDelivery = $currentService === 'delivery';
                    value="<?= $isDelivery ? $escape($order->getDeliveryCity()) : '' ?>" <?= $isDelivery ? 'required' : '' ?>>
         </div>
         <div class="col-md-2">
-            <p class="form-text mb-0">Frais recalculés automatiquement : offerts dans Bordeaux, sinon 5 € + 0,59 €/km.</p>
+            <p class="form-text mb-0">Nouvelle adresse vérifiée sur la carte. Offerte dans Bordeaux, sinon 5 € + 0,59 €/km.</p>
         </div>
+        <div class="col-md-6">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="address_manual" value="1" id="<?= $fid('manual') ?>">
+                <label class="form-check-label small" for="<?= $fid('manual') ?>">Adresse introuvable sur la carte mais correcte (saisie manuelle)</label>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="accept_outside_zone" value="1" id="<?= $fid('outside') ?>">
+                <label class="form-check-label small" for="<?= $fid('outside') ?>">Accepter la livraison hors zone (plus de <?= (int) \App\Service\DeliveryDistanceService::ZONE_RADIUS_KM ?> km), au tarif kilométrique</label>
+            </div>
+        </div>
+        <?php if (($fieldPrefix ?? '') === 'staff' && $order->isDeliveryCostPending()): ?>
+            <div class="col-md-6">
+                <label class="form-label" for="<?= $fid('cost') ?>">Frais de livraison confirmés avec le client (€)</label>
+                <input class="form-control" id="<?= $fid('cost') ?>" name="delivery_cost_override" type="number" min="0" max="1000" step="0.01">
+                <div class="form-text">Adresse saisie à la main : indiquez les frais convenus par téléphone.</div>
+            </div>
+        <?php endif; ?>
         <div class="col-12">
             <label class="form-label" for="<?= $fid('instructions') ?>">Instructions pour le livreur (facultatif)</label>
             <textarea class="form-control" id="<?= $fid('instructions') ?>" name="delivery_instructions" rows="2"><?= $escape($order->getDeliveryInstructions() ?? '') ?></textarea>
         </div>
     </div>
+</div>
+<?php /* choix dans le menu (composition.js) : répartition, remplacements, variantes sans allergène */ ?>
+<?php $orderItems = $items[$order->getId()] ?? []; ?>
+<div class="col-12">
+    <h3 class="h6 mt-2 mb-1">Choix dans le menu</h3>
+    <div class="composition composition--compact" data-composition data-menu-id="<?= (int) $order->getMenuId() ?>"
+         data-items="<?= $escape(json_encode($orderItems, JSON_UNESCAPED_UNICODE)) ?>"></div>
+    <p class="small text-danger mb-0" data-composition-message aria-live="polite"></p>
+</div>
+<div class="col-12">
+    <label class="form-label" for="<?= $fid('customization') ?>">Allergies ou précisions pour la cuisine (facultatif)</label>
+    <textarea class="form-control" id="<?= $fid('customization') ?>" name="customization" rows="2" maxlength="1000"><?= $escape($order->getCustomization() ?? '') ?></textarea>
+    <?php if (($fieldPrefix ?? '') === 'customer'): ?>
+        <div class="form-check mt-1">
+            <input class="form-check-input" type="checkbox" id="<?= $fid('consent') ?>" name="allergy_consent" value="1" checked>
+            <label class="form-check-label small" for="<?= $fid('consent') ?>">J’accepte que ces informations de santé (allergies, plats sans allergène) soient utilisées pour préparer ma commande.</label>
+        </div>
+    <?php endif; ?>
 </div>

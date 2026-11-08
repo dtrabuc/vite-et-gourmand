@@ -18,7 +18,7 @@ $imageCount = count($images);
             <div class="card-body">
                 <h2 class="h4 text-primary" id="compositionTitle">Composition</h2>
                 <p class="text-muted small">
-                    Cochez au moins une entrée, un plat et un dessert. Les plats se créent et se modifient dans
+                    Cochez au moins une entrée, un plat et un dessert ; apéritif, accompagnements et digestif sont facultatifs. Deux choix dans une catégorie (par exemple un apéritif avec et un sans alcool) : chaque convive choisit le sien. Les plats se créent et se modifient dans
                     <a href="/admin/dishes">la gestion des plats</a>.
                 </p>
 
@@ -26,7 +26,7 @@ $imageCount = count($images);
                     <input type="hidden" name="csrf_token" value="<?= $escape($csrfToken) ?>">
                     <div class="row g-4">
                         <?php foreach ($categories as $category => $label): ?>
-                            <div class="col-lg-4">
+                            <div class="col-md-6 col-xl-4">
                                 <fieldset>
                                     <legend class="h6 fw-bold"><?= $escape($label) ?>s</legend>
                                     <?php $found = false; ?>

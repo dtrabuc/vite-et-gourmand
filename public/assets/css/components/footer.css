@@ -59,3 +59,18 @@ footer a.footer-auth-btn:focus-visible {
     outline: 3px solid var(--vg-accent);
     outline-offset: 2px;
 }
+
+/* Accès réservé à l'équipe : petit lien repliable, peu visible */
+.footer-staff summary {
+    display: inline-block;
+    color: rgba(255, 255, 255, .55);
+    font-size: .75rem;
+    cursor: pointer;
+    list-style: none;
+}
+.footer-staff summary::-webkit-details-marker { display: none; }
+.footer-staff summary::before { content: "› "; }
+.footer-staff[open] summary::before { content: "⌄ "; }
+.footer-staff summary:hover,
+.footer-staff summary:focus-visible { color: #fff; text-decoration: underline; }
+.footer-staff__link { display: block; margin-top: .25rem; }

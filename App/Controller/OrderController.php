@@ -9,6 +9,7 @@ use App\Core\Session;
 use App\Repository\UserRepository;
 use App\Service\CommentService;
 use App\Service\MenuService;
+use App\Service\OrderModificationPolicy;
 use App\Service\OrderService;
 use InvalidArgumentException;
 
@@ -44,6 +45,7 @@ final class OrderController extends BaseController
             'orders' => $orders,
             'history' => $history,
             'reviews' => $reviews,
+            'items' => $this->orderService->itemsForOrders(array_map(static fn ($o): int => $o->getId(), $orders)),
         ]);
     }
 
@@ -68,7 +70,14 @@ final class OrderController extends BaseController
         $selectedMenuId = filter_var($requestedMenuId, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
         $selectedMenu = $selectedMenuId !== false ? $this->menuService->getMenuById($selectedMenuId) : null;
 
+        // Nombre de personnes proposé : ?people=N (catalogue ou fiche menu), sinon le minimum du menu.
+        $requestedPeople = filter_var($_GET['people'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => 999]]);
+        $initialPeople = $requestedPeople !== false
+            ? max($requestedPeople, $selectedMenu?->getMinPeople() ?? 1)
+            : ($selectedMenu?->getMinPeople() ?? '');
+
         $this->render('order/new', [
+            'initialPeople' => $initialPeople,
             'phoneInput' => true, // page avec champ téléphone : charge intl-tel-input
             'menus' => $menus,
             'selectedMenu' => $selectedMenu,
@@ -100,6 +109,35 @@ final class OrderController extends BaseController
                 'menus' => $this->orderService->getMenuAvailabilityForPeople($numberOfPeople),
             ],
         ]);
+    }
+
+    /** Précisions libres ou plat « sans allergène » : données de santé. */
+    private static function containsHealthData(string $customization, mixed $items): bool
+    {
+        if (trim($customization) !== '') {
+            return true;
+        }
+        foreach (is_array($items) ? $items : [] as $item) {
+            if (is_array($item) && !empty($item['without'])) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public function menuComposition(): never
+    {
+        $menuId = filter_var($_GET['menu_id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+        if ($menuId === false) {
+            $this->json(['success' => false, 'error' => 'Menu invalide.'], 422);
+        }
+
+        try {
+            $this->json(['success' => true, 'data' => ['categories' => $this->orderService->compositionOptions($menuId)]]);
+        } catch (InvalidArgumentException $exception) {
+            $this->json(['success' => false, 'error' => $exception->getMessage()], 404);
+        }
     }
 
     public function availability(): never
@@ -148,7 +186,9 @@ final class OrderController extends BaseController
                     $serviceType,
                     trim((string) ($_GET['delivery_address'] ?? '')),
                     trim((string) ($_GET['delivery_postal_code'] ?? '')),
-                    trim((string) ($_GET['delivery_city'] ?? ''))
+                    trim((string) ($_GET['delivery_city'] ?? '')),
+                    ($_GET['address_manual'] ?? '') === '1',
+                    ($_GET['accept_outside_zone'] ?? '') === '1'
                 ),
             ]);
         } catch (InvalidArgumentException $exception) {
@@ -167,7 +207,6 @@ final class OrderController extends BaseController
         $input = $this->postFields([
             'menu_id',
             'number_of_people',
-            'confirmed_guest_count',
             'service_type',
             'delivery_date',
             'delivery_time',
@@ -175,7 +214,10 @@ final class OrderController extends BaseController
             'delivery_city',
             'delivery_postal_code',
             'delivery_instructions',
+            'customization',
             'contact_phone',
+            'address_manual',
+            'accept_outside_zone',
         ]);
 
         // Contrôles propres au formulaire. Les règles métier (menu, stock, minimum,
@@ -190,9 +232,13 @@ final class OrderController extends BaseController
 
         if ($numberOfPeople === false) {
             $errors['number_of_people'] = 'Nombre de personnes requis et supérieur à 0.';
-        } elseif ((int) $input['confirmed_guest_count'] !== $numberOfPeople) {
-            $errors['number_of_people'] = 'Confirmez le nombre de convives avant de sélectionner un menu.';
         }
+
+        // données de santé (allergies) : consentement explicite obligatoire (article 9 du RGPD)
+        if (self::containsHealthData($input['customization'], $_POST['items'] ?? null) && ($_POST['allergy_consent'] ?? '') !== '1') {
+            $errors['allergy_consent'] = 'Cochez la case de consentement pour que nous puissions utiliser vos informations d’allergies.';
+        }
+        $input['allergy_consent'] = ($_POST['allergy_consent'] ?? '') === '1' ? '1' : '';
 
         if ($errors !== []) {
             Session::flash('order_errors', $errors);
@@ -210,11 +256,14 @@ final class OrderController extends BaseController
                 $input['delivery_address'],
                 $input['delivery_city'],
                 $input['delivery_postal_code'],
-                null,
+                $input['customization'],
                 $input['service_type'] !== '' ? $input['service_type'] : 'delivery',
                 'cash_on_site',
                 $input['delivery_instructions'],
-                $input['contact_phone']
+                $input['contact_phone'],
+                $input['address_manual'] === '1',
+                $input['accept_outside_zone'] === '1',
+                $_POST['items'] ?? null
             );
 
             $this->redirect('/orders/confirmation/' . $result['order_id']);
@@ -244,6 +293,7 @@ final class OrderController extends BaseController
         $this->render('order/confirmation', [
             'order' => $order,
             'menu' => $menu,
+            'items' => $this->orderService->itemsForOrders([$order->getId()])[$order->getId()] ?? [],
         ]);
     }
 
@@ -255,11 +305,16 @@ final class OrderController extends BaseController
             $this->redirect('/login');
         }
 
+        if (self::containsHealthData((string) ($_POST['customization'] ?? ''), $_POST['items'] ?? null) && ($_POST['allergy_consent'] ?? '') !== '1') {
+            Session::flash('order_error', 'Cochez la case de consentement pour que nous puissions utiliser vos informations d’allergies.');
+            $this->redirect('/orders');
+        }
+
         try {
             $this->orderService->updateCustomerOrder(
                 $id,
                 $userId,
-                $this->postFields(OrderService::EDITABLE_FIELDS)
+                $this->postFields(OrderService::EDITABLE_FIELDS) + ['items' => $_POST['items'] ?? null]
             );
             Session::flash('order_success', 'Commande modifiée.');
         } catch (InvalidArgumentException $exception) {
@@ -333,8 +388,12 @@ final class OrderController extends BaseController
             : null;
 
         // formulaire HTML (bouton « Annuler la commande ») : erreurs en message flash, plus de texte brut
-        if (!$isStaff && ($status !== 'cancelled' || $order->getStatus() !== 'pending')) {
-            $this->failStatusUpdate('Une commande ne peut être annulée par le client que lorsqu’elle est en attente.');
+        if (!$isStaff && $status !== 'cancelled') {
+            $this->failStatusUpdate('Le client peut seulement annuler sa commande.');
+        }
+        // annulation par le client : en attente et dans le délai (OrderModificationPolicy)
+        if (!$isStaff && !OrderModificationPolicy::customerCanChange($order)) {
+            $this->failStatusUpdate(OrderModificationPolicy::refusal($order));
         }
 
         if ($status === 'cancelled' && $isStaff) {

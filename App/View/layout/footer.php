@@ -50,8 +50,12 @@
                 <h2 class="h6 fw-bold mt-3">Connexion</h2>
                 <div class="footer-auth">
                     <a class="btn footer-auth-btn footer-auth-btn--client" href="/login">Espace client</a>
-                    <a class="btn footer-auth-btn footer-auth-btn--admin" href="/admin/login">Espace admin</a>
                 </div>
+                <?php /* accès de l'équipe : discret, dans un sous-menu repliable */ ?>
+                <details class="footer-staff mt-3">
+                    <summary>Accès réservé</summary>
+                    <a class="link-light small footer-staff__link" href="/admin/login" rel="nofollow">Espace équipe (employés, administrateur)</a>
+                </details>
             </div>
         </div>
     </div>
@@ -64,8 +68,11 @@
 <script src="/assets/js/accessibility.js" defer></script>
 <script src="/assets/js/api.js" defer></script>
 <script src="/assets/js/script.js" defer></script>
+<script src="/assets/js/notifications.js" defer></script>
 <script src="/assets/js/password.js" defer></script>
 <script src="/assets/js/menus.js" defer></script>
+<script src="/assets/js/menu-detail.js" defer></script>
+<script src="/assets/js/composition.js" defer></script>
 <script src="/assets/js/order.js" defer></script>
 <script src="/assets/js/order-edit.js" defer></script>
 <script src="/assets/js/address.js" defer></script>

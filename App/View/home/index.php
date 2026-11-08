@@ -134,7 +134,7 @@
                                 <span class="badge bg-primary-subtle text-primary align-self-start mb-2"><?= $escape($menu->getTheme()) ?></span>
                                 <h3 class="h4 text-primary"><?= $escape($menu->getTitle()) ?></h3>
                                 <p class="text-muted flex-grow-1"><?= $escape($menu->getDescription()) ?></p>
-                                <p class="mb-3"><strong><?= number_format($menu->getBasePrice(), 2, ',', ' ') ?> €</strong> · minimum <?= $menu->getMinPeople() ?> personnes</p>
+                                <p class="mb-3"><strong><?= \App\Service\MenuPricing::format(\App\Service\MenuPricing::perPerson($menu->getBasePrice(), $menu->getMinPeople())) ?></strong> / pers. · dès <?= $menu->getMinPeople() ?> pers.</p>
                                 <div class="d-grid gap-2">
                                     <a class="btn btn-outline-primary" href="/menus/<?= $menu->getId() ?>">Voir le détail</a>
                                     <?php if (!empty($user)): ?>

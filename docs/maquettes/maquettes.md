@@ -21,10 +21,11 @@
 5. [Connexion](#05-connexion)
 6. [Contact](#06-contact)
 7. [Commander](#07-commander)
-8. [Mes commandes](#08-mes-commandes)
-9. [Profil](#09-profil)
-10. [Admin - Tableau de bord](#10-admin-tableau-de-bord)
-11. [Admin - Commandes](#11-admin-commandes)
+8. [Confirmation](#08-confirmation)
+9. [Mes commandes](#09-mes-commandes)
+10. [Profil](#10-profil)
+11. [Admin - Tableau de bord](#11-admin-tableau-de-bord)
+12. [Admin - Commandes](#12-admin-commandes)
 
 ---
 
@@ -48,7 +49,7 @@
    - Actions : [Demander un devis]
 5. **Menus à la une**
    - Texte : Les formules disponibles actuellement.
-   - Sous-titres : Menu Réception Signature · Menu Végétal Élégance · Menu Terroir & Mer
+   - Sous-titres : Formule Enfant · Formule Bistrot · Formule Végétale
    - Cartes : 3
    - Images : 3
    - Actions : [Tout voir] [Voir le détail] [Se connecter pour commander]
@@ -78,19 +79,18 @@
 
 ## 02 Menus
 
-- **URL** : `/menus`
+- **URL** : `/menus?people=8`
 - **Accès** : Tout visiteur
 
 ### Zones de l'écran (de haut en bas)
 
-1. **Nos menus et formules**
-   - Texte : Des propositions pour les réceptions privées et les événements professionnels.
-2. **Choisir une formule**
-   - Sous-titres : Menu Réception Signature · Menu Végétal Élégance · Menu Terroir & Mer · Menu Familial Tradition · Menu Trio Végétal · Menu Duo Convivial · Formule Enfant Gourmande · Formule Solo Végétale
+1. **Nos menus**
+   - Texte : Un prix par personne, tout compris : apéritif, entrée, plat, accompagnements, dessert et digestif.
+   - Sous-titres : Formule Enfant · Formule Bistrot · Formule Végétale · Menu Familial · Menu Convivial · Menu Végétarien du Marché · Menu Végétal Élégance · Menu Marée de Printemps
    - Cartes : 10
-   - Images : 9
-   - Champs : Thème (select) ; Régime (select) ; Prix min. (number) ; Prix max. (number) ; Personnes min. (number)
-   - Actions : [Filtrer] [Réinitialiser] [Voir le détail] [Se connecter pour commander]
+   - Images : 10
+   - Champs : Pour combien de personnes ? (number) ; Tous (radio) ; Noël (radio) ; Pâques (radio) ; Classique (radio) ; Évènement (radio) ; Classique (checkbox) ; Végétarien (checkbox) ; Végan (checkbox) ; Minimum (€ / pers.) (number) ; Maximum (€ / pers.) (number)
+   - Actions : [−] [+] [1] [2] [4] [6] [10] [15] [20] [Appliquer] [Tout effacer] [Se connecter pour commander]
 
 ### Notes de conception
 
@@ -114,19 +114,20 @@
 
 ## 03 Détail menu
 
-- **URL** : `/menus/1`
+- **URL** : `/menus/10?people=8`
 - **Accès** : Tout visiteur
 
 ### Zones de l'écran (de haut en bas)
 
-1. **Formule Solo Classique**
-   - Texte : Entrées, plats, desserts, conditions de réservation et minimum de convives.
+1. **Menu de Noël**
+   - Texte : 36,90 € par personne · à partir de 4 personnes
    - Cartes : 1
    - Images : 1
    - Actions : [Image précédente] [Image suivante]
-2. **Formule Solo Classique**
-   - Sous-titres : Composition du menu · Entrée · Plat / accompagnement · Dessert · Conditions de commande · Allergènes présents dans le menu
-   - Actions : [Retour aux menus] [Connectez-vous pour commander] [Créer un compte]
+2. **Menu de Noël**
+   - Sous-titres : Inclus pour chaque convive · 1 apéritif au choix parmi 2 · 1 entrée · 1 plat · 2 accompagnements · 1 dessert · 1 digestif au choix parmi 2 · Conditions de commande
+   - Champs : Nombre de personnes (number)
+   - Actions : [−] [+] [Se connecter pour commander] [Créer un compte] [Retour aux menus]
 
 ### Notes de conception
 
@@ -243,17 +244,33 @@
 
 ## 07 Commander
 
-- **URL** : `/orders/new?menu=1`
+- **URL** : `/orders/new?menu=10&people=8`
 - **Accès** : Client connecté
 
 ### Zones de l'écran (de haut en bas)
 
-1. **Nouvelle commande**
+1. **Votre commande**
+   - Texte : Indiquez combien vous serez : nous vous montrons tout de suite les menus possibles et leur prix total.
    - Cartes : 1
-2. **Vos informations**
-   - Champs : Nom (text) ; Prénom (text) ; Adresse e-mail (email)
-3. **1. Préparer la commande**
-   - Actions : [Indiquer / modifier]
+2. **1. Nombre de personnes et menu**
+   - Cartes : 1
+   - Champs : Combien de personnes ? (number, obligatoire) ; Formule Enfant12,90 € / pers. · dès 1 pers.92,88 €−10 %8 × 12,90 € (radio, obligatoire) ; Formule Bistrot18,90 € / pers. · dès 1 pers.136,08 €−10 %8 × 18,90 € (radio, obligatoire) ; Formule Végétale19,90 € / pers. · dès 1 pers.143,28 €−10 %8 × 19,90 € (radio, obligatoire) ; Menu Familial20,90 € / pers. · dès 3 pers.150,48 €−10 %8 × 20,90 € (radio, obligatoire) ; Menu Convivial21,90 € / pers. · dès 2 pers.157,68 €−10 %8 × 21,90 € (radio, obligatoire) ; Menu Végétarien du Marché22,90 € / pers. · dès 3 pers.164,88 €−10 %8 × 22,90 € (radio, obligatoire) ; Menu Végétal Élégance25,90 € / pers. · dès 2 pers.186,48 €−10 %8 × 25,90 € (radio, obligatoire) ; Menu Marée de Printemps28,90 € / pers. · dès 2 pers.208,08 €−10 %8 × 28,90 € (radio, obligatoire) ; Menu Réception Signature34,90 € / pers. · dès 6 pers.279,20 €8 × 34,90 € (radio, obligatoire) ; Menu de Noël36,90 € / pers. · dès 4 pers.295,20 €8 × 36,90 € (radio, obligatoire)
+   - Actions : [−] [+] [1] [2] [4] [6] [10] [15] [20]
+3. **2. Composez votre menu**
+   - Cartes : 1
+   - Champs : Plat (select) ;  (number) ; sans gluten (checkbox) ; sans poisson (checkbox) ; Plat (select) ;  (number) ; sans gluten (checkbox) ; sans lait (checkbox) ; sans œufs (checkbox) ; Plat (select) ;  (number) ; sans gluten (checkbox) ; Plat (select) ;  (number) ; Plat (select) ;  (number) ; sans lait (checkbox) ; Plat (select) ;  (number) ; Plat (select) ;  (number) ; sans lait (checkbox) ; sans œufs (checkbox) ; Plat (select) ;  (number) ; sans lait (checkbox) ; Plat (select) ;  (number) ; Allergies ou précisions pour la cuisine (facultatif) (textarea) ; J’accepte que ces informations de santé (allergies, plats sans allergène) soient utilisées pour préparer ma commande. En savoir plus (checkbox)
+   - Actions : [−] [+] [+ variante pour quelques convives]
+4. **3. Livraison, retrait ou sur place**
+   - Cartes : 1
+   - Champs : Livraison Offerte dans Bordeaux, 5 € + 0,59 €/km jusqu’à 25 km. Au-delà, sur acceptation. (radio) ; À emporter Gratuit, à notre adresse à Bordeaux. (radio) ; Sur place Gratuit, repas servi chez nous. (radio) ; Adresse de livraison (numéro et rue) (text, obligatoire) ; Code postal (text, obligatoire) ; Ville (text, obligatoire) ; Instructions pour le livreur (facultatif : bâtiment, étage, digicode) (textarea)
+5. **4. Date et heure**
+   - Cartes : 1
+   - Champs : Date (date, obligatoire) ; Heure (select, obligatoire)
+6. **5. Contact**
+   - Cartes : 1
+   - Champs : Téléphone le jour de la prestation (tel, obligatoire)
+7. **Récapitulatif**
+   - Actions : [Valider la commande] [Retour aux menus]
 
 ### Notes de conception
 
@@ -275,7 +292,37 @@
 
 ---
 
-## 08 Mes commandes
+## 08 Confirmation
+
+- **URL** : `/orders/confirmation/1009`
+- **Accès** : Client connecté
+
+### Zones de l'écran (de haut en bas)
+
+1. **Commande envoyée !**
+   - Actions : [Suivre mes commandes] [Retour aux menus]
+
+### Notes de conception
+
+- _À compléter : intentions, règles métier, évolutions prévues._
+
+### Aperçus
+
+| Wireframe iPhone 14 | Mockup iPhone 14 |
+|---|---|
+| ![Wireframe iPhone 14 — Confirmation](wireframes/iphone-14/08-confirmation.png) | ![Mockup iPhone 14 — Confirmation](mockups/iphone-14/08-confirmation.png) |
+
+**Wireframe MacBook Air 13"**
+
+![Wireframe MacBook Air — Confirmation](wireframes/macbook-air-13/08-confirmation.png)
+
+**Mockup MacBook Air 13"**
+
+![Mockup MacBook Air — Confirmation](mockups/macbook-air-13/08-confirmation.png)
+
+---
+
+## 09 Mes commandes
 
 - **URL** : `/orders`
 - **Accès** : Client connecté
@@ -286,7 +333,12 @@
    - Texte : Suivez vos prestations, leurs statuts et leurs dates.
    - Cartes : 1
    - Actions : [Nouvelle commande]
-2. **Commande … (bloc répété ×5, un par élément)**
+2. **Commande … (bloc répété ×4, un par élément)**
+   - Sous-titres : Suivi · Choix dans le menu
+   - Cartes : 1
+   - Champs : Personnes (number, obligatoire) ; Date (date, obligatoire) ; Créneau (select, obligatoire) ; Téléphone (tel, obligatoire) ; Livraison (radio) ; À emporter (radio) ; Sur place (radio) ; Adresse (text, obligatoire) ; Code postal (text, obligatoire) ; Ville (text, obligatoire) ; Adresse introuvable sur la carte mais correcte (saisie manuelle) (checkbox) ; Accepter la livraison hors zone (plus de 25 km), au tarif kilométrique (checkbox) ; Instructions pour le livreur (facultatif) (textarea) ; Plat (select) ;  (number) ; sans gluten (checkbox) ; sans poisson (checkbox) ; Plat (select) ;  (number) ; sans gluten (checkbox) ; sans lait (checkbox) ; sans œufs (checkbox) ; Plat (select) ;  (number) ; sans gluten (checkbox) ; Plat (select) ;  (number) ; sans gluten (checkbox) ; Plat (select) ;  (number) ; Plat (select) ;  (number) ; sans lait (checkbox) ; Plat (select) ;  (number) ; Plat (select) ;  (number) ; sans lait (checkbox) ; sans œufs (checkbox) ; Plat (select) ;  (number) ; sans lait (checkbox) ; Plat (select) ;  (number) ; Allergies ou précisions pour la cuisine (facultatif) (textarea) ; J’accepte que ces informations de santé (allergies, plats sans allergène) soient utilisées pour préparer ma commande. (checkbox)
+   - Actions : [−] [+] [+ variante pour quelques convives] [retirer] [Enregistrer les modifications] [Annuler la commande]
+3. **Commande … (bloc répété ×5, un par élément)**
    - Sous-titres : Suivi
    - Cartes : 1
 
@@ -298,19 +350,19 @@
 
 | Wireframe iPhone 14 | Mockup iPhone 14 |
 |---|---|
-| ![Wireframe iPhone 14 — Mes commandes](wireframes/iphone-14/08-mes-commandes.png) | ![Mockup iPhone 14 — Mes commandes](mockups/iphone-14/08-mes-commandes.png) |
+| ![Wireframe iPhone 14 — Mes commandes](wireframes/iphone-14/09-mes-commandes.png) | ![Mockup iPhone 14 — Mes commandes](mockups/iphone-14/09-mes-commandes.png) |
 
 **Wireframe MacBook Air 13"**
 
-![Wireframe MacBook Air — Mes commandes](wireframes/macbook-air-13/08-mes-commandes.png)
+![Wireframe MacBook Air — Mes commandes](wireframes/macbook-air-13/09-mes-commandes.png)
 
 **Mockup MacBook Air 13"**
 
-![Mockup MacBook Air — Mes commandes](mockups/macbook-air-13/08-mes-commandes.png)
+![Mockup MacBook Air — Mes commandes](mockups/macbook-air-13/09-mes-commandes.png)
 
 ---
 
-## 09 Profil
+## 10 Profil
 
 - **URL** : `/profile`
 - **Accès** : Client connecté
@@ -322,8 +374,12 @@
    - Champs : Prénom (text, obligatoire) ; Nom (text, obligatoire) ; Email (email, obligatoire) ; Téléphone (tel, obligatoire) ; GSM (tel, obligatoire) ; Adresse (textarea, obligatoire)
    - Actions : [Enregistrer]
 2. **Changer mon mot de passe**
+   - Cartes : 1
    - Champs : Mot de passe actuel (password, obligatoire) ; Nouveau mot de passe (password, obligatoire) ; Confirmation (password, obligatoire)
    - Actions : [Afficher] [Modifier le mot de passe]
+3. **Mes données personnelles**
+   - Champs : Mot de passe actuel (password, obligatoire) ; Je comprends que la suppression est définitive. (checkbox, obligatoire)
+   - Actions : [Télécharger mes données (JSON)] [Afficher] [Supprimer mon compte]
 
 ### Notes de conception
 
@@ -333,19 +389,19 @@
 
 | Wireframe iPhone 14 | Mockup iPhone 14 |
 |---|---|
-| ![Wireframe iPhone 14 — Profil](wireframes/iphone-14/09-profil.png) | ![Mockup iPhone 14 — Profil](mockups/iphone-14/09-profil.png) |
+| ![Wireframe iPhone 14 — Profil](wireframes/iphone-14/10-profil.png) | ![Mockup iPhone 14 — Profil](mockups/iphone-14/10-profil.png) |
 
 **Wireframe MacBook Air 13"**
 
-![Wireframe MacBook Air — Profil](wireframes/macbook-air-13/09-profil.png)
+![Wireframe MacBook Air — Profil](wireframes/macbook-air-13/10-profil.png)
 
 **Mockup MacBook Air 13"**
 
-![Mockup MacBook Air — Profil](mockups/macbook-air-13/09-profil.png)
+![Mockup MacBook Air — Profil](mockups/macbook-air-13/10-profil.png)
 
 ---
 
-## 10 Admin - Tableau de bord
+## 11 Admin - Tableau de bord
 
 - **URL** : `/admin/dashboard`
 - **Accès** : Administrateur
@@ -364,19 +420,19 @@
 
 | Wireframe iPhone 14 | Mockup iPhone 14 |
 |---|---|
-| ![Wireframe iPhone 14 — Admin - Tableau de bord](wireframes/iphone-14/10-admin-tableau-de-bord.png) | ![Mockup iPhone 14 — Admin - Tableau de bord](mockups/iphone-14/10-admin-tableau-de-bord.png) |
+| ![Wireframe iPhone 14 — Admin - Tableau de bord](wireframes/iphone-14/11-admin-tableau-de-bord.png) | ![Mockup iPhone 14 — Admin - Tableau de bord](mockups/iphone-14/11-admin-tableau-de-bord.png) |
 
 **Wireframe MacBook Air 13"**
 
-![Wireframe MacBook Air — Admin - Tableau de bord](wireframes/macbook-air-13/10-admin-tableau-de-bord.png)
+![Wireframe MacBook Air — Admin - Tableau de bord](wireframes/macbook-air-13/11-admin-tableau-de-bord.png)
 
 **Mockup MacBook Air 13"**
 
-![Mockup MacBook Air — Admin - Tableau de bord](mockups/macbook-air-13/10-admin-tableau-de-bord.png)
+![Mockup MacBook Air — Admin - Tableau de bord](mockups/macbook-air-13/11-admin-tableau-de-bord.png)
 
 ---
 
-## 11 Admin - Commandes
+## 12 Admin - Commandes
 
 - **URL** : `/admin/orders`
 - **Accès** : Employé ou administrateur
@@ -390,6 +446,8 @@
    - Actions : [Filtrer]
 2. **Commande … (bloc répété ×5, un par élément)**
    - Cartes : 1
+3. **Commande … (bloc répété ×4, un par élément)**
+   - Cartes : 1
 
 ### Notes de conception
 
@@ -399,12 +457,12 @@
 
 | Wireframe iPhone 14 | Mockup iPhone 14 |
 |---|---|
-| ![Wireframe iPhone 14 — Admin - Commandes](wireframes/iphone-14/11-admin-commandes.png) | ![Mockup iPhone 14 — Admin - Commandes](mockups/iphone-14/11-admin-commandes.png) |
+| ![Wireframe iPhone 14 — Admin - Commandes](wireframes/iphone-14/12-admin-commandes.png) | ![Mockup iPhone 14 — Admin - Commandes](mockups/iphone-14/12-admin-commandes.png) |
 
 **Wireframe MacBook Air 13"**
 
-![Wireframe MacBook Air — Admin - Commandes](wireframes/macbook-air-13/11-admin-commandes.png)
+![Wireframe MacBook Air — Admin - Commandes](wireframes/macbook-air-13/12-admin-commandes.png)
 
 **Mockup MacBook Air 13"**
 
-![Mockup MacBook Air — Admin - Commandes](mockups/macbook-air-13/11-admin-commandes.png)
+![Mockup MacBook Air — Admin - Commandes](mockups/macbook-air-13/12-admin-commandes.png)

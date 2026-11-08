@@ -12,7 +12,7 @@ class MenuRepository
     public function findAll(): array
     {
         $pdo = Database::pdo();
-        $stmt = $pdo->query('SELECT * FROM menus WHERE is_active = 1 AND available_stock > 0 ORDER BY id DESC');
+        $stmt = $pdo->query('SELECT * FROM menus WHERE is_active = 1 AND available_stock > 0 ORDER BY ROUND(base_price / min_people, 2), id');
         return $this->hydrateMany($stmt->fetchAll());
     }
 
@@ -41,13 +41,15 @@ class MenuRepository
     {
         $query = 'SELECT * FROM menus WHERE is_active = 1 AND available_stock > 0';
         $params = [];
+        // les prix filtrés sont des prix PAR PERSONNE, comme sur les cartes
+        $perPerson = 'ROUND(base_price / min_people, 2)';
 
         if (isset($filters['max_price']) && $filters['max_price'] !== '') {
             $maxPrice = filter_var($filters['max_price'], FILTER_VALIDATE_FLOAT);
             if ($maxPrice === false || $maxPrice < 0) {
                 throw new \InvalidArgumentException('Le prix maximum est invalide.');
             }
-            $query .= ' AND base_price <= :max_price';
+            $query .= ' AND ' . $perPerson . ' <= :max_price';
             $params['max_price'] = $maxPrice;
         }
 
@@ -56,7 +58,7 @@ class MenuRepository
             if ($minPrice === false || $minPrice < 0) {
                 throw new \InvalidArgumentException('Le prix minimum est invalide.');
             }
-            $query .= ' AND base_price >= :min_price';
+            $query .= ' AND ' . $perPerson . ' >= :min_price';
             $params['min_price'] = $minPrice;
         }
 
@@ -87,7 +89,7 @@ class MenuRepository
             throw new \InvalidArgumentException('La fourchette de prix est invalide.');
         }
 
-        $query .= ' ORDER BY id DESC';
+        $query .= ' ORDER BY ' . $perPerson . ', id';
         // Connexion ouverte seulement une fois tous les filtres validés.
         $stmt = Database::pdo()->prepare($query);
         $stmt->execute($params);
