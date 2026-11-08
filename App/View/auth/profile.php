@@ -14,7 +14,7 @@ $value = static fn (string $key): string => (string) ($oldInput[$key] ?? $user[$
 
                         <?php if (!empty($mustChangePassword)): ?>
                             <div class="alert alert-warning" role="alert">
-                                Votre mot de passe provisoire est actif. Choisissez un nouveau mot de passe ci-dessous pour continuer.
+                                Vous devez choisir un nouveau mot de passe ci-dessous pour continuer.
                             </div>
                         <?php endif; ?>
 

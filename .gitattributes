@@ -11,3 +11,4 @@
 *.ico binary
 *.woff binary
 *.woff2 binary
+docker-compose.yml text eol=lf

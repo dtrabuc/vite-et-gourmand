@@ -39,6 +39,8 @@ final class Database
                     PDO::ATTR_EMULATE_PREPARES => false,
                 ]
             );
+            // Aligne NOW() sur le fuseau PHP pour garder les expirations cohérentes.
+            self::$pdo->exec("SET time_zone = '" . date('P') . "'");
         } catch (PDOException $exception) {
             throw new RuntimeException(
                 'Connexion MariaDB impossible.',

@@ -1,0 +1,114 @@
+# Vite & Gourmand : application + MariaDB + MongoDB + Mailpit (boîte mail de test).
+# Lancement : docker compose up -d --build   (voir docker-setup.txt)
+#
+# Les mots de passe ci-dessous ne servent qu'à cette pile locale : ne pas les
+# réutiliser en production. Le fichier .env du projet n'est PAS lu par l'application
+# dans Docker (il est exclu de l'image par .dockerignore).
+
+name: vite-gourmand
+
+services:
+  app:
+    build: .
+    image: vite-gourmand-app
+    restart: unless-stopped
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+    ports:
+      - "${VG_HTTP_PORT:-8080}:80"
+    environment:
+      APP_ENV: development
+      APP_DEBUG: "false"
+      APP_TIMEZONE: Europe/Paris
+      APP_URL: "http://localhost:${VG_HTTP_PORT:-8080}"
+      GOOGLE_MAPS_API_KEY: ""
+      HOSTING_NAME: "Docker (poste local)"
+      DB_HOST: mariadb
+      DB_PORT: "3306"
+      DB_DATABASE: viteetgourmand
+      DB_USERNAME: vg_app
+      DB_PASSWORD: vg_app_docker
+      MONGO_CONNECTION_STRING: ""
+      MONGO_HOST: mongodb
+      MONGO_PORT: "27017"
+      MONGO_DATABASE: viteetgourmand
+      MONGO_USERNAME: ""
+      MONGO_PASSWORD: ""
+      SESSION_NAME: viteetgourmand_session
+      SESSION_LIFETIME: "30"
+      SESSION_SECURE: "false"
+      PASSWORD_HASH_COST: "12"
+      MAIL_DRIVER: smtp
+      MAIL_HOST: mailpit
+      MAIL_PORT: "1025"
+      MAIL_USERNAME: ""
+      MAIL_PASSWORD: ""
+      MAIL_ENCRYPTION: none
+      MAIL_FROM_ADDRESS: noreply@viteetgourmand.local
+      MAIL_FROM_NAME: "Vite & Gourmand"
+      MAIL_TO_ADDRESS: contact@viteetgourmand.local
+      DEMO_ADMIN_EMAIL: admin@viteetgourmand.com
+      DEMO_ADMIN_PASSWORD: "Admin!Docker2026"
+      DEMO_EMPLOYEE_EMAIL: employee@viteetgourmand.com
+      DEMO_EMPLOYEE_PASSWORD: "Employe!Docker2026"
+      DEMO_USER_EMAIL: user@viteetgourmand.com
+      DEMO_USER_PASSWORD: "Client!Docker2026"
+    volumes:
+      - app_storage:/var/www/html/storage
+      - app_uploads:/var/www/html/public/uploads
+
+  mariadb:
+    image: mariadb:11.4
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: root_docker
+      MARIADB_DATABASE: viteetgourmand
+      MARIADB_USER: vg_app
+      MARIADB_PASSWORD: vg_app_docker
+      MARIADB_CHARACTER_SET_SERVER: utf8mb4
+      MARIADB_COLLATION_SERVER: utf8mb4_unicode_ci
+      TZ: Europe/Paris
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
+    volumes:
+      - mariadb_data:/var/lib/mysql
+      # importé automatiquement au tout premier démarrage (volume vide)
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+
+  mongodb:
+    image: mongo:7
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_DATABASE: viteetgourmand
+    volumes:
+      - mongodb_data:/data/db
+      # exécuté automatiquement au tout premier démarrage (volume vide)
+      - ./database/mongodb-init.js:/docker-entrypoint-initdb.d/01-init.js:ro
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+
+  mailpit:
+    image: axllent/mailpit:latest
+    restart: unless-stopped
+    ports:
+      - "${VG_MAIL_PORT:-8025}:8025"
+
+volumes:
+  mariadb_data:
+  mongodb_data:
+  app_storage:
+  app_uploads:

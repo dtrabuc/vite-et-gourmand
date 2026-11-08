@@ -4,15 +4,27 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Core\Response;
+use App\Service\RateLimiter;
 
 final class AddressController extends BaseController
 {
+    public function __construct(
+        private readonly RateLimiter $rateLimiter
+    ) {
+    }
+
     public function autocomplete(): never
     {
         $query = trim((string) ($_GET['q'] ?? ''));
         $apiKey = (string) config('app.google_maps_key', '');
 
-        if (mb_strlen($query) < 4) {
+        // Limite les appels facturés à Google et la taille de la saisie.
+        if ($this->rateLimiter->tooManyAttempts('/api/address/autocomplete')) {
+            Response::json(['success' => false, 'data' => []], 429);
+        }
+        $this->rateLimiter->hit('/api/address/autocomplete');
+
+        if (mb_strlen($query) < 4 || mb_strlen($query) > 200) {
             Response::json(['success' => true, 'data' => []]);
         }
 
@@ -37,6 +49,8 @@ final class AddressController extends BaseController
                 'content' => $payload,
                 'timeout' => 5,
                 'ignore_errors' => true,
+                // La clé API ne doit pas être transmise à une autre destination.
+                'follow_location' => 0,
             ],
         ]);
 

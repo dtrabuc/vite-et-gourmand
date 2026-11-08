@@ -1,0 +1,505 @@
+{
+  "board": "Vite & Gourmand — Gestion de projet (Scrum)",
+  "description": "Tableau Kanban/Scrum de l'ECF DWWM. Une carte = une user story ou une tâche technique. Chaque carte porte son sprint, son type et sa priorité (MoSCoW) en étiquettes.",
+  "lists": [
+    "📌 Infos & Definition of Done",
+    "Backlog produit",
+    "Sprint backlog (Sprint 5)",
+    "En cours",
+    "En test / revue",
+    "Terminé"
+  ],
+  "labels": [
+    {
+      "name": "Front",
+      "color": "blue"
+    },
+    {
+      "name": "Back",
+      "color": "green"
+    },
+    {
+      "name": "BDD",
+      "color": "purple"
+    },
+    {
+      "name": "Sécurité",
+      "color": "red"
+    },
+    {
+      "name": "DevOps",
+      "color": "black"
+    },
+    {
+      "name": "Doc / Conception",
+      "color": "sky"
+    },
+    {
+      "name": "Must",
+      "color": "orange"
+    },
+    {
+      "name": "Should",
+      "color": "yellow"
+    },
+    {
+      "name": "Could",
+      "color": "lime"
+    },
+    {
+      "name": "Sprint 0",
+      "color": "pink"
+    },
+    {
+      "name": "Sprint 1",
+      "color": "pink"
+    },
+    {
+      "name": "Sprint 2",
+      "color": "pink"
+    },
+    {
+      "name": "Sprint 3",
+      "color": "pink"
+    },
+    {
+      "name": "Sprint 4",
+      "color": "pink"
+    },
+    {
+      "name": "Sprint 5",
+      "color": "pink"
+    }
+  ],
+  "cards": [
+    {
+      "list": "📌 Infos & Definition of Done",
+      "name": "Méthode : Scrum allégé (développeur seul)",
+      "desc": "Sprints de 1 à 4 semaines selon la disponibilité.\n\n- **Product Owner** : l'énoncé de l'ECF (Julie et José, Vite & Gourmand).\n- **Développeur / Scrum Master** : moi.\n- **Rituels** : planification en début de sprint (choix des cartes du backlog), point quotidien noté en commentaire de carte, revue de sprint (démo sur la pile Docker), rétrospective en fin de sprint (ce qui a marché / à améliorer).\n- **Flux** : Backlog produit → Sprint backlog → En cours → En test / revue → Terminé.\n- **Priorisation** : MoSCoW (Must, Should, Could).",
+      "labels": [
+        "Doc / Conception"
+      ]
+    },
+    {
+      "list": "📌 Infos & Definition of Done",
+      "name": "Definition of Done",
+      "desc": "Une carte passe en « Terminé » quand :",
+      "labels": [
+        "Doc / Conception"
+      ],
+      "checklist": [
+        "Code commité sur la branche dev",
+        "Validation côté serveur en plus du JavaScript",
+        "Sorties échappées, requêtes préparées, jeton CSRF sur les formulaires",
+        "Responsive vérifié à 360, 768 et 1280 px",
+        "Testé à la main (et par le test E2E si concerné)",
+        "README mis à jour si besoin"
+      ]
+    },
+    {
+      "list": "📌 Infos & Definition of Done",
+      "name": "Calendrier des sprints",
+      "desc": "- **Sprint 0** (14 – 18 sept.) : cadrage, maquettes, MCD, choix techniques.\n- **Sprint 1** (19 – 21 sept.) : socle MVC, bases MariaDB et MongoDB, catalogue des menus.\n- **Sprint 2** (22 sept. – 4 oct.) : commandes, espace client, espace équipe et admin.\n- **Sprint 3** (5 oct. – 4 nov.) : sécurité, e-mails, déploiement Alwaysdata.\n- **Sprint 4** (5 – 7 nov.) : nouvelle inscription, audit CVE, Docker, documentation.\n- **Sprint 5** (à venir) : finitions avant soutenance.",
+      "labels": [
+        "Doc / Conception"
+      ]
+    },
+    {
+      "list": "Terminé",
+      "name": "Analyser l'énoncé et rédiger les user stories",
+      "labels": [
+        "Doc / Conception",
+        "Must",
+        "Sprint 0"
+      ],
+      "desc": "Lister les besoins des visiteurs, clients, employés et administrateur, puis les découper en user stories priorisées."
+    },
+    {
+      "list": "En cours",
+      "name": "Wireframes et mockups (mobile et desktop)",
+      "labels": [
+        "Doc / Conception",
+        "Front",
+        "Must",
+        "Sprint 4"
+      ],
+      "desc": "Maquettes des 11 pages principales au format iPhone 14 et MacBook Air 13\", dans Figma, générées à partir des pages réelles du site.",
+      "checklist": [
+        "Wireframes mobile",
+        "Wireframes desktop",
+        "Mockups mobile",
+        "Mockups desktop"
+      ]
+    },
+    {
+      "list": "En test / revue",
+      "name": "MCD, cas d'utilisation et diagramme de séquence",
+      "labels": [
+        "Doc / Conception",
+        "BDD",
+        "Must",
+        "Sprint 0"
+      ],
+      "desc": "MCD de MariaDB (collections MongoDB en encadré), cas d'utilisation par rôle, séquence de l'inscription. À vérifier : affichage à l'ouverture dans draw.io et Lucidchart."
+    },
+    {
+      "list": "Terminé",
+      "name": "Choisir la stack : PHP MVC, MariaDB, MongoDB, Bootstrap",
+      "labels": [
+        "Doc / Conception",
+        "Must",
+        "Sprint 0"
+      ],
+      "desc": "Justifier le choix SQL / NoSQL : données liées et transactions dans MariaDB, documents indépendants (galeries, avis, statistiques) dans MongoDB."
+    },
+    {
+      "list": "Terminé",
+      "name": "Socle MVC : routeur, conteneur, middlewares",
+      "labels": [
+        "Back",
+        "Must",
+        "Sprint 1"
+      ],
+      "desc": "Contrôleur frontal public/index.php, table de routes, injection de dépendances, middlewares Security / Auth / Staff / Admin / Guest."
+    },
+    {
+      "list": "Terminé",
+      "name": "Schéma MariaDB et données de démonstration",
+      "labels": [
+        "BDD",
+        "Must",
+        "Sprint 1"
+      ],
+      "desc": "database/schema.sql : tables, clés étrangères, 3 comptes, 32 plats, 9 menus, 5 commandes."
+    },
+    {
+      "list": "Terminé",
+      "name": "Initialisation MongoDB (images, avis, statistiques)",
+      "labels": [
+        "BDD",
+        "Must",
+        "Sprint 1"
+      ],
+      "desc": "database/mongodb-init.js avec index."
+    },
+    {
+      "list": "Terminé",
+      "name": "US — En tant que visiteur, je filtre les menus sans recharger la page",
+      "labels": [
+        "Front",
+        "Back",
+        "Must",
+        "Sprint 1"
+      ],
+      "desc": "**Critères d'acceptation**\n- Filtres prix max, fourchette, thème, régime, nombre de personnes.\n- Mise à jour en JavaScript (fetch), validation côté serveur."
+    },
+    {
+      "list": "Terminé",
+      "name": "US — En tant que visiteur, je consulte le détail d'un menu",
+      "labels": [
+        "Front",
+        "Back",
+        "Must",
+        "Sprint 1"
+      ],
+      "desc": "Galerie (MongoDB), plats et allergènes, conditions, stock, minimum de personnes."
+    },
+    {
+      "list": "Terminé",
+      "name": "US — En tant que client, je passe une commande",
+      "labels": [
+        "Front",
+        "Back",
+        "BDD",
+        "Must",
+        "Sprint 2"
+      ],
+      "desc": "**Critères d'acceptation**\n- Menu présélectionné, créneaux selon les horaires.\n- Remise de 10 % dès le minimum + 5 personnes.\n- Livraison gratuite dans Bordeaux, sinon 5 € + 0,59 €/km calculés par le serveur.\n- Transaction : commande, stock et historique, tout ou rien."
+    },
+    {
+      "list": "Terminé",
+      "name": "US — En tant que client, je suis, modifie ou annule ma commande",
+      "labels": [
+        "Front",
+        "Back",
+        "Must",
+        "Sprint 2"
+      ],
+      "desc": "Modification et annulation tant que la commande est en attente ; historique des statuts."
+    },
+    {
+      "list": "Terminé",
+      "name": "US — En tant que client, je laisse un avis sur une commande terminée",
+      "labels": [
+        "Back",
+        "BDD",
+        "Should",
+        "Sprint 2"
+      ],
+      "desc": "Note de 1 à 5 et commentaire, enregistrés dans MongoDB, visibles après validation."
+    },
+    {
+      "list": "Terminé",
+      "name": "US — En tant qu'employé, je gère les commandes et leurs statuts",
+      "labels": [
+        "Back",
+        "Front",
+        "Must",
+        "Sprint 2"
+      ],
+      "desc": "Filtres, mode de contact obligatoire, motif d'annulation, prêt de matériel."
+    },
+    {
+      "list": "Terminé",
+      "name": "US — En tant qu'employé, je gère menus, plats, galeries et horaires",
+      "labels": [
+        "Back",
+        "Front",
+        "Must",
+        "Sprint 2"
+      ],
+      "desc": "CRUD des menus et des plats avec allergènes, galerie d'images, horaires d'ouverture."
+    },
+    {
+      "list": "Terminé",
+      "name": "US — En tant qu'employé, je modère les avis",
+      "labels": [
+        "Back",
+        "Should",
+        "Sprint 2"
+      ],
+      "desc": "Valider ou refuser les avis en attente."
+    },
+    {
+      "list": "Terminé",
+      "name": "US — En tant qu'administrateur, je gère les comptes employés",
+      "labels": [
+        "Back",
+        "Must",
+        "Sprint 2"
+      ],
+      "desc": "Création (e-mail d'information sans mot de passe), désactivation, réactivation."
+    },
+    {
+      "list": "Terminé",
+      "name": "US — En tant qu'administrateur, je consulte CA et statistiques",
+      "labels": [
+        "Back",
+        "Front",
+        "BDD",
+        "Must",
+        "Sprint 2"
+      ],
+      "desc": "Graphique des commandes par menu (MongoDB), chiffre d'affaires filtrable par menu et période."
+    },
+    {
+      "list": "Terminé",
+      "name": "Contact et demande de devis",
+      "labels": [
+        "Back",
+        "Front",
+        "Should",
+        "Sprint 2"
+      ],
+      "desc": "Formulaires envoyés par SMTP à l'adresse de l'entreprise."
+    },
+    {
+      "list": "Terminé",
+      "name": "Accessibilité : lien d'évitement et panneau de réglages",
+      "labels": [
+        "Front",
+        "Should",
+        "Sprint 2"
+      ],
+      "desc": "Taille du texte, contraste renforcé, texte aéré, liens soulignés, animations réduites."
+    },
+    {
+      "list": "Terminé",
+      "name": "Sécurité : CSRF, en-têtes, limitation de débit",
+      "labels": [
+        "Sécurité",
+        "Must",
+        "Sprint 3"
+      ],
+      "desc": "Jeton CSRF sur tous les POST, CSP sans script inline, limitation par IP des connexions et formulaires."
+    },
+    {
+      "list": "Terminé",
+      "name": "Mots de passe : bcrypt, politique, blocage, réinitialisation",
+      "labels": [
+        "Sécurité",
+        "Back",
+        "Must",
+        "Sprint 3"
+      ],
+      "desc": "Blocage 15 min après 5 échecs ; lien de réinitialisation à usage unique, valable 1 h, stocké haché."
+    },
+    {
+      "list": "Terminé",
+      "name": "Envoi des e-mails (PHPMailer, SMTP Alwaysdata)",
+      "labels": [
+        "Back",
+        "DevOps",
+        "Must",
+        "Sprint 3"
+      ],
+      "desc": "Vérifié avec une boîte de test réelle."
+    },
+    {
+      "list": "Terminé",
+      "name": "Déploiement sur Alwaysdata",
+      "labels": [
+        "DevOps",
+        "Must",
+        "Sprint 3"
+      ],
+      "desc": "Sauvegarde, envoi FTPS, contrôle des empreintes, test réel d'inscription.",
+      "checklist": [
+        "Sauvegarde mysqldump",
+        "Envoi FTPS",
+        "Comparaison md5",
+        "Test réel"
+      ]
+    },
+    {
+      "list": "Terminé",
+      "name": "Test de bout en bout de l'inscription",
+      "labels": [
+        "Back",
+        "Sécurité",
+        "Should",
+        "Sprint 3"
+      ],
+      "desc": "Script local qui contrôle l'inscription, la connexion et les liens de réinitialisation, ainsi que l'état de la base."
+    },
+    {
+      "list": "Terminé",
+      "name": "US — En tant que visiteur, je choisis ou génère mon mot de passe à l'inscription",
+      "labels": [
+        "Front",
+        "Back",
+        "Sécurité",
+        "Must",
+        "Sprint 4"
+      ],
+      "desc": "**Critères d'acceptation**\n- Mot de passe libre avec confirmation, ou case « Me proposer un mot de passe aléatoire sécurisé ».\n- Bouton Afficher / Masquer sur tous les champs mot de passe.\n- Politique revalidée par le serveur ; mail de bienvenue sans mot de passe."
+    },
+    {
+      "list": "Terminé",
+      "name": "Audit de sécurité et CVE PHP d'octobre 2026",
+      "labels": [
+        "Sécurité",
+        "DevOps",
+        "Must",
+        "Sprint 4"
+      ],
+      "desc": "CVE-2026-109618 et 109619 corrigées (PHP 8.2.35 / 8.3.36). Appels Google sans suivi de redirection, autocomplétion d'adresse réservée aux connectés et limitée."
+    },
+    {
+      "list": "Terminé",
+      "name": "Dockeriser le projet (PHP, MariaDB, MongoDB, Mailpit)",
+      "labels": [
+        "DevOps",
+        "Should",
+        "Sprint 4"
+      ],
+      "desc": "docker compose up -d --build ; bases initialisées au premier démarrage ; guide docker-setup.txt."
+    },
+    {
+      "list": "Terminé",
+      "name": "Schéma SQL unique (suppression des migrations)",
+      "labels": [
+        "BDD",
+        "Should",
+        "Sprint 4"
+      ],
+      "desc": "database/schema.sql complet, sans CREATE DATABASE ni USE."
+    },
+    {
+      "list": "Terminé",
+      "name": "README simplifié, documentation anglaise et version Word",
+      "labels": [
+        "Doc / Conception",
+        "Should",
+        "Sprint 4"
+      ],
+      "desc": "README.md, docs/documentation-en.md, docs/README-fr.docx."
+    },
+    {
+      "list": "Terminé",
+      "name": "Vérification du responsive (360, 768, 1280 px)",
+      "labels": [
+        "Front",
+        "Must",
+        "Sprint 4"
+      ],
+      "desc": "Aucun débordement horizontal sur les pages publiques, client et admin."
+    },
+    {
+      "list": "Sprint backlog (Sprint 5)",
+      "name": "Mettre à jour le diagramme de séquence de l'inscription",
+      "labels": [
+        "Doc / Conception",
+        "Must",
+        "Sprint 5"
+      ],
+      "desc": "Le diagramme décrit encore l'ancien parcours avec mot de passe provisoire."
+    },
+    {
+      "list": "Sprint backlog (Sprint 5)",
+      "name": "Déployer la nouvelle version en production",
+      "labels": [
+        "DevOps",
+        "Must",
+        "Sprint 5"
+      ],
+      "desc": "Nouvelle inscription, correctifs de sécurité et de fuseau horaire.",
+      "checklist": [
+        "Sauvegarde",
+        "Envoi FTPS",
+        "ALTER TABLE si besoin",
+        "Test réel d'inscription"
+      ]
+    },
+    {
+      "list": "Sprint backlog (Sprint 5)",
+      "name": "Vérifier la version PHP du site web chez Alwaysdata",
+      "labels": [
+        "Sécurité",
+        "DevOps",
+        "Must",
+        "Sprint 5"
+      ],
+      "desc": "Le PHP en ligne de commande est en 8.3.36 ; vérifier celui du site dans l'administration Alwaysdata."
+    },
+    {
+      "list": "Backlog produit",
+      "name": "Retirer le champ GSM (doublon du téléphone)",
+      "labels": [
+        "Back",
+        "Front",
+        "BDD",
+        "Should"
+      ],
+      "desc": "Vues profil, employés, clients et commande ; entités, services, contrôleurs, schéma SQL."
+    },
+    {
+      "list": "Backlog produit",
+      "name": "Préparer la soutenance (démo et questions du jury)",
+      "labels": [
+        "Doc / Conception",
+        "Must"
+      ],
+      "desc": "Démo du parcours visiteur → client → employé → admin sur la pile Docker."
+    },
+    {
+      "list": "Backlog produit",
+      "name": "Supprimer l'ancienne migration restée sur le serveur",
+      "labels": [
+        "DevOps",
+        "Could"
+      ],
+      "desc": "database/migrations/2026-11-04-registration-confirmation.sql ne doit plus être rejouée."
+    }
+  ]
+}

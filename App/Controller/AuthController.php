@@ -10,6 +10,7 @@ use App\Service\MailService;
 use App\Service\PasswordPolicy;
 use App\Service\PhoneValidator;
 use App\Service\RateLimiter;
+use InvalidArgumentException;
 use Throwable;
 
 final class AuthController extends BaseController
@@ -88,7 +89,7 @@ final class AuthController extends BaseController
         $data = $this->collectUserInput();
         $errors = $this->validateRegistrationInput($data);
         // saisie renvoyée au formulaire en cas d'erreur : jamais le mot de passe en session
-        $keptInput = array_diff_key($data, ['password' => true]);
+        $keptInput = array_diff_key($data, ['password' => true, 'password_confirm' => true]);
 
         if ($errors !== []) {
             Session::flash('register_errors', $errors);
@@ -97,30 +98,28 @@ final class AuthController extends BaseController
         }
 
         try {
-            $registration = $this->authService->register($data);
-            try {
-                $sent = $this->mailService->sendTemporaryPasswordEmail(
-                    $data['email'],
-                    $data['first_name'],
-                    $registration['temporary_password']
-                );
-            } catch (Throwable $mailException) {
-                $this->userRepository->deleteNewCustomer($registration['user_id']);
-                throw $mailException;
-            }
-            if (!$sent) {
-                $this->userRepository->deleteNewCustomer($registration['user_id']);
-                Session::flash('register_errors', ['general' => 'Le mail contenant votre mot de passe provisoire n’a pas pu être envoyé. Vérifiez votre adresse e-mail puis réessayez.']);
-                $this->redirect('/register');
-            }
-            Session::flash('register_success', 'Compte créé. Votre mot de passe provisoire vous a été envoyé par e-mail. Vous devrez le changer lors de votre première connexion.');
-            $this->redirect('/login');
+            $this->authService->register($data);
+        } catch (InvalidArgumentException $exception) {
+            // email déjà pris, téléphone ou mot de passe refusé : message affichable
+            Session::flash('register_errors', ['general' => $exception->getMessage()]);
+            Session::flash('register_old_input', $keptInput);
+            $this->redirect('/register');
         } catch (Throwable $exception) {
             error_log('Inscription : ' . $exception->getMessage());
             Session::flash('register_errors', ['general' => 'Impossible de créer ce compte.']);
             Session::flash('register_old_input', $keptInput);
             $this->redirect('/register');
         }
+
+        // le mail de bienvenue ne bloque pas l'inscription s'il échoue
+        try {
+            $this->mailService->sendWelcomeEmail($data['email'], $data['first_name']);
+        } catch (Throwable $exception) {
+            error_log('Mail de bienvenue : ' . $exception->getMessage());
+        }
+
+        Session::flash('register_success', 'Compte créé. Vous pouvez maintenant vous connecter avec votre mot de passe.');
+        $this->redirect('/login');
     }
 
     public function profile(): void
@@ -307,6 +306,8 @@ final class AuthController extends BaseController
             'last_name' => trim((string) ($_POST['last_name'] ?? '')),
             'phone' => trim((string) ($_POST['phone'] ?? '')),
             'address' => trim((string) ($_POST['address'] ?? '')),
+            'password' => (string) ($_POST['password'] ?? ''),
+            'password_confirm' => (string) ($_POST['password_confirm'] ?? ''),
         ];
     }
 
@@ -332,6 +333,13 @@ final class AuthController extends BaseController
             if ($phoneError !== null) {
                 $errors[$field] = $phoneError;
             }
+        }
+
+        $passwordErrors = $this->passwordPolicy->validate($data['password']);
+        if ($passwordErrors !== []) {
+            $errors['password'] = implode(' ', $passwordErrors);
+        } elseif ($data['password'] !== $data['password_confirm']) {
+            $errors['password_confirm'] = 'Les mots de passe ne correspondent pas.';
         }
 
         if (($_POST['privacy_consent'] ?? '') !== '1') {

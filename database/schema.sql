@@ -3,8 +3,12 @@
 -- Fichier de référence unique : structure ET données de démonstration.
 -- À importer tel quel (phpMyAdmin > Importer, ou mysql < schema.sql).
 --
+-- Le fichier ne crée pas la base et ne fait pas de USE : il s'importe dans
+-- la base sélectionnée (phpMyAdmin, mysql <nom_base>, ou Docker qui utilise
+-- MARIADB_DATABASE). Le même fichier sert en local, en Docker et sur Alwaysdata.
+--
 -- ATTENTION : l'import SUPPRIME et RECRÉE toutes les tables de la base
--- viteetgourmand. Toutes les données existantes sont perdues.
+-- sélectionnée. Toutes les données existantes sont perdues.
 --
 -- Contenu des données :
 --   - 3 comptes de démonstration (ids fixes 1 admin, 2 employé, 3 client),
@@ -12,17 +16,11 @@
 --   - horaires, 10 allergènes, 32 plats, 9 menus et leurs compositions ;
 --   - 5 commandes terminées (1001 à 1005) du client, reprises par les avis
 --     et les statistiques de database/mongodb-init.js.
--- Structure à jour : inclut database/migrations/2026-11-04-temporary-password.sql
--- (ne pas rejouer cette migration après un import de ce fichier).
+-- Structure complète et à jour : il n'y a plus de fichiers de migration séparés.
 -- Après cet import, lancer database/mongodb-init.js pour MongoDB.
 -- ================================================================
 
 SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci;
-
-CREATE DATABASE IF NOT EXISTS `viteetgourmand`
-  CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
-USE `viteetgourmand`;
 
 SET FOREIGN_KEY_CHECKS = 0;
 

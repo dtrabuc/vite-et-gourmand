@@ -17,8 +17,10 @@ final readonly class AuthService
     ) {
     }
 
-    /** @return array{user_id:int, temporary_password:string} */
-    public function register(array $data): array
+    /**
+     * Crée un compte client actif avec le mot de passe choisi (ou généré dans le navigateur).
+     */
+    public function register(array $data): int
     {
         $email = $this->normalizeEmail((string) ($data['email'] ?? ''));
 
@@ -37,10 +39,12 @@ final readonly class AuthService
             throw new InvalidArgumentException('Cette adresse email est déjà utilisée.');
         }
 
-        $temporaryPassword = $this->generateTemporaryPassword();
-        $userId = $this->userRepository->create([
+        $password = (string) ($data['password'] ?? '');
+        $this->assertStrongPassword($password);
+
+        return $this->userRepository->create([
             'email' => $email,
-            'password' => $this->passwordPolicy->hash($temporaryPassword),
+            'password' => $this->passwordPolicy->hash($password),
             'role' => 'user',
             'first_name' => trim((string) ($data['first_name'] ?? '')),
             'last_name' => trim((string) ($data['last_name'] ?? '')),
@@ -48,9 +52,8 @@ final readonly class AuthService
             'gsm' => '',
             'address' => trim((string) ($data['address'] ?? '')),
             'is_active' => true,
-            'must_change_password' => true,
+            'must_change_password' => false,
         ]);
-        return ['user_id' => $userId, 'temporary_password' => $temporaryPassword];
     }
 
     public function login(string $email, string $password): ?User
@@ -237,33 +240,6 @@ final readonly class AuthService
         if ($errors !== []) {
             throw new InvalidArgumentException(implode(' ', $errors));
         }
-    }
-
-    private function generateTemporaryPassword(): string
-    {
-        $groups = [
-            'ABCDEFGHJKLMNPQRSTUVWXYZ',
-            'abcdefghijkmnopqrstuvwxyz',
-            '23456789',
-            '!@#$%*-_+',
-        ];
-        $characters = [];
-
-        foreach ($groups as $group) {
-            $characters[] = $group[random_int(0, strlen($group) - 1)];
-        }
-
-        $allCharacters = implode('', $groups);
-        while (count($characters) < 18) {
-            $characters[] = $allCharacters[random_int(0, strlen($allCharacters) - 1)];
-        }
-
-        for ($index = count($characters) - 1; $index > 0; $index--) {
-            $swapIndex = random_int(0, $index);
-            [$characters[$index], $characters[$swapIndex]] = [$characters[$swapIndex], $characters[$index]];
-        }
-
-        return implode('', $characters);
     }
 
     /**

@@ -98,6 +98,8 @@ final readonly class DeliveryDistanceService
                 'method' => 'GET',
                 'timeout' => 5,
                 'ignore_errors' => true,
+                // La clé étant dans l'URL, ne pas suivre de redirection.
+                'follow_location' => 0,
             ],
         ]);
 
