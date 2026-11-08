@@ -13,10 +13,10 @@ class OrderRepository
         $pdo = Database::pdo();
         $stmt = $pdo->prepare('INSERT INTO orders
             (user_id, menu_id, number_of_people, order_date, delivery_date, delivery_time,
-             delivery_address, delivery_city, delivery_postal_code, delivery_distance_km,
+             delivery_address, delivery_city, delivery_postal_code, delivery_distance_km, address_status, delivery_zone,
                  delivery_cost, customization, service_type, payment_method, delivery_instructions, contact_phone, menu_price, discount_rate, total_price, status, equipment_loaned)
             VALUES (:user_id, :menu_id, :number_of_people, :order_date, :delivery_date, :delivery_time,
-                    :delivery_address, :delivery_city, :delivery_postal_code, :delivery_distance_km,
+                    :delivery_address, :delivery_city, :delivery_postal_code, :delivery_distance_km, :address_status, :delivery_zone,
                     :delivery_cost, :customization, :service_type, :payment_method, :delivery_instructions, :contact_phone, :menu_price, :discount_rate, :total_price, :status, :equipment_loaned)');
         $stmt->execute([
             'user_id' => $data['user_id'],
@@ -29,6 +29,8 @@ class OrderRepository
             'delivery_city' => $data['delivery_city'],
             'delivery_postal_code' => $data['delivery_postal_code'] ?? null,
             'delivery_distance_km' => $data['delivery_distance_km'] ?? null,
+            'address_status' => $data['address_status'] ?? null,
+            'delivery_zone' => $data['delivery_zone'] ?? null,
             'delivery_cost' => $data['delivery_cost'],
             'customization' => $data['customization'] ?? null,
             'service_type' => $data['service_type'] ?? 'delivery',
@@ -110,7 +112,8 @@ class OrderRepository
             'UPDATE orders SET number_of_people = :people, delivery_date = :delivery_date, delivery_time = :delivery_time,
              service_type = :service_type, contact_phone = :contact_phone,
              delivery_address = :address, delivery_city = :city, delivery_postal_code = :postal_code,
-             delivery_distance_km = :distance, delivery_instructions = :instructions,
+             delivery_distance_km = :distance, address_status = :address_status, delivery_zone = :delivery_zone,
+             delivery_instructions = :instructions, customization = :customization,
              menu_price = :menu_price, delivery_cost = :delivery_cost,
              discount_rate = :discount_rate, total_price = :total_price, updated_at = NOW()
              WHERE id = :id'
@@ -126,7 +129,10 @@ class OrderRepository
             'city' => $data['delivery_city'],
             'postal_code' => $data['delivery_postal_code'],
             'distance' => $data['delivery_distance_km'],
+            'address_status' => $data['address_status'] ?? null,
+            'delivery_zone' => $data['delivery_zone'] ?? null,
             'instructions' => $data['delivery_instructions'],
+            'customization' => $data['customization'] ?? null,
             'menu_price' => $data['menu_price'],
             'delivery_cost' => $data['delivery_cost'],
             'discount_rate' => $data['discount_rate'],
@@ -315,6 +321,8 @@ class OrderRepository
         $order->setDeliveryCity((string) ($row['delivery_city'] ?? ''));
         $order->setDeliveryPostalCode((string) ($row['delivery_postal_code'] ?? ''));
         $order->setDeliveryDistanceKm($row['delivery_distance_km'] !== null ? (float) $row['delivery_distance_km'] : null);
+        $order->setAddressStatus(isset($row['address_status']) ? (string) $row['address_status'] : null);
+        $order->setDeliveryZone(isset($row['delivery_zone']) ? (string) $row['delivery_zone'] : null);
         $order->setCustomization($row['customization'] ?? null);
         $order->setServiceType((string) ($row['service_type'] ?? 'delivery'));
         $order->setPaymentMethod((string) ($row['payment_method'] ?? 'cash_on_site'));

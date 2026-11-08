@@ -99,8 +99,9 @@ MongoDB et la boîte mail de test sont dans les conteneurs : rien d'autre
    3. valider, puis se connecter sur /login avec ce mot de passe ;
    4. le mail de bienvenue est visible dans http://localhost:8025
 
- Note : l'autocomplétion d'adresse et le calcul de distance utilisent
- l'API Google, désactivée ici (pas de clé). Le reste du site fonctionne.
+ Note : les adresses de livraison sont vérifiées avec OpenStreetMap
+ (Photon et OSRM, sans clé). Il faut un accès Internet ; sinon la
+ saisie manuelle de l'adresse reste possible.
 
 ------------------------------------------------------------------
  5. ARRÊTER, RELANCER, REPARTIR DE ZÉRO

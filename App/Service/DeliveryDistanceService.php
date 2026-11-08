@@ -4,34 +4,38 @@ declare(strict_types=1);
 namespace App\Service;
 
 use InvalidArgumentException;
+use RuntimeException;
 
 /**
- * Frais de livraison : gratuits dans Bordeaux, sinon 5 € + 0,59 € par kilomètre.
- * La distance est calculée par le serveur (API Google Distance Matrix) depuis
- * l'adresse de l'entreprise ; elle n'est jamais saisie par le client.
+ * Vérification de l'adresse et frais de livraison (données OpenStreetMap, voir GeoService).
+ *
+ * - Bordeaux : livraison offerte ;
+ * - jusqu'à 25 km à vol d'oiseau : 5 € + 0,59 € par km de route ;
+ * - au-delà : hors zone. Le client choisit le retrait (gratuit) ou accepte
+ *   la livraison hors zone, au même tarif kilométrique ;
+ * - adresse introuvable ou service indisponible : saisie manuelle possible,
+ *   les frais sont alors estimés depuis la commune, ou confirmés par l'équipe.
  */
 final readonly class DeliveryDistanceService
 {
     /** Adresse, ville et code postal de l'entreprise (point de départ des livraisons). */
     public const COMPANY_ADDRESS = ['12 Quai des Chartrons', 'Bordeaux', '33000'];
+    /** Coordonnées OpenStreetMap du 12 quai des Chartrons. */
+    public const COMPANY_COORDS = [44.8494341, -0.5705344];
+
+    public const ZONE_RADIUS_KM = 25.0;
+    public const BASE_FEE = 5.00;
+    public const PRICE_PER_KM = 0.59;
+    /** Route ≈ vol d'oiseau × 1,3 quand OSRM ne répond pas. */
+    private const ROAD_FACTOR = 1.3;
 
     private const BORDEAUX_POSTAL_CODES = ['33000', '33100', '33200', '33300', '33800'];
 
-    private const BASE_FEE = 5.00;
-    private const PRICE_PER_KM = 0.59;
-
-    private const ENDPOINT = 'https://maps.googleapis.com/maps/api/distancematrix/json';
-
     public function __construct(
-        private string $apiKey,
-        private CacheService $cacheService
+        private GeoService $geoService
     ) {
     }
 
-    /**
-     * Bordeaux est reconnu par le nom de la ville (sans tenir compte de la casse,
-     * des accents et des espaces) ou par l'un de ses codes postaux.
-     */
     public function isBordeaux(string $city, string $postalCode): bool
     {
         return $this->normalize($city) === 'bordeaux'
@@ -39,94 +43,125 @@ final readonly class DeliveryDistanceService
     }
 
     /**
-     * @return array{distance_km: ?float, cost: float} distance_km vaut null dans Bordeaux.
+     * Vérifie une adresse pour l'affichage (sans rien refuser).
      *
-     * @throws InvalidArgumentException si l'adresse est incomplète ou si la distance
-     *                                  ne peut pas être calculée (la commande est alors refusée).
+     * @return array{status: string, label: ?string, street: ?string, postal_code: ?string, city: ?string,
+     *               zone: ?string, crow_km: ?float, distance_km: ?float, estimated: bool, cost: ?float}
+     *         status : verified (adresse trouvée), approximate (seule la commune est trouvée),
+     *                  not_found, unavailable (service injoignable).
      */
-    public function quote(string $address, string $postalCode, string $city): array
+    public function check(string $street, string $postalCode, string $city): array
     {
-        $address = trim($address);
+        $empty = ['label' => null, 'street' => null, 'postal_code' => null, 'city' => null,
+            'zone' => null, 'crow_km' => null, 'distance_km' => null, 'estimated' => false, 'cost' => null];
+
+        try {
+            $place = $this->geoService->geocode($street, $postalCode, $city);
+            $status = 'verified';
+            // l'adresse exacte est inconnue : on se rabat sur la commune
+            if ($place === null || $place['precision'] === 'city') {
+                $place = $place ?? $this->geoService->geocode('', $postalCode, $city);
+                $status = $place === null ? 'not_found' : 'approximate';
+            }
+        } catch (RuntimeException) {
+            return ['status' => 'unavailable'] + $empty;
+        }
+
+        if ($place === null) {
+            return ['status' => 'not_found'] + $empty;
+        }
+
+        return ['status' => $status] + $this->price($place);
+    }
+
+    /**
+     * Frais de livraison retenus pour une commande. Refuse (exception) une adresse
+     * non vérifiée sans saisie manuelle, ou une adresse hors zone non acceptée.
+     *
+     * @return array{distance_km: ?float, cost: float, zone: ?string, address_status: string, cost_pending: bool}
+     */
+    public function quote(string $street, string $postalCode, string $city, bool $manual = false, bool $acceptOutside = false): array
+    {
+        $street = trim($street);
         $postalCode = trim($postalCode);
         $city = trim($city);
 
-        if ($address === '' || $postalCode === '' || $city === '') {
+        if ($street === '' || $postalCode === '' || $city === '') {
             throw new InvalidArgumentException('L’adresse, le code postal et la ville de livraison sont requis.');
         }
 
-        if ($this->isBordeaux($city, $postalCode)) {
-            return ['distance_km' => null, 'cost' => 0.00];
+        $check = $this->check($street, $postalCode, $city);
+
+        if ($check['status'] !== 'verified' && !$manual) {
+            throw new InvalidArgumentException(match ($check['status']) {
+                'unavailable' => 'La vérification des adresses est indisponible pour le moment. Cochez « Mon adresse est correcte » pour la saisir manuellement.',
+                default => 'Adresse introuvable sur la carte. Corrigez-la, choisissez une suggestion, ou cochez « Mon adresse est correcte ».',
+            });
         }
 
-        $distanceKm = $this->distanceKm($address . ', ' . $postalCode . ' ' . $city . ', France');
+        // service injoignable ou commune inconnue : Bordeaux reste gratuit, sinon frais à confirmer
+        if ($check['zone'] === null) {
+            $bordeaux = $this->isBordeaux($city, $postalCode);
+
+            return [
+                'distance_km' => null,
+                'cost' => 0.00,
+                'zone' => $bordeaux ? 'bordeaux' : null,
+                'address_status' => 'manual',
+                'cost_pending' => !$bordeaux,
+            ];
+        }
+
+        if ($check['zone'] === 'outside' && !$acceptOutside) {
+            throw new InvalidArgumentException(sprintf(
+                'Cette adresse est à %s km de Bordeaux, hors de notre zone de livraison (%d km). '
+                . 'Choisissez le retrait à Bordeaux (gratuit) ou acceptez la livraison hors zone (%s).',
+                number_format((float) $check['crow_km'], 0, ',', ' '),
+                (int) self::ZONE_RADIUS_KM,
+                MenuPricing::format((float) $check['cost'])
+            ));
+        }
 
         return [
-            'distance_km' => $distanceKm,
-            'cost' => round(self::BASE_FEE + (self::PRICE_PER_KM * $distanceKm), 2),
+            'distance_km' => $check['distance_km'],
+            'cost' => (float) $check['cost'],
+            'zone' => $check['zone'],
+            'address_status' => $check['status'] === 'verified' ? 'verified' : 'manual',
+            'cost_pending' => false,
         ];
     }
 
-    private function distanceKm(string $destination): float
+    /** Zone et frais pour un lieu trouvé sur la carte. */
+    private function price(array $place): array
     {
-        $cacheKey = 'delivery_distance:' . $this->normalize($destination);
-        $cached = $this->cacheService->get($cacheKey);
+        [$lat0, $lon0] = self::COMPANY_COORDS;
+        $crow = GeoService::crowKm($lat0, $lon0, $place['lat'], $place['lon']);
+        $base = [
+            'label' => $place['label'],
+            'street' => $place['street'],
+            'postal_code' => $place['postal_code'],
+            'city' => $place['city'],
+            'crow_km' => $crow,
+        ];
 
-        if (is_float($cached) || is_int($cached)) {
-            return (float) $cached;
+        if ($this->isBordeaux($place['city'], $place['postal_code'])) {
+            return $base + ['zone' => 'bordeaux', 'distance_km' => null, 'estimated' => false, 'cost' => 0.00];
         }
 
-        $failure = 'Impossible de calculer la distance de livraison pour cette adresse. '
-            . 'Vérifiez l’adresse ou contactez-nous : la commande ne peut pas être enregistrée sans ce calcul.';
-
-        if ($this->apiKey === '') {
-            error_log('Distance Matrix : GOOGLE_MAPS_API_KEY absente.');
-            throw new InvalidArgumentException($failure);
+        try {
+            $road = $this->geoService->drivingKm($lat0, $lon0, $place['lat'], $place['lon']);
+        } catch (RuntimeException) {
+            $road = null;
         }
+        $estimated = $road === null;
+        $road ??= round($crow * self::ROAD_FACTOR, 2);
 
-        [$street, $city, $postalCode] = self::COMPANY_ADDRESS;
-        $url = self::ENDPOINT . '?' . http_build_query([
-            'origins' => $street . ', ' . $postalCode . ' ' . $city . ', France',
-            'destinations' => $destination,
-            'mode' => 'driving',
-            'units' => 'metric',
-            'language' => 'fr',
-            'key' => $this->apiKey,
-        ]);
-
-        $context = stream_context_create([
-            'http' => [
-                'method' => 'GET',
-                'timeout' => 5,
-                'ignore_errors' => true,
-                // La clé étant dans l'URL, ne pas suivre de redirection.
-                'follow_location' => 0,
-            ],
-        ]);
-
-        $response = @file_get_contents($url, false, $context);
-        $decoded = is_string($response) ? json_decode($response, true) : null;
-        $element = $decoded['rows'][0]['elements'][0] ?? null;
-
-        if (
-            !is_array($decoded)
-            || ($decoded['status'] ?? '') !== 'OK'
-            || !is_array($element)
-            || ($element['status'] ?? '') !== 'OK'
-            || !isset($element['distance']['value'])
-        ) {
-            error_log(sprintf(
-                'Distance Matrix en échec (statut %s / %s) pour « %s ».',
-                is_array($decoded) ? (string) ($decoded['status'] ?? '?') : 'réponse invalide',
-                is_array($element) ? (string) ($element['status'] ?? '?') : '?',
-                $destination
-            ));
-            throw new InvalidArgumentException($failure);
-        }
-
-        $distanceKm = round(((float) $element['distance']['value']) / 1000, 2);
-        $this->cacheService->set($cacheKey, $distanceKm, 30 * 24 * 3600);
-
-        return $distanceKm;
+        return $base + [
+            'zone' => $crow <= self::ZONE_RADIUS_KM ? 'zone' : 'outside',
+            'distance_km' => $road,
+            'estimated' => $estimated,
+            'cost' => round(self::BASE_FEE + self::PRICE_PER_KM * $road, 2),
+        ];
     }
 
     private function normalize(string $value): string

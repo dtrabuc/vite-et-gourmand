@@ -29,6 +29,10 @@ use App\Service\AuthService;
 use App\Service\CacheService;
 use App\Service\CommentService;
 use App\Service\DeliveryDistanceService;
+use App\Service\GeoService;
+use App\Service\OrderCompositionService;
+use App\Service\PrivacyService;
+use App\Repository\OrderItemRepository;
 use App\Service\DishService;
 use App\Service\MailService;
 use App\Service\MenuService;
@@ -238,14 +242,47 @@ final class Container
                 $container->get(NotificationService::class),
                 $container->get(DeliveryDistanceService::class),
                 $container->get(MenuService::class),
-                $container->get(PhoneValidator::class)
+                $container->get(PhoneValidator::class),
+                $container->get(OrderCompositionService::class),
+                $container->get(OrderItemRepository::class)
+            )
+        );
+
+        $this->set(
+            OrderCompositionService::class,
+            static fn (Container $container): OrderCompositionService => new OrderCompositionService(
+                $container->get(MenuRepository::class),
+                $container->get(DishRepository::class)
+            )
+        );
+
+        $this->set(OrderItemRepository::class, static fn (): OrderItemRepository => new OrderItemRepository());
+
+        $this->set(
+            PrivacyService::class,
+            static fn (Container $container): PrivacyService => new PrivacyService(
+                $container->get(UserRepository::class),
+                $container->get(OrderItemRepository::class)
+            )
+        );
+
+        $this->set(
+            \App\Controller\PrivacyController::class,
+            static fn (Container $container): \App\Controller\PrivacyController => new \App\Controller\PrivacyController(
+                $container->get(PrivacyService::class)
             )
         );
 
         $this->set(
             DeliveryDistanceService::class,
             static fn (Container $container): DeliveryDistanceService => new DeliveryDistanceService(
-                (string) config('app.google_maps_key', ''),
+                $container->get(GeoService::class)
+            )
+        );
+
+        $this->set(
+            GeoService::class,
+            static fn (Container $container): GeoService => new GeoService(
                 $container->get(CacheService::class)
             )
         );
@@ -315,7 +352,9 @@ final class Container
         $this->set(
             AddressController::class,
             static fn (Container $container): AddressController => new AddressController(
-                $container->get(RateLimiter::class)
+                $container->get(RateLimiter::class),
+                $container->get(GeoService::class),
+                $container->get(DeliveryDistanceService::class)
             )
         );
 

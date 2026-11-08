@@ -6,6 +6,7 @@ namespace App\Controller;
 use App\Core\Response;
 use App\Core\Session;
 use App\Core\View;
+use App\Repository\NotificationRepository;
 use App\Repository\OpeningHoursRepository;
 
 abstract class BaseController
@@ -19,6 +20,16 @@ abstract class BaseController
             $data['openingHours'] = [];
         }
 
+        // compteur de la cloche (notifications non lues)
+        $unread = 0;
+        if (Session::id() !== null) {
+            try {
+                $unread = (new NotificationRepository())->countUnread((int) Session::id());
+            } catch (\Throwable $exception) {
+                error_log('Compteur de notifications indisponible : ' . $exception->getMessage());
+            }
+        }
+
         $content = View::render($template, $data);
 
         $layoutData = array_merge($data, [
@@ -29,6 +40,7 @@ abstract class BaseController
             'last_name' => $_SESSION['last_name'] ?? '',
             'role' => $_SESSION['role'] ?? '',
             'csrfToken' => Session::csrfToken(),
+            'unreadNotifications' => $unread,
         ]);
 
         echo View::render('layout/layout', $layoutData);

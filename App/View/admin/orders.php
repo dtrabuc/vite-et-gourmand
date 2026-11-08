@@ -79,11 +79,15 @@
                 <p class="small mb-1"><strong>Téléphone :</strong> <?= $escape($order->getContactPhone()) ?></p>
                 <p class="small mb-0"><strong>Lieu :</strong> <?= $escape($order->getDeliveryAddress()) ?>
                     <?= $order->getDeliveryCity() !== '' ? ' — ' . $escape($order->getDeliveryPostalCode() . ' ' . $order->getDeliveryCity()) : '' ?>
+                    <?= delivery_badges($order) ?>
+                    <?php if ($order->getDeliveryDistanceKm() !== null): ?><span class="text-muted">(<?= number_format($order->getDeliveryDistanceKm(), 1, ',', ' ') ?> km)</span><?php endif; ?>
                 </p>
             </div>
             <div class="col-12 col-lg-6">
                 <p class="small mb-1"><strong>Personnes :</strong> <?= $order->getNumberOfPeople() ?></p>
                 <p class="small mb-1"><strong>Menu :</strong> <?= $escape($order->getMenuTitle() ?? ('#' . $order->getMenuId())) ?></p>
+                <?php if (!empty($items[$order->getId()])): ?><div class="mb-1"><strong class="small">Choix du client :</strong><?= order_items_html($items[$order->getId()]) ?></div><?php endif; ?>
+                <?php if ($order->getCustomization()): ?><p class="small mb-1 text-danger"><strong>Précisions cuisine :</strong> <?= $escape($order->getCustomization()) ?></p><?php endif; ?>
                 <p class="small mb-0"><strong>Total :</strong> <?= number_format($order->getTotalPrice(), 2, ',', ' ') ?> €</p>
             </div>
         </div>

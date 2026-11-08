@@ -50,4 +50,25 @@ final class NotificationController extends BaseController
         $this->notificationService->markRead($id, $userId);
         $this->redirect('/notifications');
     }
+
+    /** JSON pour la cloche : nombre de non lues et nouvelles notifications depuis ?after=ID. */
+    public function feed(): never
+    {
+        $userId = Session::id();
+
+        if ($userId === null) {
+            $this->json(['success' => false, 'error' => 'Connexion requise.'], 401);
+        }
+
+        $after = filter_var($_GET['after'] ?? 0, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]]);
+        $feed = $this->notificationService->feed($userId, $after === false ? 0 : $after);
+        $feed['items'] = array_map(static fn (array $n): array => [
+            'id' => (int) $n['id'],
+            'title' => (string) $n['title'],
+            'message' => (string) $n['message'],
+            'link' => !empty($n['order_id']) ? '/orders' : (!empty($n['quote_request_id']) ? '/quote' : '/notifications'),
+        ], $feed['items']);
+
+        $this->json(['success' => true, 'data' => $feed]);
+    }
 }

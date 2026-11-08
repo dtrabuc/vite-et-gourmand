@@ -13,3 +13,219 @@
     background: var(--bs-primary-bg-subtle);
     box-shadow: 0 0 0 .15rem rgba(var(--vg-primary-rgb), .06);
 }
+
+/* Choix du menu en cartes (une ligne par menu, prix total à droite) */
+.menu-options { display: grid; gap: .5rem; }
+
+.menu-option {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    padding: .8rem 1rem;
+    border: 1px solid var(--vg-border);
+    border-radius: .8rem;
+    background: #fff;
+    cursor: pointer;
+    transition: border-color .15s ease, background-color .15s ease;
+}
+
+.menu-option .form-check-input { flex: 0 0 auto; margin: 0; }
+
+.menu-option:has(input:checked) {
+    border-color: var(--vg-primary);
+    background: var(--bs-primary-bg-subtle);
+}
+
+.menu-option:has(input:focus-visible) {
+    outline: 3px solid rgba(var(--vg-primary-rgb), .35);
+    outline-offset: 2px;
+}
+
+.menu-option__body { display: flex; flex: 1 1 auto; flex-direction: column; min-width: 0; }
+.menu-option__title { font-weight: 650; }
+.menu-option__price { flex: 0 0 auto; text-align: right; }
+.menu-option__price strong { color: var(--vg-primary); font-size: 1.1rem; }
+
+.menu-option--disabled { cursor: not-allowed; opacity: .6; background: var(--vg-soft); }
+
+/* Récapitulatif collant à droite sur grand écran */
+.order-summary { position: sticky; top: calc(var(--vg-nav-h, 4rem) + 1rem); }
+
+.order-summary__lines > div {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: .2rem 0;
+}
+
+.order-summary__lines dt { font-weight: 400; }
+.order-summary__lines dd { margin: 0; font-weight: 600; text-align: right; }
+
+.order-summary__total {
+    margin-top: .3rem;
+    padding-top: .5rem !important;
+    border-top: 1px solid var(--vg-border);
+    font-size: 1.15rem;
+}
+
+.order-summary__total dt,
+.order-summary__total dd { font-weight: 700; }
+
+@media (max-width: 575.98px) {
+    .menu-option { flex-wrap: wrap; }
+    .menu-option__price { width: 100%; padding-left: 1.75rem; text-align: left; }
+}
+
+/* Adresse : liste de suggestions sous le champ */
+.address-autocomplete-wrap { position: relative; }
+
+.address-suggestions {
+    position: absolute;
+    z-index: 1030;
+    top: 100%;
+    right: 0;
+    left: 0;
+    max-height: 18rem;
+    overflow-y: auto;
+    box-shadow: var(--vg-shadow-lg);
+}
+
+/* Résultat de la vérification d'adresse */
+.address-status {
+    padding: .65rem .85rem;
+    border-left: 4px solid var(--vg-border);
+    border-radius: .5rem;
+    background: var(--vg-soft);
+    font-size: .925rem;
+}
+.address-status--success { border-color: #198754; background: #e9f6ef; color: #0f5132; }
+.address-status--warning { border-color: #e0a800; background: #fff8e1; color: #664d03; }
+.address-status--pending { color: var(--vg-muted); }
+
+.outside-choice {
+    margin-top: .75rem;
+    padding: .85rem 1rem;
+    border: 1px dashed #e0a800;
+    border-radius: .75rem;
+    background: #fffdf5;
+}
+.outside-choice label.btn:has(input:checked) { background: var(--vg-primary); color: #fff; }
+
+.menu-options__others summary,
+.menu-others summary { color: var(--vg-primary); font-weight: 650; cursor: pointer; }
+
+/* Confirmation de commande : coche, étapes de suivi, récapitulatif */
+.order-confirmation__check {
+    display: inline-grid;
+    place-items: center;
+    width: 4.5rem;
+    height: 4.5rem;
+    border-radius: 50%;
+    background: #198754;
+    color: #fff;
+    font-size: 2.4rem;
+    font-weight: 700;
+}
+
+.order-steps {
+    display: flex;
+    gap: .25rem;
+    margin: 1.5rem 0;
+    padding: 0;
+    list-style: none;
+}
+
+.order-steps__item {
+    position: relative;
+    display: flex;
+    flex: 1 1 0;
+    flex-direction: column;
+    align-items: center;
+    gap: .35rem;
+    color: var(--vg-muted);
+    font-size: .85rem;
+    text-align: center;
+}
+
+.order-steps__item::before {
+    content: "";
+    position: absolute;
+    top: 1rem;
+    right: 50%;
+    left: -50%;
+    z-index: 0;
+    height: 3px;
+    background: var(--vg-border);
+}
+
+.order-steps__item:first-child::before { display: none; }
+.order-steps__item.is-done::before,
+.order-steps__item.is-current::before { background: #198754; }
+
+.order-steps__dot {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    border: 3px solid var(--vg-border);
+    border-radius: 50%;
+    background: #fff;
+    font-weight: 700;
+}
+
+.order-steps__item.is-done .order-steps__dot { border-color: #198754; background: #198754; color: #fff; }
+.order-steps__item.is-current .order-steps__dot { border-color: #198754; color: #198754; }
+.order-steps__item.is-current .order-steps__label { color: var(--vg-ink); font-weight: 700; }
+
+.order-recap > div {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: .45rem 0;
+    border-bottom: 1px solid var(--vg-border);
+}
+.order-recap dt { font-weight: 400; color: var(--vg-muted); }
+.order-recap dd { margin: 0; font-weight: 600; text-align: right; }
+.order-recap__total { font-size: 1.15rem; border-bottom: 0 !important; }
+.order-recap__total dt, .order-recap__total dd { color: var(--vg-ink); font-weight: 700; }
+
+@media (max-width: 575.98px) {
+    .order-steps__label { font-size: .7rem; }
+}
+
+/* Composer son menu (composition.js) */
+.compo-cat {
+    margin-bottom: 1rem;
+    padding: .75rem 1rem;
+    border: 1px solid var(--vg-border);
+    border-radius: .75rem;
+}
+.compo-cat__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-bottom: .25rem;
+    font-size: 1rem;
+    font-weight: 700;
+    float: none;
+}
+.compo-sum { font-size: .8rem; font-weight: 700; padding: .1rem .5rem; border-radius: 999px; }
+.compo-sum.is-ok { background: #e9f6ef; color: #0f5132; }
+.compo-sum.is-ko { background: #fdecea; color: #842029; }
+.compo-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 8rem;
+    gap: .5rem .75rem;
+    padding: .5rem 0;
+    border-top: 1px dashed var(--vg-border);
+}
+.compo-row.is-variant { padding-left: .75rem; border-left: 3px solid var(--vg-accent); }
+.compo-row__opts { grid-column: 1 / -1; }
+.compo-qty { flex-wrap: nowrap; }
+.compo-qty .form-control { min-width: 2.75rem; padding-inline: .2rem; -moz-appearance: textfield; appearance: textfield; }
+.compo-without summary { color: var(--vg-primary); font-size: .85rem; cursor: pointer; }
+.order-items { padding-left: 1.1rem; text-align: left; }
+.order-recap__items dd { text-align: left !important; }

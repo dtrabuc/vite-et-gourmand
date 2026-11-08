@@ -60,7 +60,7 @@ VG_HTTP_PORT=8090 VG_MAIL_PORT=8026 docker compose up -d --build   # other ports
 
 Inside Docker, the app reads its configuration from the `environment` section of `docker-compose.yml`. The project `.env` file is never copied into the image.
 
-Google address autocomplete and delivery distance need a `GOOGLE_MAPS_API_KEY`. Without one, both features are disabled; the rest of the site works.
+Delivery addresses are checked with OpenStreetMap (Photon for search, OSRM for road distance). No API key is needed, only Internet access; if the services cannot be reached, customers can confirm their address manually.
 
 ## 4. Running without Docker
 
@@ -114,7 +114,7 @@ Each route declares its middlewares, for example:
 
 ### MariaDB
 
-`database/schema.sql` is the **single SQL file**. It contains the full structure and the demo data (3 accounts, opening hours, 10 allergens, 32 dishes, 9 menus, 5 completed orders). There are no separate migration files.
+`database/schema.sql` is the **single SQL file**. It contains the full structure and the demo data (3 accounts, opening hours, 10 allergens, 46 dishes (aperitifs, starters, mains, sides, desserts, digestifs), 10 menus, 5 completed orders). There are no separate migration files.
 
 - The file has no `CREATE DATABASE` or `USE` statement, so it can be imported into any selected database: locally, in Docker or on the hosting server.
 - **It drops and recreates every table.** Never import it into a database you want to keep.
@@ -139,7 +139,25 @@ Main tables: `users`, `menus`, `dishes`, `allergens` and their link tables, `ord
 4. A welcome e-mail without the password is sent. If sending fails, the account is kept anyway.
 5. The customer signs in at `/login`.
 
-## 8. Security
+## 8. Menus and pricing
+
+The catalogue works like a food delivery app: the visitor picks the number of guests at the top of `/menus`, and every card shows the price per person, what each guest gets and the total for that number of guests.
+
+- `menus.base_price` is the price for the menu's minimum number of guests (`min_people`). The site shows the **price per person** (`base_price / min_people`).
+- Total = price per person × guests, with **10 % off** from `min_people + 5` guests.
+- Each guest gets 1 aperitif (with or without alcohol), 1 starter, 1 main, every side dish, 1 dessert and 1 digestif (none in the kids' menu). When a menu offers two options in a category, each guest picks one (`menu_composition()` in `App/Core/functions.php`).
+- Delivery: free in Bordeaux; up to 25 km (straight line) 5 € + 0.59 € per road km. Further away, the customer chooses pickup (free) or explicitly accepts out-of-zone delivery at the same rate. Pickup and on-site meals are free. Payment in cash.
+
+All amounts come from `App/Service/MenuPricing.php`, used by the catalogue API (`/menus/filter?people=N`), the menu page (`/menus/{id}/quote?people=N`), the order form and the e-mails. The server recalculates the total when the order is saved.
+
+### Ordering, notifications and delivery addresses
+
+- `/orders/new` starts with the number of guests (stepper and quick picks). Every menu possible for that number is listed with its total; menus needing more guests are folded away, never blocking.
+- The delivery address is suggested and checked with OpenStreetMap (`GeoService`, `/api/address/autocomplete`, `/api/address/check`). The street name must match, otherwise the address is only "approximate". Orders store `address_status` (`verified`, `manual`) and `delivery_zone` (`bordeaux`, `zone`, `outside`).
+- Outside the 25 km zone the customer picks pickup or ticks "deliver anyway" with the computed fee. If the address cannot be verified, they can confirm it manually; when no distance can be computed, staff confirm the delivery fee by phone (`delivery_cost_override` in the staff edit form).
+- After ordering, a confirmation page shows a progress tracker. Each status change creates an in-app notification (bell with unread count in the navbar, toasts polled every 30 s from `/notifications/feed`) and sends an e-mail.
+
+## 9. Security
 
 - **SQL injection**: native prepared statements everywhere.
 - **XSS**: every output escaped; Content Security Policy without inline scripts.
@@ -149,16 +167,23 @@ Main tables: `users`, `menus`, `dishes`, `allergens` and their link tables, `ord
 - **Sessions**: `HttpOnly` and `SameSite=Lax` cookies, `Secure` over HTTPS, ID regenerated at login, 30-minute idle timeout.
 - **Access control**: customers only see their own orders; staff routes are protected by the `Staff` and `Admin` middlewares.
 - **Uploads**: file type checked from the content (JPEG, PNG, WebP), 5 MB maximum, random file name.
-- **Outbound calls** to Google do not follow redirects, so the API key cannot leak to another host. Address autocomplete requires a login and is rate limited.
+- **Outbound calls** to OpenStreetMap services (Photon, OSRM) do not follow redirects, send an identifying User-Agent and are cached. Address search and checks require a login and are rate limited.
 - **Secrets** live only in `.env`, which is ignored by Git.
+- **Verified** with an automated probe (134 checks): every protected route refuses anonymous users, customers cannot reach staff pages, employees cannot reach admin pages, a customer cannot read, edit, cancel or review another customer's order, POST requests without a CSRF token get a 403. Sensitive files (`.env`, SQL, sources, `.git`) are not reachable from the web.
 
-## 9. Deployment (Alwaysdata)
+### GDPR
+
+- Privacy policy (`/confidentialite`) and terms of sale (`/cgv`) list the data, purposes, legal bases, retention periods and recipients (OpenStreetMap services are in the EU).
+- Allergy information is health data: explicit consent is required (checkbox, checked by the server) whenever a customer adds kitchen notes or an allergen-free variant.
+- From the profile, customers can download all their data (JSON) and delete their account: personal data is erased; past orders are kept without identity, address, phone or allergy data for accounting; reviews are removed.
+
+## 10. Deployment (Alwaysdata)
 
 1. Back up the database and the files that will be replaced.
 2. Upload the changed files over FTPS. Never overwrite `.env`, `storage/` or `public/uploads/`.
 3. Update the live database structure with targeted `ALTER TABLE` statements, tested on a copy first.
 4. Check the main pages, then test a real sign-up with a disposable mailbox.
 
-## 10. Design documents
+## 11. Design documents
 
-`docs/conception/` contains the data model (MCD), the sign-up sequence diagram and the use-case diagram, in `.drawio`, `.png` and `.svg`.
+`docs/conception/` contains a UML class diagram (entities with attributes **and methods**, MongoDB documents, application services), the Merise data model (MCD), the use-case diagram and two sequence diagrams (sign-up, ordering), in `.drawio`, `.png` and `.svg`. They are generated from `docs/conception/outils/diagrams.py`.

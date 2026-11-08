@@ -7,7 +7,6 @@ return [
         'env' => $_ENV['APP_ENV'] ?? 'development',
         'debug' => filter_var($_ENV['APP_DEBUG'] ?? 'false', FILTER_VALIDATE_BOOLEAN),
         'url' => rtrim((string) ($_ENV['APP_URL'] ?? 'http://localhost:8000'), '/'),
-        'google_maps_key' => (string) ($_ENV['GOOGLE_MAPS_API_KEY'] ?? ''),
     ],
     // Hébergeur affiché dans les mentions légales (renseigné lors du déploiement).
     'hosting' => [

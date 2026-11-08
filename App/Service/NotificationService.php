@@ -58,4 +58,19 @@ final readonly class NotificationService
     {
         $this->notificationRepository->markAllRead($userId);
     }
+
+    public function unreadCount(int $userId): int
+    {
+        return $this->notificationRepository->countUnread($userId);
+    }
+
+    /** @return array{unread: int, last_id: int, items: list<array>} */
+    public function feed(int $userId, int $afterId): array
+    {
+        return [
+            'unread' => $this->notificationRepository->countUnread($userId),
+            'last_id' => $this->notificationRepository->lastId($userId),
+            'items' => $afterId > 0 ? $this->notificationRepository->findAfter($userId, $afterId) : [],
+        ];
+    }
 }

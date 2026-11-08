@@ -36,3 +36,39 @@
     border-radius: .85rem;
     background: #fff;
 }
+
+/* Encadré prix : prix par personne, nombre de personnes et total */
+.price-box {
+    position: sticky;
+    top: calc(var(--vg-nav-h, 4rem) + 1rem);
+    padding: 1.25rem;
+    border: 1px solid rgba(var(--vg-primary-rgb), .15);
+    border-radius: 1rem;
+    background: var(--vg-soft);
+}
+
+.price-box__unit strong {
+    color: var(--vg-primary);
+    font-size: 1.6rem;
+}
+
+.price-box__lines > div {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: .25rem 0;
+}
+
+.price-box__lines dt { font-weight: 400; }
+.price-box__lines dd { margin: 0; font-weight: 600; }
+
+.price-box__total {
+    margin-top: .25rem;
+    border-top: 1px solid var(--vg-border);
+    font-size: 1.15rem;
+}
+
+.price-box__total dt,
+.price-box__total dd { font-weight: 700; }
+
+.menu-detail-group + .menu-detail-group { margin-top: 1rem; }

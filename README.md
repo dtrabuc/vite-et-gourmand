@@ -55,7 +55,7 @@ docker compose down -v         # tout supprimer, bases comprises
 Ports déjà utilisés : `VG_HTTP_PORT=8090 VG_MAIL_PORT=8026 docker compose up -d --build`.
 Le guide complet, avec les problèmes fréquents, est dans [`docker-setup.txt`](docker-setup.txt).
 
-L'autocomplétion d'adresse et le calcul de distance de livraison utilisent l'API Google : ils sont inactifs sans clé `GOOGLE_MAPS_API_KEY`.
+Les adresses de livraison sont vérifiées avec OpenStreetMap (Photon pour la recherche, OSRM pour la distance par la route), sans clé d'API. Zone de livraison : Bordeaux (gratuit) et 25 km autour ; au-delà, retrait ou livraison hors zone acceptée par le client. Si le service est injoignable, la saisie manuelle reste possible.
 
 ## 3. Lancer le projet sans Docker
 
@@ -79,7 +79,7 @@ Les variables du `.env` sont décrites dans `.env.example`. Sans `MAIL_HOST`, au
 
 ## 4. Base de données
 
-- `database/schema.sql` est le **fichier SQL unique** : structure complète et données de démonstration (3 comptes, 32 plats, 9 menus, 5 commandes). Il n'y a pas de migrations séparées.
+- `database/schema.sql` est le **fichier SQL unique** : structure complète et données de démonstration (3 comptes, 46 plats, 10 menus, 5 commandes). Il n'y a pas de migrations séparées.
 - Il ne contient ni `CREATE DATABASE` ni `USE` : il s'importe dans la base choisie.
 - **Il supprime et recrée toutes les tables** : ne jamais l'importer sur une base à conserver.
 - `database/mongodb-init.js` recrée les collections MongoDB : `menu_images`, `comments` et `menu_statistics`.
@@ -88,9 +88,9 @@ Les variables du `.env` sont décrites dans `.env.example`. Sans `MAIL_HOST`, au
 
 ## 5. Fonctionnalités
 
-- **Visiteur** : menus filtrables sans rechargement, détail d'un menu (galerie, plats, allergènes), contact, devis, inscription.
+- **Visiteur** : menus affichés avec leur prix par personne et le total pour le nombre de convives choisi, filtres sans rechargement, détail d'un menu (galerie, plats, allergènes), contact, devis, inscription.
 - **Inscription** : mot de passe libre ou généré aléatoirement (case à cocher), bouton « Afficher » pour voir les caractères, mail de bienvenue.
-- **Client** : commande (livraison, retrait ou sur place) avec prix calculé par le serveur, suivi, modification et annulation tant que la commande est en attente, avis, profil.
+- **Client** : commande en partant du nombre de personnes, adresse vérifiée sur OpenStreetMap (Bordeaux et 25 km, au-delà retrait ou livraison hors zone acceptée), page de confirmation avec suivi, notifications (cloche et e-mails à chaque étape), suivi, modification et annulation tant que la commande est en attente, avis, profil.
 - **Employé** : commandes et statuts, menus, plats, galeries, horaires, modération des avis, clients, devis.
 - **Administrateur** : employés, chiffre d'affaires, graphique des commandes par menu.
 
@@ -126,7 +126,7 @@ scripts/        set-password.php (mots de passe en ligne de commande)
 ## 9. Documentation
 
 - [`docs/documentation-en.md`](docs/documentation-en.md) : documentation technique en anglais.
-- `docs/conception/` : MCD, diagramme de séquence et diagramme de cas d'utilisation (`.drawio`, `.png`, `.svg`).
-- `docs/maquettes/` : wireframes et mockups des 11 écrans en iPhone 14 et MacBook Air 13" : PNG, `wireframes.pdf`, `mockups.pdf` et `maquettes.md` (fiches modifiables).
+- `docs/conception/` : diagramme de classes UML (attributs et méthodes), MCD, cas d'utilisation, séquences d'inscription et de commande (`.drawio`, `.png`, `.svg`), générés par `docs/conception/outils/diagrams.py`.
+- `docs/maquettes/` : wireframes et mockups des 12 écrans (dont commande et confirmation) en iPhone 14 et MacBook Air 13" : PNG, `wireframes.pdf`, `mockups.pdf` et `maquettes.md` (fiches modifiables).
 - `docs/gestion-projet/` : backlog Scrum (user stories, sprints, Definition of Done) et script `trello-import.mjs` qui crée le tableau Trello.
 - `docs/README-fr.docx` : ce README au format Word.

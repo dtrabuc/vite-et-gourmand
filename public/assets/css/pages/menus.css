@@ -1,40 +1,89 @@
-/* Catalogue : filtres confortables et bandeau immersif. */
-#menuFilters {
+/* Catalogue : barre de choix collante (personnes, thèmes, régimes), façon appli de livraison. */
+.menu-toolbar {
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+    padding: .9rem 1rem;
     border: 1px solid rgba(44, 62, 80, .07);
     border-radius: 1rem;
-    background: #fff;
-    box-shadow: 0 .4rem 1.25rem rgba(44, 62, 80, .07) !important;
+    background: rgba(255, 255, 255, .97);
+    box-shadow: 0 .4rem 1.25rem rgba(44, 62, 80, .08);
 }
 
-#menuFilters .form-label {
+/* collante seulement sur tablette et ordinateur : sur mobile elle prendrait trop de place */
+@media (min-width: 768px) {
+    .menu-toolbar {
+        position: sticky;
+        top: calc(var(--vg-nav-h, 4rem) + .5rem);
+        z-index: 1010;
+    }
+}
+
+.menu-toolbar__people {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .5rem 1rem;
+}
+
+.menu-toolbar__chips {
+    display: flex;
+    gap: .4rem;
+    overflow-x: auto;
+    padding-bottom: .15rem;
+    scrollbar-width: thin;
+}
+
+.menu-toolbar__sep {
+    flex: 0 0 1px;
+    margin: .2rem .25rem;
+    background: var(--vg-border);
+}
+
+.btn-chip {
+    flex: 0 0 auto;
+    padding: .35rem .9rem;
+    border: 1px solid #dfe3e4;
+    border-radius: 999px;
+    background: #fff;
     color: var(--vg-ink);
     font-size: .9rem;
-    font-weight: 650;
+    font-weight: 600;
+    white-space: nowrap;
 }
 
-#menuFilters .form-control,
-#menuFilters .form-select {
-    min-height: 2.9rem;
-    border-color: #dfe3e4;
-    border-radius: .7rem;
-}
-
-#menuFilters .form-control:focus,
-#menuFilters .form-select:focus {
+.btn-check:checked + .btn-chip {
     border-color: var(--vg-primary);
-    box-shadow: 0 0 0 .2rem rgba(var(--vg-primary-rgb), .12);
+    background: var(--vg-primary);
+    color: #fff;
 }
+
+.btn-check:focus-visible + .btn-chip {
+    outline: 3px solid rgba(var(--vg-primary-rgb), .35);
+    outline-offset: 2px;
+}
+
+.menu-toolbar__more summary,
+.pricing-info summary {
+    color: var(--vg-primary);
+    font-weight: 650;
+    cursor: pointer;
+}
+
+.pricing-info {
+    padding: .85rem 1rem;
+    border-left: 4px solid var(--vg-accent);
+    border-radius: .5rem;
+    background: var(--vg-soft);
+}
+
+.pricing-info li + li { margin-top: .3rem; }
 
 .menu-hero {
     background: linear-gradient(110deg, rgba(74, 22, 31, .92), rgba(74, 22, 31, .54)),
         url("https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=1900&h=700&q=82") center 48% / cover;
 }
 
-#menuFilterStatus:not(.visually-hidden) {
-    margin: -.5rem 0 1rem;
-    color: var(--vg-muted);
-    font-size: .9rem;
-}
 
 #menuGrid[aria-busy="true"] { opacity: .55; }
 #menuGrid { transition: opacity .18s ease; }

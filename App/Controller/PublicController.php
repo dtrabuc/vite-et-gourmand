@@ -10,6 +10,7 @@ use App\Entity\Menu;
 use App\Service\CommentService;
 use App\Service\DeliveryDistanceService;
 use App\Service\MailService;
+use App\Service\MenuPricing;
 use App\Service\MenuService;
 
 final class PublicController extends BaseController
@@ -52,6 +53,13 @@ final class PublicController extends BaseController
             $menus = [];
         }
 
+        // Avec un nombre de personnes : les menus commandables d'abord (comme menus.js).
+        $people = $this->requestedPeople();
+        if ($people !== null) {
+            usort($menus, static fn (Menu $a, Menu $b): int =>
+                ($a->getMinPeople() > $people) <=> ($b->getMinPeople() > $people));
+        }
+
         // Plats et couvertures de tous les menus : une requête chacun (pas de N+1).
         $menuDetails = array_map(
             static fn (array $dishes): array => ['dishes' => $dishes],
@@ -59,6 +67,7 @@ final class PublicController extends BaseController
         );
 
         $this->render('home/menus', [
+            'people' => $people,
             'menus' => $menus,
             'menuDetails' => $menuDetails,
             'menuCovers' => $this->menuService->getCovers($menus),
@@ -78,6 +87,7 @@ final class PublicController extends BaseController
 
         $details = $this->menuService->getMenuDetails($id);
         $this->render('home/menu_detail', [
+            'people' => $this->requestedPeople() ?? $menu->getMinPeople(),
             'menu' => $menu,
             'details' => $details,
             'images' => $this->menuService->getImages($id),
@@ -137,8 +147,44 @@ final class PublicController extends BaseController
 
         $this->json([
             'success' => true,
-            'data' => $this->serializeMenus($menus),
+            'data' => $this->serializeMenus($menus, $this->requestedPeople()),
         ]);
+    }
+
+    /**
+     * Prix d'un menu pour un nombre de convives (fiche menu, avant connexion).
+     * Le montant définitif est recalculé à la commande.
+     */
+    public function menuQuote(int $id): never
+    {
+        $menu = $this->menuService->getMenuById($id);
+        $people = $this->requestedPeople();
+
+        if ($menu === null) {
+            $this->json(['success' => false, 'error' => 'Menu introuvable.'], 404);
+        }
+
+        if ($people === null) {
+            $this->json(['success' => false, 'error' => 'Nombre de personnes invalide (1 à 999).'], 422);
+        }
+
+        $this->json([
+            'success' => true,
+            'data' => MenuPricing::quote($menu->getBasePrice(), $menu->getMinPeople(), $people)
+                + ['min_people' => $menu->getMinPeople()],
+        ]);
+    }
+
+    /** ?people=N dans l'URL, entre 1 et 999, sinon null. */
+    private function requestedPeople(): ?int
+    {
+        $people = filter_var(
+            $_GET['people'] ?? null,
+            FILTER_VALIDATE_INT,
+            ['options' => ['min_range' => 1, 'max_range' => 999]]
+        );
+
+        return $people === false ? null : $people;
     }
 
     public function legal(): void
@@ -177,7 +223,7 @@ final class PublicController extends BaseController
      * Liste de menus pour le filtrage dynamique : plats et couvertures chargés
      * en une requête chacun pour l'ensemble des menus.
      */
-    private function serializeMenus(array $menus): array
+    private function serializeMenus(array $menus, ?int $people = null): array
     {
         $dishes = $this->menuService->getDishesForMenus($menus);
         $covers = $this->menuService->getCovers($menus);
@@ -186,14 +232,21 @@ final class PublicController extends BaseController
             fn (Menu $menu): array => $this->serializeMenu(
                 $menu,
                 $dishes[$menu->getId()] ?? [],
-                isset($covers[$menu->getId()]) ? [$covers[$menu->getId()]] : []
+                isset($covers[$menu->getId()]) ? [$covers[$menu->getId()]] : [],
+                null,
+                $people
             ),
             $menus
         );
     }
 
-    private function serializeMenu(Menu $menu, array $dishes, array $images, ?array $allergens = null): array
-    {
+    private function serializeMenu(
+        Menu $menu,
+        array $dishes,
+        array $images,
+        ?array $allergens = null,
+        ?int $people = null
+    ): array {
         $data = [
             'id' => $menu->getId(),
             'title' => $menu->getTitle(),
@@ -203,6 +256,9 @@ final class PublicController extends BaseController
             'dietary_regime_label' => Labels::dietaryRegime($menu->getDietaryRegime()),
             'min_people' => $menu->getMinPeople(),
             'base_price' => $menu->getBasePrice(),
+            'price_per_person' => MenuPricing::perPerson($menu->getBasePrice(), $menu->getMinPeople()),
+            'discount_from' => MenuPricing::discountFrom($menu->getMinPeople()),
+            'composition' => menu_composition($dishes),
             'conditions' => $menu->getConditions(),
             'available_stock' => $menu->getAvailableStock(),
             'dishes' => $dishes,
@@ -214,6 +270,10 @@ final class PublicController extends BaseController
 
         if ($allergens !== null) {
             $data['allergens'] = $allergens;
+        }
+
+        if ($people !== null) {
+            $data['quote'] = MenuPricing::quote($menu->getBasePrice(), $menu->getMinPeople(), $people);
         }
 
         return $data;
